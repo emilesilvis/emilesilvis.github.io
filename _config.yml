@@ -9,7 +9,7 @@ permalink:        pretty
 title:            Emile Silvis
 tagline:          ''
 description:      ''
-baseurl:          {{ "/" | relative_url }}
+baseurl:          "/"
 
 author:
   name:           'Emile Silvis'
