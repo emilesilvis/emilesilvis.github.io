@@ -4,13 +4,12 @@ highlighter:      pygments
 
 # Permalinks
 permalink:        pretty
-relative_permalinks: true
 
 # Setup
 title:            Emile Silvis
 tagline:          ''
 description:      ''
-baseurl:          /
+baseurl:          https://emilesilvis.github.io/
 
 author:
   name:           'Emile Silvis'
