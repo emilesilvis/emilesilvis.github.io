@@ -3,4 +3,4 @@ layout: page
 title: About
 ---
 
-Some thoughts. Thanks for reading!
+Liked or disagrees with something you've read? Ping me on [Twitter](https://www.twitter.com/emilesilvis).
