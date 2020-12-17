@@ -8,7 +8,7 @@ permalink:        pretty
 # Setup
 title:            Emile Silvis
 tagline:          'Some thoughts'
-description:      ''
+description:      'Thoughts (mostly on making software)'
 baseurl:          https://emilesilvis.github.io/
 
 author:
