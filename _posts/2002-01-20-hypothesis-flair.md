@@ -5,6 +5,8 @@ title: Hypothesis -- the Flair is not the ultimate beginner's espresso machine.
 
 The [Flair](https://flairespresso.com/) is not the ultimate beginner's espresso machine.
 
+![Flair](https://www.dropbox.com/s/i3zddqlufu0v5q6/IMG_5388.jpeg?dl=0)
+
 I'm definitely not saying that it's not an _accessible_ espresso machine for beginner's, because that it is: both because of its price point (relatively lower than other espresso machines) and its unintimidating user interface (no scary boilers or digital displays — just a big lever, some coffee and a cup).
 
 I would go as far as to say that it's the ultimate _master_'s espresso machine.
