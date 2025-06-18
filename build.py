@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from config import SITE_NAME, BIO, NAVIGATION, HOSTNAME
+from config import SITE_NAME, BIO, NAVIGATION, HOSTNAME, UMAMI
 from pathlib import Path
 from datetime import datetime
 import shutil, re, html
@@ -74,7 +74,8 @@ def apply_template(title, body_html, nav="", seo_image="", seo_description="", d
             .replace("{{seo_image}}", seo_image)
             .replace("{{seo_description}}", seo_description)
             .replace("{{date}}", date)
-            .replace("{{main_heading}}", main_heading))
+            .replace("{{main_heading}}", main_heading)
+            .replace("{{umami_website_id}}", UMAMI["website_id"]))
 
 
 def build_post(md_path):
