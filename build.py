@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from config import SITE_NAME, BIO, NAVIGATION
+from config import SITE_NAME, BIO, NAVIGATION, HOSTNAME
 from pathlib import Path
 from datetime import datetime
 import shutil, re, html
@@ -73,6 +73,10 @@ def build_post(md_path):
     seo_image = frontmatter.get("seo_image", "/static/images/profile.png")
     seo_description = frontmatter.get("seo_description", "")
     
+    # Make SEO image URL absolute
+    if seo_image and not seo_image.startswith(('http://', 'https://')):
+        seo_image = HOSTNAME + seo_image
+    
     # Get date from frontmatter or filename
     date = frontmatter.get("date", "-".join(md_path.stem.split("-", 3)[:3]))
     
@@ -132,7 +136,10 @@ def main():
     # Create navigation HTML
     nav_html = f"<ul>{''.join(nav_items)}</ul>"
 
-    index_html = apply_template(SITE_NAME, "\n".join(index_content), nav=nav_html, main_heading="")
+    # Default SEO image for index page
+    default_seo_image = HOSTNAME + "/static/images/profile.png"
+    
+    index_html = apply_template(SITE_NAME, "\n".join(index_content), nav=nav_html, main_heading="", seo_image=default_seo_image)
     (OUT / "index.html").write_text(index_html, encoding="utf-8")
 
 

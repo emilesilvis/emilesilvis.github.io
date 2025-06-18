@@ -1,5 +1,8 @@
 SITE_NAME = "Emile Silvis"
 
+# Site configuration
+HOSTNAME = "https://emilesilvis.com"  # Base URL for absolute meta image tags
+
 # Bio configuration
 BIO = {
     "name": "Emile Silvis",
