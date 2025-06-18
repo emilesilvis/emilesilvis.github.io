@@ -13,9 +13,31 @@ OUT = ROOT / "out"
 TEMPL = (ROOT / "static" / "templates" / "template.html").read_text(encoding="utf-8")
 
 
+def process_external_links(html_content):
+    """Add target="_blank" and rel="noopener noreferrer" to external links"""
+    # Pattern to match <a href="..."> tags
+    link_pattern = r'<a\s+href="([^"]+)"([^>]*)>'
+    
+    def replace_link(match):
+        href = match.group(1)
+        other_attrs = match.group(2)
+        
+        # Check if it's an external link (starts with http:// or https://)
+        if href.startswith(('http://', 'https://')):
+            # Add target="_blank" and rel="noopener noreferrer" if not already present
+            if 'target="_blank"' not in other_attrs:
+                other_attrs += ' target="_blank"'
+            if 'rel="noopener noreferrer"' not in other_attrs:
+                other_attrs += ' rel="noopener noreferrer"'
+        
+        return f'<a href="{href}"{other_attrs}>'
+    
+    return re.sub(link_pattern, replace_link, html_content)
+
+
 def render(markdown_text):
     """convert md → html using python-markdown"""
-    return markdown.markdown(
+    html_content = markdown.markdown(
         markdown_text,
         extensions=[
             "fenced_code",
@@ -29,6 +51,9 @@ def render(markdown_text):
             }
         }
     )
+    
+    # Process external links to add target="_blank"
+    return process_external_links(html_content)
 
 
 def apply_template(title, body_html, nav="", seo_image="", seo_description="", date="", main_heading=""):
