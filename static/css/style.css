@@ -5,6 +5,59 @@
   --body-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --max-width: 60ch;              /* keep line-length comfortable */
   --accent: #0069ff;
+  
+  /* Light mode colors */
+  --bg-color: #fff;
+  --text-color: #222;
+  --text-muted: #666;
+  --text-lighter: #777;
+  --border-color: #eee;
+  --code-bg: #f5f5f5;
+  --bio-bg: #f8f8f8;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode colors */
+[data-theme="dark"] {
+  --bg-color: #0f0f0f;
+  --text-color: #e4e4e4;
+  --text-muted: #a0a0a0;
+  --text-lighter: #888;
+  --border-color: #333;
+  --code-bg: #1a1a1a;
+  --bio-bg: #1a1a1a;
+  --shadow-color: rgba(255, 255, 255, 0.1);
+  --accent: #4a9eff;
+}
+
+/* Dark mode toggle button */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: var(--bio-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.theme-toggle:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Reset and base styles */
@@ -22,9 +75,10 @@ body {
   margin: 0;
   font-family: var(--body-font);
   line-height: 1.6;
-  color: #222;
-  background: #fff;
+  color: var(--text-color);
+  background: var(--bg-color);
   padding: 2rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Typography */
@@ -32,11 +86,12 @@ h1, h2, h3, h4 {
   line-height: 1.3;
   margin: 1.5rem 0 1rem;
   font-weight: 700;
+  color: var(--text-color);
 }
 
 .post-date {
   display: block;
-  color: #666;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin: -0.5rem 0 2rem;
 }
@@ -98,12 +153,15 @@ nav a {
 /* Code blocks */
 code, pre {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  background: #f5f5f5;
+  background: var(--code-bg);
+  color: var(--text-color);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 pre {
   padding: 0.75rem 1rem;
   overflow-x: auto;
+  border-radius: 4px;
 }
 
 /* Bio section */
@@ -113,10 +171,12 @@ pre {
     top: 2rem; /* Keep for when sticky is re-added */
     height: fit-content;
     padding: 1.5rem;
-    background: #f8f8f8;
+    background: var(--bio-bg);
     border-radius: 8px;
     font-size: 0.9rem;
     text-align: center;
+    transition: background-color 0.2s ease;
+    border: 1px solid var(--border-color);
 }
 
 .bio-image {
@@ -198,10 +258,11 @@ pre {
 footer {
     margin-top: 3rem;
     font-size: 0.9rem;
-    color: #777;
+    color: var(--text-lighter);
     text-align: center;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
     padding-top: 1rem;
+    transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 /* Accessibility */
@@ -213,10 +274,25 @@ textarea:focus,
 [tabindex]:focus {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-    box-shadow: 0 0 0 3px rgba(0, 105, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.25);
 }
 
-/* Syntax highlighting */
+/* Dark mode syntax highlighting */
+[data-theme="dark"] .codehilite .k { color: #ff79c6; font-weight: bold } /* Keyword */
+[data-theme="dark"] .codehilite .s { color: #f1fa8c } /* String */
+[data-theme="dark"] .codehilite .c { color: #6272a4; font-style: italic } /* Comment */
+[data-theme="dark"] .codehilite .n { color: #f8f8f2 } /* Name */
+[data-theme="dark"] .codehilite .o { color: #ff79c6 } /* Operator */
+[data-theme="dark"] .codehilite .p { color: #f8f8f2 } /* Punctuation */
+[data-theme="dark"] .codehilite .ch { color: #6272a4; font-style: italic } /* Comment.Hashbang */
+[data-theme="dark"] .codehilite .cm { color: #6272a4; font-style: italic } /* Comment.Multiline */
+[data-theme="dark"] .codehilite .cp { color: #ff79c6 } /* Comment.Preproc */
+[data-theme="dark"] .codehilite .c1 { color: #6272a4; font-style: italic } /* Comment.Single */
+[data-theme="dark"] .codehilite .cs { color: #6272a4; background-color: #44475a } /* Comment.Special */
+[data-theme="dark"] .codehilite .kc { color: #ff79c6; font-weight: bold } /* Keyword.Constant */
+[data-theme="dark"] .codehilite .kd { color: #ff79c6; font-weight: bold } /* Keyword.Declaration */
+
+/* Light mode syntax highlighting */
 .codehilite .k { color: #007020; font-weight: bold } /* Keyword */
 .codehilite .s { color: #4070a0 } /* String */
 .codehilite .c { color: #60a0b0; font-style: italic } /* Comment */
