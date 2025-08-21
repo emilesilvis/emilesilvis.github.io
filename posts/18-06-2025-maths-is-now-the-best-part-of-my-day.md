@@ -18,6 +18,6 @@ I've been "simply logging on and doing a lesson" now for the last 16 months, and
 
 The other day, my partner asked me, "When will you actually finish all of this maths stuff?" — my answer came quickly: "Never". 
 
-Following my curiosity is what makes life interesting. So learning maths will stay a part of my life. Apart from being the favourite part of my day (tablet out, calculator ready, let's go!), it's making possible what I once only dreamt about: more advanced mathematical topics, machine learning, economics, physics. It already gave me the confidence [to build a modern computer from scratch](https://emilesilvis.com/i-built-a-computer.html). The list goes on. It's teaching me discipline and patience. But most of all, I fundamentally changed my relationship with maths. 
+Following my curiosity is what makes life interesting. So learning maths will stay a part of my life. Apart from being the favourite part of my day (tablet out, calculator ready, let's go!), it's making possible what I once only dreamt about: more advanced mathematical topics, machine learning, economics, physics. The list goes on. It's teaching me discipline and patience. But most of all, I fundamentally changed my relationship with maths. 
 
 I'm looking forward to doing some maths tomorrow. And for that, I'm grateful.
