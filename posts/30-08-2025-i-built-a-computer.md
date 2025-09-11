@@ -1,7 +1,7 @@
 ---
 title: "I built a computer from scratch"
 seo_image: "/static/images/04-06-2025-i-built-a-computer/nand2tetris-big-picture.png"
-seo_description: "Building a computer from NAND gates to a working CPU"
+seo_description: "Building a computer from NAND gates to a working OS"
 ---
 
 # I built a computer from scratch
