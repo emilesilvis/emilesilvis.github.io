@@ -121,6 +121,12 @@ def main():
     if static_dir.exists():
         shutil.copytree(static_dir, OUT / "static")
 
+    # copy standalone HTML pages to output root
+    html_dir = ROOT / "html"
+    if html_dir.exists():
+        for f in html_dir.glob("*.html"):
+            shutil.copy(f, OUT / f.name)
+
     # collect posts
     posts = sorted(POSTS.glob("*.md"), reverse=True)
     index_items = []
