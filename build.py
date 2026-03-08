@@ -127,8 +127,12 @@ def main():
         for f in html_dir.glob("*.html"):
             shutil.copy(f, OUT / f.name)
 
-    # collect posts
-    posts = sorted(POSTS.glob("*.md"), reverse=True)
+    # collect posts, sorted by date (newest first)
+    def post_date(md_path):
+        parts = md_path.stem.split("-", 3)[:3]
+        return datetime.strptime("-".join(parts), "%d-%m-%Y")
+
+    posts = sorted(POSTS.glob("*.md"), key=post_date, reverse=True)
     index_items = []
 
     # Process pages
