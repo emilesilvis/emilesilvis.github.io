@@ -183,8 +183,7 @@
 <body>
 <div class="container">
   <div style="text-align:center;margin-bottom:28px">
-    <h1>Pascal's Triangle</h1>
-    <p class="subtitle">Binomial Expansion Explorer</p>
+    <h1>Binomial expansion with Pascal's triangle</h1>
   </div>
   <div class="n-selector" id="nSelector">
     <span class="label">n =</span>
@@ -352,11 +351,11 @@
         html += '<span class="powers-arrow">→</span>';
         html += '<span class="powers-text" style="color:#92857a">a' + sup(n-1) + 'b¹</span>';
       }
-      if (n > 2) {
+      if (n > 3) {
         html += '<span class="powers-arrow">→</span>';
         html += '<span class="powers-arrow">⋯</span>';
       }
-      if (n > 1) {
+      if (n > 2) {
         html += '<span class="powers-arrow">→</span>';
         html += '<span class="powers-text" style="color:#92857a">a¹b' + sup(n-1) + '</span>';
       }
