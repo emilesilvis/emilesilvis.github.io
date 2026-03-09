@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from config import SITE_NAME, BIO, NAVIGATION, HOSTNAME, UMAMI
+from config import SITE_NAME, BIO, HOSTNAME, UMAMI, NAVIGATION
 from pathlib import Path
 from datetime import datetime
 import shutil, re, html
@@ -11,6 +11,14 @@ POSTS = ROOT / "posts"
 PAGES = ROOT / "pages"
 OUT = ROOT / "out"
 TEMPL = (ROOT / "static" / "templates" / "template.html").read_text(encoding="utf-8")
+def _nav_href(path):
+    path = path.strip("/")
+    return "/" if not path else f"/{path}.html"
+
+NAV_HTML = "<ul>" + "".join(
+    f'<li><a href="{_nav_href(n["path"])}">{n["title"]}</a></li>'
+    for n in NAVIGATION
+) + "</ul>" if NAVIGATION else ""
 
 
 def process_external_links(html_content):
@@ -56,7 +64,7 @@ def render(markdown_text):
     return process_external_links(html_content)
 
 
-def apply_template(title, body_html, nav="", seo_image="", seo_description="", date="", main_heading=""):
+def apply_template(title, body_html, seo_image="", seo_description="", date="", main_heading=""):
     return (TEMPL.replace("{{title}}", html.escape(title))
             .replace("{{content}}", body_html)
             .replace("{{year}}", str(datetime.now().year))
@@ -70,7 +78,7 @@ def apply_template(title, body_html, nav="", seo_image="", seo_description="", d
             .replace("{{bio.social.linkedin.icon}}", BIO["social"]["linkedin"]["icon"])
             .replace("{{bio.social.github.url}}", BIO["social"]["github"]["url"])
             .replace("{{bio.social.github.icon}}", BIO["social"]["github"]["icon"])
-            .replace("{{nav}}", nav)
+            .replace("{{nav}}", NAV_HTML)
             .replace("{{seo_image}}", seo_image)
             .replace("{{seo_description}}", seo_description)
             .replace("{{date}}", date)
@@ -78,7 +86,7 @@ def apply_template(title, body_html, nav="", seo_image="", seo_description="", d
             .replace("{{umami_website_id}}", UMAMI["website_id"]))
 
 
-def build_post(md_path):
+def build_post(md_path, is_page=False):
     raw = md_path.read_text(encoding="utf-8")
     
     # Parse frontmatter if it exists
@@ -103,10 +111,12 @@ def build_post(md_path):
     if seo_image and not seo_image.startswith(('http://', 'https://')):
         seo_image = HOSTNAME + seo_image
     
-    # Get date from frontmatter or filename
-    date = frontmatter.get("date", "-".join(md_path.stem.split("-", 3)[:3]))
-    
-    main_heading = f'<h1>{html.escape(title)}</h1>\n<time datetime="{date}" class="post-date">{date}</time>'
+    if is_page:
+        main_heading = f'<h1>{html.escape(title)}</h1>'
+        date = ""
+    else:
+        date = frontmatter.get("date", "-".join(md_path.stem.split("-", 3)[:3]))
+        main_heading = f'<h1>{html.escape(title)}</h1>\n<time datetime="{date}" class="post-date">{date}</time>'
     
     return title, apply_template(title, html_body, seo_image=seo_image, seo_description=seo_description, date=date, main_heading=main_heading)
 
@@ -127,6 +137,14 @@ def main():
         for f in html_dir.glob("*.html"):
             shutil.copy(f, OUT / f.name)
 
+    # Process pages
+    pages = sorted(PAGES.glob("*.md"))
+    for md in pages:
+        title, full_html = build_post(md, is_page=True)
+        slug = md.stem
+        fname = f"{slug}.html"
+        (OUT / fname).write_text(full_html, encoding="utf-8")
+
     # collect posts, sorted by date (newest first)
     def post_date(md_path):
         parts = md_path.stem.split("-", 3)[:3]
@@ -135,20 +153,6 @@ def main():
     posts = sorted(POSTS.glob("*.md"), key=post_date, reverse=True)
     index_items = []
 
-    # Process pages
-    pages = sorted(PAGES.glob("*.md"))
-    nav_items = []
-    for md in pages:
-        title, full_html = build_post(md)
-        slug = md.stem
-        fname = f"{slug}.html"
-        (OUT / fname).write_text(full_html, encoding="utf-8")
-        # Only add to navigation if it's in the NAVIGATION config
-        for nav_item in NAVIGATION:
-            if nav_item["path"].lstrip("/") == fname.replace(".html", ""):
-                nav_items.append(f'<li><a href="{fname}">{nav_item["title"]}</a></li>')
-
-    # Process posts
     for md in posts:
         title, full_html = build_post(md)
         slug = md.stem.split("-", 3)[-1]  # after the date
@@ -163,19 +167,16 @@ def main():
     
     # Add posts section
     index_content.append('<div class="main-content">')
-    index_content.append('<h2 id="posts">Posts</h2>')
+    index_content.append('<h1>Posts</h1>')
     index_content.append("<ul>")
     index_content.extend(index_items)
     index_content.append("</ul>")
     index_content.append('</div>')
 
-    # Create navigation HTML
-    nav_html = f"<ul>{''.join(nav_items)}</ul>"
-
     # Default SEO image for index page
     default_seo_image = HOSTNAME + "/static/images/profile.png"
     
-    index_html = apply_template(SITE_NAME, "\n".join(index_content), nav=nav_html, main_heading="", seo_image=default_seo_image)
+    index_html = apply_template(SITE_NAME, "\n".join(index_content), main_heading="", seo_image=default_seo_image)
     (OUT / "index.html").write_text(index_html, encoding="utf-8")
 
 

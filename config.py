@@ -31,8 +31,12 @@ BIO = {
 
 # Navigation configuration
 NAVIGATION = [
-    # {
-    #     "title": "About",
-    #     "path": "/about"
-    # }
+    {
+        "title": "Posts",
+        "path": "/"
+    },
+    {
+        "title": "Maths stuff",
+        "path": "/maths"
+    }
 ]
