@@ -109,15 +109,6 @@
     padding: 2px 5px; border-radius: 4px; transition: all 0.25s ease;
   }
   .expansion-plus { color: #c4b5a6; margin: 0 3px; font-size: 16px; }
-  .hover-detail {
-    background: #fff; border: 1px solid #e8dfd4;
-    border-radius: 12px; padding: 14px 20px;
-    display: none; flex-wrap: wrap; gap: 18px;
-    align-items: center; justify-content: center;
-    margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    animation: fadeIn 0.2s ease;
-  }
-  .hover-detail.visible { display: flex; }
   .eval-card { margin-top: 16px; padding: 18px 20px; }
   .eval-inputs {
     display: flex; align-items: center; justify-content: center;
@@ -194,7 +185,6 @@
   </div>
   <div class="card" id="patternCard"></div>
   <div class="card expansion-card" id="expansionCard"></div>
-  <div class="hover-detail" id="hoverDetail"></div>
   <div class="card eval-card" id="evalCard"></div>
 </div>
 
@@ -402,31 +392,6 @@
     el.innerHTML = html;
   }
 
-  // Hover detail
-  function buildHoverDetail() {
-    var el = document.getElementById("hoverDetail");
-    if (!hoveredCell) {
-      el.classList.remove("visible");
-      return;
-    }
-    el.classList.add("visible");
-    var n = hoveredCell.n, k = hoveredCell.k;
-    var val = Math.round(pascalRow(n)[k]);
-    var color = hPalette[k % hPalette.length];
-    var aPow = n - k, bPow = k;
-    var term = "";
-    if (val !== 1 || (aPow === 0 && bPow === 0)) term += val;
-    if (aPow > 0) term += "a" + (aPow > 1 ? sup(aPow) : "");
-    if (bPow > 0) term += "b" + (bPow > 1 ? sup(bPow) : "");
-
-    var html = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:22px;font-weight:700;color:' + color + '">' + val + '</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:3px">';
-    html += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:14px;color:#92857a">C(' + n + ',' + k + ') = ' + val + '</span>';
-    html += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:#c4b5a6">' + n + '! / (' + k + '! × ' + (n-k) + '!)</span>';
-    html += '</div>';
-    html += '<div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;color:#2c2418;padding:4px 10px;background:rgba(245,158,11,0.08);border-radius:6px">Term: ' + esc(term) + '</div>';
-    el.innerHTML = html;
-  }
 
   // Numeric evaluation
   function buildEval() {
@@ -510,7 +475,6 @@
     buildTriangle();
     buildPattern();
     buildExpansion();
-    buildHoverDetail();
     buildEval();
   }
 
