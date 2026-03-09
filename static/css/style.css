@@ -130,16 +130,17 @@ nav a {
 }
 
 .main-nav {
-  margin: -0.5rem 0 2rem;
+  margin: 0.5rem 0 0;
 }
 
 .main-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: flex;
-  flex-wrap: wrap; /* Allow wrapping on small screens */
-  gap: 1rem; /* Adjusted gap for mobile */
+}
+
+.main-nav li {
+  line-height: 1.4;
 }
 
 .main-nav a {
@@ -192,6 +193,12 @@ pre {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+.bio-section hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1rem 0 0.5rem;
 }
 
 /* Social links */

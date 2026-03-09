@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pascal's Triangle — Binomial Expansion Explorer</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script>
+    (function() {
+        var savedTheme = localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+</script>
+<style>
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 1.5rem; }
+  .n-selector {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; margin: 1.5rem 0; flex-wrap: wrap;
+  }
+  .n-selector .label { font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
+  .n-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--border-color); background: var(--bg-color);
+    color: var(--text-muted);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 13px; cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .n-btn:hover { transform: scale(1.08); }
+  .n-btn.active {
+    border: 2px solid var(--accent);
+    color: var(--accent); font-weight: 700;
+    background: var(--code-bg);
+  }
+  .triangle-box {
+    background: var(--bg-color); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 1.25rem 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .tri-row {
+    display: flex; justify-content: center; gap: 4px; margin-bottom: 4px;
+  }
+  .tri-cell {
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    cursor: pointer; transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background: var(--code-bg); color: var(--text-muted);
+  }
+  .tri-cell.selected-row {
+    border: 1px solid var(--accent);
+    background: var(--bg-color);
+    color: var(--text-color); font-weight: 600;
+  }
+  .card {
+    background: var(--bio-bg); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 1.125rem 1.5rem; margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.875rem;
+    text-align: center; font-style: italic;
+  }
+  .step-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; flex-wrap: wrap; justify-content: center;
+  }
+  .step-label {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 11px; color: var(--text-muted);
+    background: var(--code-bg);
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+  }
+  .coeff-chip {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 14px; font-weight: 600;
+    padding: 2px 7px; border-radius: 5px;
+  }
+  .expansion-card { padding: 1rem 1.25rem; }
+  .expansion {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 2px; align-items: baseline; line-height: 1.9;
+  }
+  .expansion-prefix {
+    font-size: 1.1rem;
+    color: var(--accent); margin-right: 6px;
+  }
+  .expansion-term {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 16px;
+    padding: 2px 5px; border-radius: 4px; transition: all 0.25s ease;
+  }
+  .expansion-plus { color: var(--text-lighter); margin: 0 3px; font-size: 16px; }
+  .eval-card { margin-top: 1rem; padding: 1.125rem 1.25rem; }
+  .eval-inputs {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .eval-inputs .label {
+    font-size: 0.85rem; color: var(--text-muted);
+    font-style: italic;
+  }
+  .eval-inputs .var-label {
+    font-size: 14px; color: var(--accent);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+  .eval-input {
+    width: 56px; padding: 6px 8px; background: var(--bg-color);
+    border: 1px solid var(--border-color); border-radius: 6px;
+    color: var(--text-color);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 14px; text-align: center; outline: none;
+  }
+  .eval-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; flex-wrap: wrap;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 14px; color: var(--text-color); line-height: 2.2;
+  }
+  .eval-label {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 11px; color: var(--text-muted);
+    background: var(--code-bg);
+    padding: 1px 8px; border-radius: 4px;
+    white-space: nowrap; text-transform: uppercase;
+    letter-spacing: 0.5px; flex-shrink: 0;
+  }
+  .eval-terms { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; justify-content: center; }
+  .eval-result-row {
+    border-top: 1px dashed var(--border-color);
+    padding-top: 10px; margin-top: 4px;
+  }
+  .eval-result {
+    color: var(--accent); font-weight: 700; font-size: 1.1rem;
+    padding: 2px 10px; border-radius: 6px;
+    background: var(--code-bg);
+  }
+  .powers-text {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+  }
+  .powers-arrow { color: var(--text-lighter); font-size: 13px; }
+  .powers-note {
+    text-align: center; margin-top: 10px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 11px; color: var(--text-lighter);
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span id="theme-icon">🌙</span>
+</button>
+<div class="container">
+  <div style="text-align:center;margin-bottom:1.75rem">
+    <h1>Binomial expansion with Pascal's triangle</h1>
+  </div>
+  <div class="n-selector" id="nSelector">
+    <span class="label">n =</span>
+  </div>
+  <div class="triangle-box">
+    <div class="triangle-inner" id="triangle"></div>
+  </div>
+  <div class="card" id="patternCard"></div>
+  <div class="card expansion-card" id="expansionCard"></div>
+  <div class="card eval-card" id="evalCard"></div>
+</div>
+
+<script>
+(function() {
+  var MAX_N = 12;
+  var selectedN = 4;
+  var hoveredCell = null;
+  var aVal = "2";
+  var bVal = "1";
+
+  var hPalette = [
+    "#0369a1","#c2410c","#7c3aed","#047857",
+    "#be185d","#4d7c0f","#4f46e5","#b45309",
+    "#0f766e","#9333ea","#15803d","#dc2626","#0284c7"
+  ];
+
+  var supMap = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
+  function sup(n) {
+    return String(n).split("").map(function(c){return supMap[c]||c;}).join("");
+  }
+
+  function pascalRow(n) {
+    var row = [1];
+    for (var k = 1; k <= n; k++) row.push(row[k-1]*(n-k+1)/k);
+    return row;
+  }
+
+  function allRows(max) {
+    var rows = [];
+    for (var i = 0; i <= max; i++) rows.push(pascalRow(i));
+    return rows;
+  }
+
+  var rows = allRows(MAX_N);
+  var animateTriangle = true;
+
+  function fmt(v) {
+    if (Number.isInteger(v)) return v;
+    if (Math.abs(v) < 0.0001) return v.toExponential(2);
+    return v.toFixed(4);
+  }
+
+  function esc(s) {
+    var d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function buildSelector() {
+    var el = document.getElementById("nSelector");
+    el.innerHTML = '<span class="label">n =</span>';
+    for (var i = 0; i <= MAX_N; i++) {
+      var btn = document.createElement("button");
+      btn.className = "n-btn" + (i === selectedN ? " active" : "");
+      btn.textContent = i;
+      btn.dataset.n = i;
+      btn.addEventListener("click", function() {
+        selectedN = parseInt(this.dataset.n);
+        hoveredCell = null;
+        animateTriangle = true;
+        render();
+      });
+      el.appendChild(btn);
+    }
+  }
+
+  function buildTriangle() {
+    var el = document.getElementById("triangle");
+    el.innerHTML = "";
+    var cellSize = Math.max(36, 48 - selectedN * 1.2);
+    for (var n = 0; n <= selectedN; n++) {
+      var rowDiv = document.createElement("div");
+      rowDiv.className = "tri-row";
+      if (animateTriangle) rowDiv.style.animation = "fadeSlideIn 0.3s ease " + (n * 0.04) + "s both";
+      for (var k = 0; k < rows[n].length; k++) {
+        var cell = document.createElement("div");
+        cell.className = "tri-cell" + (n === selectedN ? " selected-row" : "");
+        cell.style.width = cellSize + "px";
+        cell.style.height = cellSize + "px";
+        var val = Math.round(rows[n][k]);
+        cell.style.fontSize = (val > 999 ? 10 : val > 99 ? 11 : 13) + "px";
+        cell.textContent = val;
+        cell.dataset.n = n;
+        cell.dataset.k = k;
+        cell.addEventListener("mouseenter", onCellEnter);
+        cell.addEventListener("mouseleave", onCellLeave);
+        cell.addEventListener("click", onCellClick);
+        if (hoveredCell && hoveredCell.n === n && hoveredCell.k === k) {
+          var color = hPalette[k % hPalette.length];
+          cell.style.border = "2px solid " + color;
+          cell.style.background = color + "18";
+          cell.style.color = color;
+          cell.style.transform = "scale(1.15)";
+          cell.style.boxShadow = "0 0 12px " + color + "25";
+        }
+        rowDiv.appendChild(cell);
+      }
+      el.appendChild(rowDiv);
+    }
+    animateTriangle = false;
+  }
+
+  function onCellEnter(e) {
+    var n = parseInt(this.dataset.n);
+    var k = parseInt(this.dataset.k);
+    if (n === selectedN) {
+      hoveredCell = {n:n, k:k};
+      render();
+    }
+  }
+  function onCellLeave() {
+    hoveredCell = null;
+    render();
+  }
+  function onCellClick(e) {
+    var n = parseInt(this.dataset.n);
+    var k = parseInt(this.dataset.k);
+    if (n === selectedN) {
+      hoveredCell = (hoveredCell && hoveredCell.k === k) ? null : {n:n, k:k};
+    } else {
+      selectedN = n;
+      hoveredCell = null;
+      animateTriangle = true;
+    }
+    render();
+  }
+
+  function buildPattern() {
+    var el = document.getElementById("patternCard");
+    var n = selectedN;
+    var row = pascalRow(n);
+    var html = '<div class="card-title">General pattern for (a + b)' + sup(n) + '</div>';
+
+    html += '<div class="step-row">';
+    html += '<span class="step-label">1 — Coefficients</span>';
+    html += '<span style="font-size:14px;color:var(--accent)">Row ' + n + ':</span>';
+    html += '<div style="display:flex;gap:4px;flex-wrap:wrap">';
+    for (var i = 0; i < row.length; i++) {
+      var color = hPalette[i % hPalette.length];
+      html += '<span class="coeff-chip" style="color:' + color + ';background:' + color + '11">' + Math.round(row[i]) + '</span>';
+    }
+    html += '</div></div>';
+
+    html += '<div class="step-row" style="margin-bottom:0">';
+    html += '<span class="step-label">2 — Powers</span>';
+    html += '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center">';
+    if (n === 0) {
+      html += '<span class="powers-text" style="color:var(--text-color)">a⁰b⁰ = 1</span>';
+    } else {
+      html += '<span class="powers-text" style="color:var(--text-color)">a' + sup(n) + 'b⁰</span>';
+      if (n > 1) {
+        html += '<span class="powers-arrow">→</span>';
+        html += '<span class="powers-text" style="color:var(--text-muted)">a' + sup(n-1) + 'b¹</span>';
+      }
+      if (n > 3) {
+        html += '<span class="powers-arrow">→</span>';
+        html += '<span class="powers-arrow">⋯</span>';
+      }
+      if (n > 2) {
+        html += '<span class="powers-arrow">→</span>';
+        html += '<span class="powers-text" style="color:var(--text-muted)">a¹b' + sup(n-1) + '</span>';
+      }
+      html += '<span class="powers-arrow">→</span>';
+      html += '<span class="powers-text" style="color:var(--text-color)">a⁰b' + sup(n) + '</span>';
+    }
+    html += '</div></div>';
+
+    html += '<div class="powers-note">a descends ' + n + ' → 0 &nbsp;·&nbsp; b ascends 0 → ' + n + ' &nbsp;·&nbsp; each term\'s powers sum to ' + n + '</div>';
+
+    el.innerHTML = html;
+  }
+
+  function buildExpansion() {
+    var el = document.getElementById("expansionCard");
+    var n = selectedN;
+    var row = pascalRow(n);
+    var html = '<div class="expansion">';
+    html += '<span class="expansion-prefix">(a + b)' + sup(n) + ' =</span>';
+    for (var k = 0; k <= n; k++) {
+      var coeff = Math.round(row[k]);
+      var aPow = n - k;
+      var bPow = k;
+      var term = "";
+      if (coeff !== 1 || (aPow === 0 && bPow === 0)) term += coeff;
+      if (aPow > 0) term += "a" + (aPow > 1 ? sup(aPow) : "");
+      if (bPow > 0) term += "b" + (bPow > 1 ? sup(bPow) : "");
+
+      if (k > 0) html += '<span class="expansion-plus"> + </span>';
+
+      var isHighlighted = hoveredCell && hoveredCell.k === k;
+      var color = hPalette[k % hPalette.length];
+      var style = isHighlighted
+        ? "color:#fff;background:" + color + ";font-weight:700"
+        : "color:var(--text-color);background:transparent;font-weight:400";
+      html += '<span class="expansion-term" style="' + style + '">' + esc(term) + '</span>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function buildEval() {
+    var el = document.getElementById("evalCard");
+    var n = selectedN;
+    var aNum = parseFloat(aVal) || 0;
+    var bNum = parseFloat(bVal) || 0;
+    var row = pascalRow(n);
+    var terms = [];
+    var total = 0;
+    for (var k = 0; k <= n; k++) {
+      var coeff = Math.round(row[k]);
+      var aPow = n - k, bPow = k;
+      var val = coeff * Math.pow(aNum, aPow) * Math.pow(bNum, bPow);
+      terms.push({coeff:coeff, aPow:aPow, bPow:bPow, val:val});
+      total += val;
+    }
+
+    function powersStep(t) {
+      var parts = [String(t.coeff)];
+      if (t.aPow > 0) parts.push(aNum + (t.aPow > 1 ? sup(t.aPow) : ""));
+      if (t.bPow > 0) parts.push(bNum + (t.bPow > 1 ? sup(t.bPow) : ""));
+      return parts.join("·");
+    }
+
+    if (!document.getElementById("evalResults")) {
+      var inputsHtml = '<div class="eval-inputs">';
+      inputsHtml += '<span class="label">Evaluate with</span>';
+      inputsHtml += '<span class="var-label">a =</span>';
+      inputsHtml += '<input class="eval-input" id="inputA" value="' + esc(aVal) + '">';
+      inputsHtml += '<span class="var-label">b =</span>';
+      inputsHtml += '<input class="eval-input" id="inputB" value="' + esc(bVal) + '">';
+      inputsHtml += '</div>';
+      inputsHtml += '<div id="evalResults"></div>';
+      el.innerHTML = inputsHtml;
+
+      document.getElementById("inputA").addEventListener("input", function() {
+        aVal = this.value;
+        buildEval();
+      });
+      document.getElementById("inputB").addEventListener("input", function() {
+        bVal = this.value;
+        buildEval();
+      });
+    }
+
+    var html = '';
+
+    html += '<div class="eval-row"><span class="eval-label">Expand</span>';
+    html += '<span style="color:var(--accent)">(' + aNum + ' + ' + bNum + ')' + sup(n) + '</span></div>';
+
+    html += '<div class="eval-row"><span class="eval-label">Powers</span>';
+    html += '<div class="eval-terms">';
+    for (var i = 0; i < terms.length; i++) {
+      var color = hPalette[i % hPalette.length];
+      if (i > 0) html += '<span style="color:var(--text-lighter);margin:0 2px">+</span>';
+      html += '<span style="padding:2px 5px;border-radius:4px;background:' + color + '0a;color:' + color + '">' + esc(powersStep(terms[i])) + '</span>';
+    }
+    html += '</div></div>';
+
+    html += '<div class="eval-row"><span class="eval-label">Values</span>';
+    html += '<div class="eval-terms">';
+    for (var i = 0; i < terms.length; i++) {
+      if (i > 0) html += '<span style="color:var(--text-lighter);margin:0 2px">+</span>';
+      html += '<span style="padding:2px 5px;border-radius:4px;background:var(--code-bg);color:var(--text-color)">' + fmt(terms[i].val) + '</span>';
+    }
+    html += '</div></div>';
+
+    html += '<div class="eval-row eval-result-row"><span class="eval-label">Result</span>';
+    html += '<span class="eval-result">' + fmt(total) + '</span></div>';
+
+    document.getElementById("evalResults").innerHTML = html;
+  }
+
+  function render() {
+    buildSelector();
+    buildTriangle();
+    buildPattern();
+    buildExpansion();
+    buildEval();
+  }
+
+  render();
+})();
+</script>
+
+<script>
+(function() {
+    var themeToggle = document.getElementById('theme-toggle');
+    var themeIcon = document.getElementById('theme-icon');
+
+    function updateThemeIcon(theme) {
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        updateThemeIcon(theme);
+    }
+
+    var currentTheme = document.documentElement.getAttribute('data-theme');
+    updateThemeIcon(currentTheme);
+
+    themeToggle.addEventListener('click', function() {
+        var currentTheme = document.documentElement.getAttribute('data-theme');
+        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+})();
+</script>
+</body>
+</html>
