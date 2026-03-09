@@ -230,6 +230,7 @@
   }
 
   var rows = allRows(MAX_N);
+  var animateTriangle = true;
 
   function fmt(v) {
     if (Number.isInteger(v)) return v;
@@ -255,6 +256,7 @@
       btn.addEventListener("click", function() {
         selectedN = parseInt(this.dataset.n);
         hoveredCell = null;
+        animateTriangle = true;
         render();
       });
       el.appendChild(btn);
@@ -269,7 +271,7 @@
     for (var n = 0; n <= selectedN; n++) {
       var rowDiv = document.createElement("div");
       rowDiv.className = "tri-row";
-      rowDiv.style.animation = "fadeSlideIn 0.3s ease " + (n * 0.04) + "s both";
+      if (animateTriangle) rowDiv.style.animation = "fadeSlideIn 0.3s ease " + (n * 0.04) + "s both";
       for (var k = 0; k < rows[n].length; k++) {
         var cell = document.createElement("div");
         cell.className = "tri-cell" + (n === selectedN ? " selected-row" : "");
@@ -295,6 +297,7 @@
       }
       el.appendChild(rowDiv);
     }
+    animateTriangle = false;
   }
 
   function onCellEnter(e) {
@@ -317,6 +320,7 @@
     } else {
       selectedN = n;
       hoveredCell = null;
+      animateTriangle = true;
     }
     render();
   }
@@ -448,13 +452,28 @@
       return parts.join("·");
     }
 
-    var html = '<div class="eval-inputs">';
-    html += '<span class="label">Evaluate with</span>';
-    html += '<span class="var-label">a =</span>';
-    html += '<input class="eval-input" id="inputA" value="' + esc(aVal) + '">';
-    html += '<span class="var-label">b =</span>';
-    html += '<input class="eval-input" id="inputB" value="' + esc(bVal) + '">';
-    html += '</div>';
+    if (!document.getElementById("evalResults")) {
+      var inputsHtml = '<div class="eval-inputs">';
+      inputsHtml += '<span class="label">Evaluate with</span>';
+      inputsHtml += '<span class="var-label">a =</span>';
+      inputsHtml += '<input class="eval-input" id="inputA" value="' + esc(aVal) + '">';
+      inputsHtml += '<span class="var-label">b =</span>';
+      inputsHtml += '<input class="eval-input" id="inputB" value="' + esc(bVal) + '">';
+      inputsHtml += '</div>';
+      inputsHtml += '<div id="evalResults"></div>';
+      el.innerHTML = inputsHtml;
+
+      document.getElementById("inputA").addEventListener("input", function() {
+        aVal = this.value;
+        buildEval();
+      });
+      document.getElementById("inputB").addEventListener("input", function() {
+        bVal = this.value;
+        buildEval();
+      });
+    }
+
+    var html = '';
 
     // Expand
     html += '<div class="eval-row"><span class="eval-label">Expand</span>';
@@ -483,17 +502,7 @@
     html += '<div class="eval-row eval-result-row"><span class="eval-label">Result</span>';
     html += '<span class="eval-result">' + fmt(total) + '</span></div>';
 
-    el.innerHTML = html;
-
-    // Attach input listeners after rendering
-    document.getElementById("inputA").addEventListener("input", function() {
-      aVal = this.value;
-      buildEval();
-    });
-    document.getElementById("inputB").addEventListener("input", function() {
-      bVal = this.value;
-      buildEval();
-    });
+    document.getElementById("evalResults").innerHTML = html;
   }
 
   function render() {
