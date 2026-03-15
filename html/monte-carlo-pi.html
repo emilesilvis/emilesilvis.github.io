@@ -120,16 +120,15 @@
     var animId = null;
 
     function getThemeColors() {
-        var style = getComputedStyle(document.documentElement);
-        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var s = getComputedStyle(document.documentElement);
         return {
-            bg: isDark ? '#1a1a1a' : '#f5f0e8',
-            stroke: isDark ? '#ccc' : '#222',
-            circleStroke: isDark ? '#4a9eff' : '#4a7fb5',
-            circleFill: isDark ? 'rgba(74,158,255,0.06)' : 'rgba(74,127,181,0.06)',
-            label: isDark ? '#999' : '#555',
-            radiusLabel: isDark ? '#4a9eff' : '#4a7fb5',
-            radiusLine: isDark ? 'rgba(74,158,255,0.4)' : 'rgba(74,127,181,0.4)',
+            bg: s.getPropertyValue('--bio-bg').trim(),
+            stroke: s.getPropertyValue('--text-color').trim(),
+            circleStroke: s.getPropertyValue('--accent').trim(),
+            circleFill: s.getPropertyValue('--code-bg').trim(),
+            label: s.getPropertyValue('--text-muted').trim(),
+            radiusLabel: s.getPropertyValue('--accent').trim(),
+            radiusLine: s.getPropertyValue('--border-color').trim(),
         };
     }
 
@@ -142,8 +141,8 @@
         ctx.fillRect(0, 0, SIZE, SIZE);
 
         // Square
-        ctx.strokeStyle = c.stroke;
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = c.label;
+        ctx.lineWidth = 1.5;
         ctx.strokeRect(PAD, PAD, SIZE - PAD * 2, SIZE - PAD * 2);
 
         // Circle fill
@@ -156,7 +155,7 @@
         ctx.beginPath();
         ctx.arc(CENTER, CENTER, RADIUS, 0, Math.PI * 2);
         ctx.strokeStyle = c.circleStroke;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // Dots
@@ -169,7 +168,7 @@
         }
 
         // Labels
-        ctx.font = '13px Georgia, serif';
+        ctx.font = '13px system-ui, -apple-system, sans-serif';
         ctx.fillStyle = c.label;
         ctx.textAlign = 'center';
         ctx.fillText('side = 2', CENTER, SIZE - 8);
@@ -181,7 +180,7 @@
 
         // Radius label
         ctx.fillStyle = c.radiusLabel;
-        ctx.font = 'italic 13px Georgia, serif';
+        ctx.font = 'italic 13px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'left';
         ctx.beginPath();
         ctx.setLineDash([4, 4]);
