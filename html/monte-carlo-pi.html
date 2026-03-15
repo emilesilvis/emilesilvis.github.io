@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimating π with Monte Carlo</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script>
+    (function() {
+        var savedTheme = localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+</script>
+<style>
+  .container { max-width: 560px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 1.5rem; }
+  .subtitle {
+    text-align: center; font-size: 0.85rem; color: var(--text-muted);
+    font-style: italic; margin-bottom: 1.5rem;
+  }
+  .canvas-wrap {
+    display: flex; justify-content: center;
+  }
+  canvas {
+    border-radius: 6px;
+    box-shadow: 0 2px 16px var(--shadow-color);
+  }
+  .controls {
+    display: flex; gap: 8px; margin-top: 1.25rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .btn {
+    font-family: var(--body-font);
+    font-size: 13px; padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn:disabled {
+    opacity: 0.4; cursor: default;
+  }
+  .btn.active {
+    border-color: #c0392b;
+    background: rgba(192,57,43,0.08);
+    color: #c0392b;
+  }
+  .steps {
+    margin-top: 1.75rem; font-size: 0.9rem;
+    line-height: 2;
+  }
+  .step {
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  .step-num {
+    font-size: 11px; color: var(--text-muted);
+    min-width: 18px; text-align: right;
+    font-style: italic; flex-shrink: 0;
+  }
+  .step span { color: var(--text-color); }
+  .step b { font-weight: 700; color: var(--text-color); }
+  .inside-count { color: #2a8c5a; font-weight: 600; }
+  .outside-count { color: #c0392b; font-weight: 600; }
+  .result-box {
+    margin-top: 1rem; padding: 0.75rem 1rem;
+    background: var(--code-bg);
+    border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .result-box b { color: var(--text-color); }
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span id="theme-icon"></span>
+</button>
+<div class="container">
+  <div style="text-align:center;margin-bottom:0.5rem">
+    <h1>Estimating &pi; with random darts</h1>
+  </div>
+  <p class="subtitle">Throw darts at a square. Count how many land in the circle.</p>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="400" height="400"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn1" onclick="throwDarts(1)">Throw 1</button>
+    <button class="btn" id="btn10" onclick="throwDarts(10)">Throw 10</button>
+    <button class="btn" id="btn100" onclick="throwDarts(100)">Throw 100</button>
+    <button class="btn" id="btnRun" onclick="toggleRun()">Keep throwing</button>
+    <button class="btn" id="btnClear" onclick="clearAll()">Clear</button>
+  </div>
+
+  <div class="steps" id="steps"></div>
+</div>
+
+<script>
+(function() {
+    var SIZE = 400;
+    var PAD = 30;
+    var CENTER = SIZE / 2;
+    var RADIUS = (SIZE - PAD * 2) / 2;
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var points = [];
+    var inside = 0;
+    var total = 0;
+    var running = false;
+    var animId = null;
+
+    function getThemeColors() {
+        var style = getComputedStyle(document.documentElement);
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+            bg: isDark ? '#1a1a1a' : '#f5f0e8',
+            stroke: isDark ? '#ccc' : '#222',
+            circleStroke: isDark ? '#4a9eff' : '#4a7fb5',
+            circleFill: isDark ? 'rgba(74,158,255,0.06)' : 'rgba(74,127,181,0.06)',
+            label: isDark ? '#999' : '#555',
+            radiusLabel: isDark ? '#4a9eff' : '#4a7fb5',
+            radiusLine: isDark ? 'rgba(74,158,255,0.4)' : 'rgba(74,127,181,0.4)',
+        };
+    }
+
+    function draw() {
+        var c = getThemeColors();
+        ctx.clearRect(0, 0, SIZE, SIZE);
+
+        // Background
+        ctx.fillStyle = c.bg;
+        ctx.fillRect(0, 0, SIZE, SIZE);
+
+        // Square
+        ctx.strokeStyle = c.stroke;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(PAD, PAD, SIZE - PAD * 2, SIZE - PAD * 2);
+
+        // Circle fill
+        ctx.beginPath();
+        ctx.arc(CENTER, CENTER, RADIUS, 0, Math.PI * 2);
+        ctx.fillStyle = c.circleFill;
+        ctx.fill();
+
+        // Circle stroke
+        ctx.beginPath();
+        ctx.arc(CENTER, CENTER, RADIUS, 0, Math.PI * 2);
+        ctx.strokeStyle = c.circleStroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Dots
+        for (var i = 0; i < points.length; i++) {
+            var p = points[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = p.inside ? '#2a8c5a' : '#c0392b';
+            ctx.fill();
+        }
+
+        // Labels
+        ctx.font = '13px Georgia, serif';
+        ctx.fillStyle = c.label;
+        ctx.textAlign = 'center';
+        ctx.fillText('side = 2', CENTER, SIZE - 8);
+        ctx.save();
+        ctx.translate(12, CENTER);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('side = 2', 0, 0);
+        ctx.restore();
+
+        // Radius label
+        ctx.fillStyle = c.radiusLabel;
+        ctx.font = 'italic 13px Georgia, serif';
+        ctx.textAlign = 'left';
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(CENTER, CENTER);
+        ctx.lineTo(CENTER + RADIUS - 4, CENTER);
+        ctx.strokeStyle = c.radiusLine;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillText('r = 1', CENTER + RADIUS / 2 - 12, CENTER - 8);
+    }
+
+    function addPoints(n) {
+        for (var i = 0; i < n; i++) {
+            var rx = Math.random() * 2 - 1;
+            var ry = Math.random() * 2 - 1;
+            var isInside = rx * rx + ry * ry <= 1;
+            points.push({
+                x: CENTER + rx * RADIUS,
+                y: CENTER + ry * RADIUS,
+                inside: isInside,
+            });
+            total++;
+            if (isInside) inside++;
+        }
+        draw();
+        updateSteps();
+        updateButtons();
+    }
+
+    function updateSteps() {
+        var el = document.getElementById('steps');
+        var ratio = total > 0 ? inside / total : 0;
+        var piEst = ratio * 4;
+        var html = '';
+        html += step(1, 'The square has area <b>2 &times; 2 = 4</b>');
+        html += step(2, 'The circle has area <b>&pi; &times; 1&sup2; = &pi;</b>');
+        html += step(3, 'So the circle covers <b>&pi; &div; 4</b> of the square &mdash; that\'s the chance a random dart lands inside');
+        if (total > 0) {
+            html += step(4, 'Darts thrown: <b>' + total.toLocaleString() + '</b>');
+            html += step(5, 'Landed inside: <span class="inside-count">' + inside.toLocaleString() + '</span> &mdash; outside: <span class="outside-count">' + (total - inside).toLocaleString() + '</span>');
+            html += step(6, 'Fraction inside: ' + inside.toLocaleString() + ' &div; ' + total.toLocaleString() + ' = <b>' + ratio.toFixed(4) + '</b>');
+            html += step(7, 'That fraction &asymp; &pi; &div; 4, so <b>&pi; &asymp; ' + ratio.toFixed(4) + ' &times; 4 = ' + piEst.toFixed(4) + '</b>');
+        }
+        if (total >= 10) {
+            var diff = Math.abs(piEst - Math.PI).toFixed(4);
+            var msg = '';
+            if (total < 500) msg = '. Throw more darts!';
+            else if (total < 5000) msg = '. Getting closer.';
+            else msg = '. Nice convergence.';
+            html += '<div class="result-box">Real &pi; = 3.14159&hellip; &mdash; you\'re off by <b>' + diff + '</b>' + msg + '</div>';
+        }
+        el.innerHTML = html;
+    }
+
+    function step(n, content) {
+        return '<div class="step"><span class="step-num">' + n + '.</span><span>' + content + '</span></div>';
+    }
+
+    function updateButtons() {
+        var btns = [document.getElementById('btn1'), document.getElementById('btn10'), document.getElementById('btn100')];
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].disabled = running;
+        }
+        var runBtn = document.getElementById('btnRun');
+        if (running) {
+            runBtn.textContent = 'Stop';
+            runBtn.classList.add('active');
+        } else {
+            runBtn.textContent = 'Keep throwing';
+            runBtn.classList.remove('active');
+        }
+    }
+
+    window.throwDarts = function(n) {
+        if (!running) addPoints(n);
+    };
+
+    window.toggleRun = function() {
+        running = !running;
+        updateButtons();
+        if (running) {
+            function tick() {
+                addPoints(5);
+                animId = requestAnimationFrame(tick);
+            }
+            animId = requestAnimationFrame(tick);
+        } else {
+            if (animId) cancelAnimationFrame(animId);
+            animId = null;
+        }
+    };
+
+    window.clearAll = function() {
+        running = false;
+        if (animId) cancelAnimationFrame(animId);
+        animId = null;
+        points = [];
+        inside = 0;
+        total = 0;
+        draw();
+        updateSteps();
+        updateButtons();
+    };
+
+    // Redraw on theme change to update colors
+    var observer = new MutationObserver(function() { draw(); });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    draw();
+    updateSteps();
+
+    // Theme toggle
+    var themeToggle = document.getElementById('theme-toggle');
+    var themeIcon = document.getElementById('theme-icon');
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        updateThemeIcon(theme);
+    }
+
+    function updateThemeIcon(theme) {
+        themeIcon.textContent = theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+    }
+
+    var currentTheme = document.documentElement.getAttribute('data-theme');
+    updateThemeIcon(currentTheme);
+
+    themeToggle.addEventListener('click', function() {
+        var currentTheme = document.documentElement.getAttribute('data-theme');
+        var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    });
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+})();
+</script>
+</body>
+</html>
