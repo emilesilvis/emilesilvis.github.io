@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <rect width="800" height="400" fill="#0f0f0f" rx="8"/>
+
+  <!-- Clerical support (high exposure - red/orange) -->
+  <rect x="10" y="10" width="200" height="180" fill="#c86432" rx="4" opacity="0.85"/>
+  <text x="20" y="35" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Clerical support</text>
+  <text x="20" y="52" fill="white" font-family="system-ui" font-size="10" opacity="0.8">16.7M jobs · exposure: 9</text>
+
+  <!-- Professionals (high exposure) -->
+  <rect x="215" y="10" width="350" height="180" fill="#c8a032" rx="4" opacity="0.85"/>
+  <text x="225" y="35" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Professionals</text>
+  <text x="225" y="52" fill="white" font-family="system-ui" font-size="10" opacity="0.8">44.9M jobs · exposure: 5-8</text>
+
+  <!-- Managers -->
+  <rect x="570" y="10" width="220" height="100" fill="#c8a032" rx="4" opacity="0.85"/>
+  <text x="580" y="35" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Managers</text>
+  <text x="580" y="52" fill="white" font-family="system-ui" font-size="10" opacity="0.8">13.2M · exp: 6-7</text>
+
+  <!-- Technicians -->
+  <rect x="570" y="115" width="220" height="75" fill="#c88b32" rx="4" opacity="0.85"/>
+  <text x="580" y="140" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Technicians</text>
+  <text x="580" y="157" fill="white" font-family="system-ui" font-size="10" opacity="0.8">30.9M · exp: 3-8</text>
+
+  <!-- Service & sales (lower exposure - yellowish green) -->
+  <rect x="10" y="195" width="240" height="195" fill="#5ca822" rx="4" opacity="0.85"/>
+  <text x="20" y="220" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Service & sales</text>
+  <text x="20" y="237" fill="white" font-family="system-ui" font-size="10" opacity="0.8">30.8M jobs · exposure: 2-5</text>
+
+  <!-- Craft & trades (low exposure - green) -->
+  <rect x="255" y="195" width="220" height="195" fill="#368b22" rx="4" opacity="0.85"/>
+  <text x="265" y="220" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Craft & trades</text>
+  <text x="265" y="237" fill="white" font-family="system-ui" font-size="10" opacity="0.8">21.5M jobs · exposure: 1-2</text>
+
+  <!-- Elementary (low exposure - green) -->
+  <rect x="480" y="195" width="160" height="195" fill="#228b22" rx="4" opacity="0.85"/>
+  <text x="490" y="220" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Elementary</text>
+  <text x="490" y="237" fill="white" font-family="system-ui" font-size="10" opacity="0.8">15.9M · exp: 1</text>
+
+  <!-- Operators -->
+  <rect x="645" y="195" width="145" height="115" fill="#5c8b22" rx="4" opacity="0.85"/>
+  <text x="655" y="220" fill="white" font-family="system-ui" font-size="13" font-weight="bold">Operators</text>
+  <text x="655" y="237" fill="white" font-family="system-ui" font-size="10" opacity="0.8">12.7M · exp: 3-4</text>
+
+  <!-- Agriculture -->
+  <rect x="645" y="315" width="90" height="75" fill="#228b22" rx="4" opacity="0.85"/>
+  <text x="653" y="340" fill="white" font-family="system-ui" font-size="11" font-weight="bold">Agriculture</text>
+  <text x="653" y="355" fill="white" font-family="system-ui" font-size="9" opacity="0.8">6.3M · exp: 1-2</text>
+
+  <!-- Armed forces -->
+  <rect x="740" y="315" width="50" height="75" fill="#5ca822" rx="4" opacity="0.85"/>
+  <text x="746" y="340" fill="white" font-family="system-ui" font-size="8" font-weight="bold">Armed</text>
+  <text x="746" y="352" fill="white" font-family="system-ui" font-size="8" font-weight="bold">forces</text>
+</svg>
