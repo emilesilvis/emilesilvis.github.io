@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Exposure of the European Job Market</title>
-<link rel="stylesheet" href="/static/css/style.css">
+<title>🇪🇺 AI Exposure of the European Job Market</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script>
     (function() {
         var savedTheme = localStorage.getItem('theme') ||
@@ -13,15 +13,35 @@
     })();
 </script>
 <style>
+  :root {
+    --body-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --accent: #0069ff;
+    --bg-color: #fff;
+    --text-color: #222;
+    --text-muted: #666;
+    --border-color: #eee;
+    --code-bg: #f5f5f5;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+  [data-theme="dark"] {
+    --bg-color: #0f0f0f;
+    --text-color: #e4e4e4;
+    --text-muted: #a0a0a0;
+    --border-color: #333;
+    --code-bg: #1a1a1a;
+    --shadow-color: rgba(255, 255, 255, 0.1);
+    --accent: #4a9eff;
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: var(--body-font);
     background: var(--bg-color);
     color: var(--text-color);
     overflow: hidden;
+    height: 100vh;
   }
   .sidebar {
-    position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+    position: fixed; left: 0; top: 0; width: 240px; height: 100vh;
     padding: 20px 16px;
     overflow-y: auto;
     border-right: 1px solid var(--border-color);
@@ -53,10 +73,14 @@
   .legend { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
   .legend span { font-size: 0.65rem; color: var(--text-muted); }
   #legend-canvas { border-radius: 2px; }
-  canvas#canvas {
-    position: fixed; top: 0; right: 0; bottom: 0;
-    left: 240px;
+  #treemap {
+    position: fixed; top: 0; bottom: 0; left: 240px; right: 0;
   }
+  #treemap svg { width: 100%; height: 100%; display: block; }
+  .cell rect { opacity: 0.82; transition: opacity 0.1s; }
+  .cell:hover rect { opacity: 1; }
+  .cell text { fill: #fff; pointer-events: none; }
+  .cat-label { fill: var(--text-muted); font-size: 11px; pointer-events: none; }
   #tooltip {
     display: none; position: fixed; z-index: 100;
     background: var(--bg-color); border: 1px solid var(--border-color);
@@ -71,11 +95,18 @@
   #tooltip .tt-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
   #tooltip .tt-stat-label { color: var(--text-muted); }
   #tooltip .tt-stat-value { text-align: right; font-weight: 600; }
+  #tooltip .tt-rationale { color: var(--text-muted); font-size: 0.72rem; margin-top: 8px; line-height: 1.4; }
   .back-link {
     font-size: 0.72rem; color: var(--text-muted); text-decoration: none;
     display: inline-block; margin-bottom: 4px;
   }
   .back-link:hover { color: var(--accent); }
+  .theme-toggle {
+    font-family: var(--body-font); font-size: 12px; padding: 4px 10px;
+    border: 1px solid var(--border-color); border-radius: 4px;
+    background: var(--bg-color); color: var(--text-muted); cursor: pointer;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -83,7 +114,7 @@
 <div class="sidebar">
   <div>
     <a href="/" class="back-link">&larr; emilesilvis.com</a>
-    <h1 id="title">AI Exposure of the European Job Market</h1>
+    <h1 id="title">🇪🇺 AI Exposure of the European Job Market</h1>
     <div class="subtitle">ISCO-08 occupations &middot; <a href="https://ec.europa.eu/eurostat/databrowser/view/LFSA_EGAI2D" target="_blank">Eurostat LFS</a></div>
   </div>
   <div class="view-btns">
@@ -113,199 +144,69 @@
     <div class="sub" style="margin-top:3px;">Size = employment &middot; Color = AI exposure</div>
   </div>
   <div class="stat-section">
-    <div class="sub">Inspired by <a href="https://karpathy.ai/jobs/" target="_blank">Karpathy's US Job Market Visualizer</a>. AI exposure scores estimated by an LLM based on occupation descriptions. Source: <a href="https://ec.europa.eu/eurostat/databrowser/view/LFSA_EGAI2D" target="_blank">Eurostat</a>.</div>
+    <div class="sub">Inspired by <a href="https://karpathy.ai/jobs/" target="_blank">Karpathy's US Job Market Visualizer</a>. AI exposure scores estimated by an LLM based on occupation descriptions. Source: <a href="https://ec.europa.eu/eurostat/databrowser/view/LFSA_EGAI2D" target="_blank">Eurostat</a>. <a href="/static/data/job_market_data.json" target="_blank">Data (JSON)</a>.</div>
+  </div>
+  <div style="margin-top:auto;">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <span id="theme-icon">🌙</span>
+    </button>
   </div>
 </div>
 
-<canvas id="canvas"></canvas>
+<div id="treemap"></div>
 
 <div id="tooltip">
   <div class="tt-title" id="tt-title"></div>
   <div class="tt-category" id="tt-category"></div>
   <div class="tt-bar"><div class="tt-bar-fill" id="tt-bar-fill"></div></div>
   <div class="tt-stats" id="tt-stats"></div>
+  <div class="tt-rationale" id="tt-rationale"></div>
 </div>
 
 <script>
-// --- DATA ---
-// ISCO-08 2-digit occupations with employment (thousands) for EU27 and NL (2023)
-// Source: Eurostat Labour Force Survey (table LFSA_EGAI2D)
-// AI exposure scores: LLM-estimated (0-10 scale)
-const DATA = [
-  // ISCO 1: Managers
-  {isco:"11", title:"Chief executives & senior officials", category:"Managers", eu:2800, nl:140, exposure:7, rationale:"Strategic decision-making augmented by AI analytics, but leadership and stakeholder management remain human."},
-  {isco:"12", title:"Administrative & commercial managers", category:"Managers", eu:5200, nl:280, exposure:7, rationale:"Management of business operations increasingly supported by AI tools for planning, reporting and analysis."},
-  {isco:"13", title:"Production & specialised services managers", category:"Managers", eu:3400, nl:170, exposure:6, rationale:"Operational management benefits from AI-driven optimisation but requires physical presence and human judgment."},
-  {isco:"14", title:"Hospitality, retail & other services managers", category:"Managers", eu:1800, nl:95, exposure:5, rationale:"Customer-facing management with significant in-person requirements limits AI displacement."},
-
-  // ISCO 2: Professionals
-  {isco:"21", title:"Science & engineering professionals", category:"Professionals", eu:7200, nl:390, exposure:6, rationale:"Research and engineering increasingly AI-assisted but creative problem-solving and physical experimentation remain essential."},
-  {isco:"22", title:"Health professionals", category:"Professionals", eu:7800, nl:360, exposure:4, rationale:"Diagnosis may be AI-augmented but patient care, surgery and clinical judgment are fundamentally human tasks."},
-  {isco:"23", title:"Teaching professionals", category:"Professionals", eu:9200, nl:420, exposure:5, rationale:"AI tutoring tools emerging but classroom management, mentorship and social development require human presence."},
-  {isco:"24", title:"Business & administration professionals", category:"Professionals", eu:10500, nl:580, exposure:8, rationale:"Financial analysis, accounting, HR analytics and consulting are highly susceptible to LLM automation."},
-  {isco:"25", title:"ICT professionals", category:"Professionals", eu:4800, nl:420, exposure:8, rationale:"Software development, data analysis and IT architecture are core LLM capabilities with direct task overlap."},
-  {isco:"26", title:"Legal, social & cultural professionals", category:"Professionals", eu:5400, nl:290, exposure:7, rationale:"Legal research, writing, translation and content creation are strong LLM use cases."},
-
-  // ISCO 3: Technicians & associate professionals
-  {isco:"31", title:"Science & engineering associate professionals", category:"Technicians", eu:6800, nl:310, exposure:5, rationale:"Technical support roles blend hands-on work with documentation that AI can assist with."},
-  {isco:"32", title:"Health associate professionals", category:"Technicians", eu:5600, nl:290, exposure:3, rationale:"Nursing, physiotherapy and other care roles require physical presence and patient interaction."},
-  {isco:"33", title:"Business & administration associate professionals", category:"Technicians", eu:12800, nl:650, exposure:8, rationale:"Bookkeeping, data entry, insurance and financial clerking are highly automatable by AI."},
-  {isco:"34", title:"Legal, social, cultural & related associate professionals", category:"Technicians", eu:3600, nl:180, exposure:6, rationale:"Media, design and social work have mixed exposure — creative tasks augmented, administrative tasks automated."},
-  {isco:"35", title:"ICT technicians", category:"Technicians", eu:2100, nl:120, exposure:7, rationale:"IT support, network operations and systems administration increasingly handled by AI agents."},
-
-  // ISCO 4: Clerical support workers
-  {isco:"41", title:"General & keyboard clerks", category:"Clerical support", eu:8200, nl:380, exposure:9, rationale:"Typing, data entry, secretarial and general office work are among the most directly automatable tasks."},
-  {isco:"42", title:"Customer services clerks", category:"Clerical support", eu:4200, nl:190, exposure:8, rationale:"Call centres, help desks and customer service are rapidly being augmented or replaced by AI chatbots."},
-  {isco:"43", title:"Numerical & material recording clerks", category:"Clerical support", eu:3200, nl:140, exposure:9, rationale:"Accounting clerks, bookkeepers and stock clerks perform highly structured tasks that AI handles well."},
-  {isco:"44", title:"Other clerical support workers", category:"Clerical support", eu:1100, nl:50, exposure:8, rationale:"Mail clerks, coding clerks and filing clerks do routine information processing that AI can replace."},
-
-  // ISCO 5: Service & sales workers
-  {isco:"51", title:"Personal service workers", category:"Service & sales", eu:9800, nl:420, exposure:3, rationale:"Cooks, waiters, hairdressers and travel attendants require physical presence and interpersonal skills."},
-  {isco:"52", title:"Sales workers", category:"Service & sales", eu:11200, nl:480, exposure:5, rationale:"Retail sales is partly automatable (self-checkout, online) but personal selling remains valuable."},
-  {isco:"53", title:"Personal care workers", category:"Service & sales", eu:7200, nl:380, exposure:2, rationale:"Childcare, elderly care and home-based personal care are fundamentally physical and emotional tasks."},
-  {isco:"54", title:"Protective services workers", category:"Service & sales", eu:2600, nl:100, exposure:3, rationale:"Police, firefighters and security guards require physical presence and real-world judgment."},
-
-  // ISCO 6: Skilled agricultural, forestry & fishery workers
-  {isco:"61", title:"Market-oriented skilled agricultural workers", category:"Agriculture", eu:4600, nl:120, exposure:2, rationale:"Farming, horticulture and animal husbandry are physical outdoor tasks with limited AI applicability."},
-  {isco:"62", title:"Market-oriented skilled forestry & fishery workers", category:"Agriculture", eu:450, nl:12, exposure:2, rationale:"Forestry and fishing are physically demanding outdoor occupations in unpredictable environments."},
-  {isco:"63", title:"Subsistence farmers & fishers", category:"Agriculture", eu:1200, nl:5, exposure:1, rationale:"Subsistence work is entirely physical and location-dependent."},
-
-  // ISCO 7: Craft & related trades workers
-  {isco:"71", title:"Building & related trades workers (excl. electricians)", category:"Craft & trades", eu:7200, nl:280, exposure:1, rationale:"Bricklaying, plastering, roofing and carpentry are irreducibly physical trades."},
-  {isco:"72", title:"Metal, machinery & related trades workers", category:"Craft & trades", eu:5800, nl:210, exposure:2, rationale:"Welding, machining and mechanical repair require hands-on dexterity and physical problem-solving."},
-  {isco:"73", title:"Handicraft & printing workers", category:"Craft & trades", eu:480, nl:18, exposure:4, rationale:"Printing is increasingly digital (some AI exposure) but handicraft remains physical."},
-  {isco:"74", title:"Electrical & electronic trades workers", category:"Craft & trades", eu:3200, nl:130, exposure:2, rationale:"Electrical installation and electronics repair require physical access and manual skills."},
-  {isco:"75", title:"Food processing, woodworking, garment & other craft workers", category:"Craft & trades", eu:4800, nl:140, exposure:2, rationale:"Food production, tailoring and woodworking are physical manufacturing tasks."},
-
-  // ISCO 8: Plant & machine operators and assemblers
-  {isco:"81", title:"Stationary plant & machine operators", category:"Operators", eu:3100, nl:80, exposure:3, rationale:"Operating industrial machinery requires physical presence, though monitoring may be AI-assisted."},
-  {isco:"82", title:"Assemblers", category:"Operators", eu:2200, nl:55, exposure:3, rationale:"Assembly line work is physical and repetitive — robot-automatable but not LLM-automatable."},
-  {isco:"83", title:"Drivers & mobile plant operators", category:"Operators", eu:7400, nl:250, exposure:4, rationale:"Driving is targeted by autonomous vehicles but widespread replacement is still years away."},
-
-  // ISCO 9: Elementary occupations
-  {isco:"91", title:"Cleaners & helpers", category:"Elementary", eu:6200, nl:280, exposure:1, rationale:"Cleaning requires physical navigation of varied environments — among the least AI-exposed jobs."},
-  {isco:"92", title:"Agricultural, forestry & fishery labourers", category:"Elementary", eu:1800, nl:40, exposure:1, rationale:"Manual outdoor labour in unpredictable conditions."},
-  {isco:"93", title:"Labourers in mining, construction, manufacturing & transport", category:"Elementary", eu:5200, nl:180, exposure:1, rationale:"Heavy physical labour with no meaningful text/data processing component."},
-  {isco:"94", title:"Food preparation assistants", category:"Elementary", eu:1600, nl:70, exposure:2, rationale:"Kitchen work is physical and fast-paced with minimal digital component."},
-  {isco:"96", title:"Refuse workers & other elementary workers", category:"Elementary", eu:1100, nl:45, exposure:1, rationale:"Waste collection and other manual tasks require physical presence."},
-
-  // ISCO 0: Armed forces
-  {isco:"01", title:"Commissioned armed forces officers", category:"Armed forces", eu:500, nl:8, exposure:4, rationale:"Military strategy may benefit from AI analysis but command authority remains human."},
-  {isco:"02", title:"Non-commissioned armed forces officers", category:"Armed forces", eu:550, nl:10, exposure:3, rationale:"Tactical operations require physical presence and leadership."},
-  {isco:"03", title:"Armed forces occupations, other ranks", category:"Armed forces", eu:600, nl:12, exposure:2, rationale:"Combat and operational roles are fundamentally physical."},
-];
-
-// --- TREEMAP LAYOUT ---
-function squarify(items, x, y, w, h) {
-  if (!items.length) return [];
-  const rects = [];
-  const total = items.reduce((s, d) => s + d.value, 0);
-  if (total <= 0 || w <= 0 || h <= 0) return [];
-
-  let remaining = [...items];
-  let cx = x, cy = y, cw = w, ch = h;
-
-  while (remaining.length) {
-    const isWide = cw >= ch;
-    const side = isWide ? ch : cw;
-    const areaLeft = remaining.reduce((s, d) => s + d.value, 0);
-    const scale = (cw * ch) / areaLeft;
-
-    let row = [remaining[0]];
-    let rowArea = remaining[0].value * scale;
-    let bestWorst = worstAspect(row, rowArea, side, scale);
-
-    for (let i = 1; i < remaining.length; i++) {
-      const next = [...row, remaining[i]];
-      const nextArea = rowArea + remaining[i].value * scale;
-      const w2 = worstAspect(next, nextArea, side, scale);
-      if (w2 > bestWorst) break;
-      row = next;
-      rowArea = nextArea;
-      bestWorst = w2;
-    }
-
-    const rowLen = rowArea / side;
-    let offset = 0;
-    for (const d of row) {
-      const sz = (d.value * scale) / rowLen;
-      if (isWide) {
-        rects.push({ ...d, x: cx, y: cy + offset, w: rowLen, h: sz });
-      } else {
-        rects.push({ ...d, x: cx + offset, y: cy, w: sz, h: rowLen });
-      }
-      offset += sz;
-    }
-
-    remaining = remaining.slice(row.length);
-    if (isWide) { cx += rowLen; cw -= rowLen; }
-    else { cy += rowLen; ch -= rowLen; }
-  }
-  return rects;
-}
-
-function worstAspect(row, totalArea, side, scale) {
-  const rowLen = totalArea / side;
-  if (rowLen <= 0) return Infinity;
-  let worst = 0;
-  for (const d of row) {
-    const sz = (d.value * scale) / rowLen;
-    const ar = Math.max(rowLen / sz, sz / rowLen);
-    if (ar > worst) worst = ar;
-  }
-  return worst;
-}
+let DATA = [];
 
 // --- COLOR ---
-function exposureColor(score) {
-  const t = score / 10;
-  let r, g, b;
-  if (t < 0.5) {
-    const s = t * 2;
-    r = Math.round(34 + s * (200 - 34));
-    g = Math.round(139 + s * (180 - 139));
-    b = Math.round(34 + s * (50 - 34));
-  } else {
-    const s = (t - 0.5) * 2;
-    r = Math.round(200 + s * (180 - 200));
-    g = Math.round(180 - s * 150);
-    b = Math.round(50 - s * 20);
-  }
-  return `rgb(${r},${g},${b})`;
-}
+const exposureColor = d3.scaleLinear()
+  .domain([0, 5, 10])
+  .range(['#228b22', '#c8b432', '#b41e1e'])
+  .clamp(true);
 
 // --- STATE ---
 let region = 'eu';
-let rects = [];
-let hovered = null;
 
 function setRegion(r) {
   region = r;
   document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`.view-btn[onclick="setRegion('${r}')"]`).classList.add('active');
   document.getElementById('title').textContent =
-    r === 'nl' ? 'AI Exposure of the Dutch Job Market' : 'AI Exposure of the European Job Market';
+    r === 'nl' ? '🇳🇱 AI Exposure of the Dutch Job Market' : '🇪🇺 AI Exposure of the European Job Market';
   draw();
 }
 
 // --- STATS ---
-function computeStats(data, key) {
+function updateStats(key) {
   let totalJobs = 0, weightedSum = 0;
-  for (const d of data) {
+  for (const d of DATA) {
     const v = d[key] || 0;
     totalJobs += v;
     weightedSum += v * d.exposure;
   }
   const avgExposure = totalJobs > 0 ? weightedSum / totalJobs : 0;
 
+  document.getElementById('stat-total').textContent =
+    (totalJobs / 1000).toFixed(1) + ' million';
+  document.getElementById('stat-avg').textContent =
+    avgExposure.toFixed(1) + ' / 10';
+
   const tiers = [
-    { name: 'Minimal (0-2)', min: 0, max: 2, jobs: 0, color: exposureColor(1) },
-    { name: 'Low (3-4)', min: 3, max: 4, jobs: 0, color: exposureColor(3.5) },
-    { name: 'Moderate (5-6)', min: 5, max: 6, jobs: 0, color: exposureColor(5.5) },
-    { name: 'High (7-8)', min: 7, max: 8, jobs: 0, color: exposureColor(7.5) },
-    { name: 'Very high (9-10)', min: 9, max: 10, jobs: 0, color: exposureColor(9.5) },
+    { name: 'Minimal (0-2)', min: 0, max: 2, jobs: 0 },
+    { name: 'Low (3-4)', min: 3, max: 4, jobs: 0 },
+    { name: 'Moderate (5-6)', min: 5, max: 6, jobs: 0 },
+    { name: 'High (7-8)', min: 7, max: 8, jobs: 0 },
+    { name: 'Very high (9-10)', min: 9, max: 10, jobs: 0 },
   ];
-  for (const d of data) {
+  for (const d of DATA) {
     for (const t of tiers) {
       if (d.exposure >= t.min && d.exposure <= t.max) {
         t.jobs += d[key] || 0;
@@ -313,29 +214,18 @@ function computeStats(data, key) {
       }
     }
   }
-
-  return { totalJobs, avgExposure, tiers };
-}
-
-function updateStats(stats) {
-  document.getElementById('stat-total').textContent =
-    (stats.totalJobs / 1000).toFixed(1) + ' million';
-  document.getElementById('stat-avg').textContent =
-    stats.avgExposure.toFixed(1) + ' / 10';
-
+  const maxJobs = Math.max(...tiers.map(t => t.jobs));
   const tierList = document.getElementById('tier-list');
-  tierList.innerHTML = '';
-  const maxJobs = Math.max(...stats.tiers.map(t => t.jobs));
-  for (const t of stats.tiers) {
-    const pct = stats.totalJobs > 0 ? (t.jobs / stats.totalJobs * 100) : 0;
+  tierList.innerHTML = tiers.map(t => {
+    const pct = totalJobs > 0 ? (t.jobs / totalJobs * 100) : 0;
     const barW = maxJobs > 0 ? (t.jobs / maxJobs * 60) : 0;
-    tierList.innerHTML += `
-      <div class="tier-row">
-        <span class="tier-label">${t.name}</span>
-        <div class="tier-bar" style="width:${barW}px;background:${t.color};"></div>
-        <span class="tier-pct">${pct.toFixed(0)}%</span>
-      </div>`;
-  }
+    const color = exposureColor((t.min + t.max) / 2);
+    return `<div class="tier-row">
+      <span class="tier-label">${t.name}</span>
+      <div class="tier-bar" style="width:${barW}px;background:${color};"></div>
+      <span class="tier-pct">${pct.toFixed(0)}%</span>
+    </div>`;
+  }).join('');
 }
 
 // --- LEGEND ---
@@ -348,174 +238,188 @@ function drawLegend() {
   }
 }
 
-// --- DRAW ---
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+// --- TOOLTIP ---
+const tooltip = document.getElementById('tooltip');
 
-function draw() {
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.clientWidth;
-  const H = canvas.clientHeight;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
+function showTooltip(e, d) {
+  const jobs = d.data[region] || 0;
+  const jobStr = jobs >= 1000 ? (jobs / 1000).toFixed(1) + ' million' : jobs + ',000';
 
-  const key = region === 'nl' ? 'nl' : 'eu';
-  const items = DATA.filter(d => (d[key] || 0) > 0)
-    .sort((a, b) => (b[key] || 0) - (a[key] || 0))
-    .map(d => ({ ...d, value: d[key] }));
+  document.getElementById('tt-title').textContent = d.data.title;
+  document.getElementById('tt-category').textContent = d.data.category + ' · ISCO ' + d.data.isco;
+  const barFill = document.getElementById('tt-bar-fill');
+  barFill.style.width = (d.data.exposure * 10) + '%';
+  barFill.style.background = exposureColor(d.data.exposure);
+  document.getElementById('tt-stats').innerHTML = `
+    <span class="tt-stat-label">Employment</span><span class="tt-stat-value">${jobStr}</span>
+    <span class="tt-stat-label">AI exposure</span><span class="tt-stat-value">${d.data.exposure} / 10</span>
+  `;
+  document.getElementById('tt-rationale').textContent = d.data.rationale || '';
 
-  // Group by category, then squarify within groups
-  const categories = {};
-  for (const d of items) {
-    if (!categories[d.category]) categories[d.category] = [];
-    categories[d.category].push(d);
-  }
-
-  const catItems = Object.entries(categories).map(([name, items]) => ({
-    name,
-    value: items.reduce((s, d) => s + d.value, 0),
-    children: items,
-  })).sort((a, b) => b.value - a.value);
-
-  const pad = 3;
-  const headerH = 16;
-  const catRects = squarify(
-    catItems.map(c => ({ ...c, value: c.value })),
-    pad, pad, W - pad * 2, H - pad * 2
-  );
-
-  rects = [];
-  ctx.clearRect(0, 0, W, H);
-
-  for (let i = 0; i < catRects.length; i++) {
-    const cr = catRects[i];
-    const cat = catItems[i];
-
-    // Category background
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--code-bg').trim() || '#1a1a1a';
-    ctx.fillRect(cr.x, cr.y, cr.w, cr.h);
-
-    // Category label
-    if (cr.w > 50 && cr.h > headerH + 10) {
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#999';
-      ctx.font = '11px system-ui, sans-serif';
-      ctx.fillText(cat.name, cr.x + 4, cr.y + 12);
-    }
-
-    // Squarify children within this category rect
-    const innerY = cr.y + headerH;
-    const innerH = cr.h - headerH;
-    if (innerH > 0 && cr.w > 0) {
-      const childRects = squarify(
-        cat.children.map(c => ({ ...c, value: c.value })),
-        cr.x + 1, innerY, cr.w - 2, innerH - 1
-      );
-
-      for (const r of childRects) {
-        const gapPx = 1.5;
-        const rx = r.x + gapPx;
-        const ry = r.y + gapPx;
-        const rw = r.w - gapPx * 2;
-        const rh = r.h - gapPx * 2;
-
-        if (rw <= 0 || rh <= 0) continue;
-
-        ctx.fillStyle = exposureColor(r.exposure);
-        ctx.globalAlpha = hovered && hovered.isco === r.isco ? 1 : 0.82;
-        ctx.fillRect(rx, ry, rw, rh);
-        ctx.globalAlpha = 1;
-
-        // Label
-        if (rw > 40 && rh > 16) {
-          ctx.fillStyle = '#fff';
-          ctx.font = rw > 100 && rh > 28 ? 'bold 12px system-ui, sans-serif' : '10px system-ui, sans-serif';
-          const label = r.title;
-          const maxW = rw - 6;
-          let text = label;
-          if (ctx.measureText(text).width > maxW) {
-            while (text.length > 3 && ctx.measureText(text + '...').width > maxW) text = text.slice(0, -1);
-            text += '...';
-          }
-          ctx.fillText(text, rx + 3, ry + (rh > 28 ? 15 : 12));
-
-          // Jobs count
-          if (rh > 30 && rw > 60) {
-            ctx.font = '10px system-ui, sans-serif';
-            ctx.globalAlpha = 0.8;
-            const jobText = r.value >= 1000 ? (r.value / 1000).toFixed(1) + 'M' : r.value + 'K';
-            ctx.fillText(jobText + ' jobs · exposure: ' + r.exposure, rx + 3, ry + 28);
-            ctx.globalAlpha = 1;
-          }
-        }
-
-        rects.push({ ...r, rx, ry, rw, rh });
-      }
-    }
-  }
-
-  const stats = computeStats(DATA, key);
-  updateStats(stats);
+  tooltip.style.display = 'block';
+  let tx = e.clientX + 14;
+  let ty = e.clientY + 14;
+  if (tx + 320 > window.innerWidth) tx = e.clientX - 330;
+  if (ty + 160 > window.innerHeight) ty = e.clientY - 170;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = ty + 'px';
 }
 
-// --- INTERACTION ---
-canvas.addEventListener('mousemove', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+function moveTooltip(e) {
+  let tx = e.clientX + 14;
+  let ty = e.clientY + 14;
+  if (tx + 320 > window.innerWidth) tx = e.clientX - 330;
+  if (ty + 160 > window.innerHeight) ty = e.clientY - 170;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = ty + 'px';
+}
 
-  let found = null;
-  for (const r of rects) {
-    if (mx >= r.rx && mx <= r.rx + r.rw && my >= r.ry && my <= r.ry + r.rh) {
-      found = r;
-      break;
-    }
+function hideTooltip() {
+  tooltip.style.display = 'none';
+}
+
+// --- TREEMAP ---
+const container = document.getElementById('treemap');
+const svg = d3.select(container).append('svg');
+const PAD_TOP = 18;
+const PAD_INNER = 2;
+
+function draw() {
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+
+  const key = region === 'nl' ? 'nl' : 'eu';
+  updateStats(key);
+
+  const grouped = d3.groups(DATA.filter(d => (d[key] || 0) > 0), d => d.category);
+  const hierarchyData = {
+    name: 'root',
+    children: grouped.map(([cat, items]) => ({
+      name: cat,
+      children: items.map(d => ({ name: d.title, ...d, value: d[key] }))
+    }))
+  };
+
+  const root = d3.hierarchy(hierarchyData)
+    .sum(d => d.value || 0)
+    .sort((a, b) => b.value - a.value);
+
+  d3.treemap()
+    .size([W, H])
+    .paddingTop(PAD_TOP)
+    .paddingInner(PAD_INNER)
+    .paddingOuter(3)
+    .round(true)
+    .tile(d3.treemapSquarify.ratio(1.2))
+    (root);
+
+  // Category groups (depth 1)
+  const cats = root.children || [];
+  const catSel = svg.selectAll('g.cat-group')
+    .data(cats, d => d.data.name);
+
+  catSel.exit().remove();
+
+  const catEnter = catSel.enter().append('g').attr('class', 'cat-group');
+  catEnter.append('rect').attr('class', 'cat-bg');
+  catEnter.append('text').attr('class', 'cat-label');
+
+  const catMerge = catEnter.merge(catSel);
+
+  catMerge.select('rect.cat-bg')
+    .attr('x', d => d.x0).attr('y', d => d.y0)
+    .attr('width', d => d.x1 - d.x0).attr('height', d => d.y1 - d.y0)
+    .attr('fill', 'var(--code-bg)');
+
+  catMerge.select('text.cat-label')
+    .attr('x', d => d.x0 + 4).attr('y', d => d.y0 + 13)
+    .text(d => (d.x1 - d.x0 > 50 && d.y1 - d.y0 > 24) ? d.data.name : '');
+
+  // Leaf cells (depth 2)
+  const leaves = root.leaves();
+  const cellSel = svg.selectAll('g.cell')
+    .data(leaves, d => d.data.isco);
+
+  cellSel.exit().remove();
+
+  const cellEnter = cellSel.enter().append('g').attr('class', 'cell');
+  cellEnter.append('rect');
+  cellEnter.append('text').attr('class', 'cell-title');
+  cellEnter.append('text').attr('class', 'cell-detail');
+
+  const cellMerge = cellEnter.merge(cellSel);
+
+  cellMerge
+    .on('mouseenter', (e, d) => showTooltip(e, d))
+    .on('mousemove', moveTooltip)
+    .on('mouseleave', hideTooltip);
+
+  cellMerge.select('rect')
+    .attr('x', d => d.x0).attr('y', d => d.y0)
+    .attr('width', d => Math.max(0, d.x1 - d.x0))
+    .attr('height', d => Math.max(0, d.y1 - d.y0))
+    .attr('fill', d => exposureColor(d.data.exposure));
+
+  cellMerge.select('text.cell-title')
+    .attr('x', d => d.x0 + 4).attr('y', d => d.y0 + 14)
+    .attr('font-size', d => (d.x1 - d.x0 > 100 && d.y1 - d.y0 > 28) ? '12px' : '10px')
+    .attr('font-weight', d => (d.x1 - d.x0 > 100 && d.y1 - d.y0 > 28) ? '700' : '400')
+    .each(function(d) {
+      const w = d.x1 - d.x0;
+      const h = d.y1 - d.y0;
+      if (w < 40 || h < 16) { this.textContent = ''; return; }
+      this.textContent = d.data.title;
+      while (this.getComputedTextLength() > w - 8 && this.textContent.length > 3) {
+        this.textContent = this.textContent.slice(0, -4) + '…';
+      }
+    });
+
+  cellMerge.select('text.cell-detail')
+    .attr('x', d => d.x0 + 4).attr('y', d => d.y0 + 27)
+    .attr('font-size', '10px').attr('opacity', 0.8)
+    .text(d => {
+      const w = d.x1 - d.x0;
+      const h = d.y1 - d.y0;
+      if (w < 60 || h < 32) return '';
+      const v = d.data[key];
+      const jobText = v >= 1000 ? (v / 1000).toFixed(1) + 'M' : v + 'K';
+      return jobText + ' jobs · exposure: ' + d.data.exposure;
+    });
+}
+
+// --- THEME TOGGLE ---
+(function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  function updateThemeIcon(theme) {
+    themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
-
-  if (found !== hovered) {
-    hovered = found;
-    draw();
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    updateThemeIcon(theme);
+    drawLegend();
   }
-
-  const tooltip = document.getElementById('tooltip');
-  if (found) {
-    const key = region === 'nl' ? 'nl' : 'eu';
-    const jobs = found[key] || 0;
-    const jobStr = jobs >= 1000 ? (jobs / 1000).toFixed(1) + ' million' : jobs + ',000';
-
-    document.getElementById('tt-title').textContent = found.title;
-    document.getElementById('tt-category').textContent = found.category + ' · ISCO ' + found.isco;
-    const barFill = document.getElementById('tt-bar-fill');
-    barFill.style.width = (found.exposure * 10) + '%';
-    barFill.style.background = exposureColor(found.exposure);
-
-    document.getElementById('tt-stats').innerHTML = `
-      <span class="tt-stat-label">Employment</span><span class="tt-stat-value">${jobStr}</span>
-      <span class="tt-stat-label">AI exposure</span><span class="tt-stat-value">${found.exposure} / 10</span>
-    `;
-
-    tooltip.style.display = 'block';
-    let tx = e.clientX + 14;
-    let ty = e.clientY + 14;
-    if (tx + 320 > window.innerWidth) tx = e.clientX - 330;
-    if (ty + 160 > window.innerHeight) ty = e.clientY - 170;
-    tooltip.style.left = tx + 'px';
-    tooltip.style.top = ty + 'px';
-  } else {
-    tooltip.style.display = 'none';
-  }
-});
-
-canvas.addEventListener('mouseleave', () => {
-  hovered = null;
-  document.getElementById('tooltip').style.display = 'none';
-  draw();
-});
+  updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+  themeToggle.addEventListener('click', function() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    setTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    if (!localStorage.getItem('theme')) setTheme(e.matches ? 'dark' : 'light');
+  });
+})();
 
 // --- INIT ---
-window.addEventListener('resize', draw);
-drawLegend();
-draw();
+async function init() {
+  const resp = await fetch('/static/data/job_market_data.json');
+  DATA = await resp.json();
+  window.addEventListener('resize', draw);
+  drawLegend();
+  draw();
+}
+init();
 </script>
 </body>
 </html>
