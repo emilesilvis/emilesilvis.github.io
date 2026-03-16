@@ -9,9 +9,9 @@ Yesterday Andrej Karpathy [published a treemap](https://karpathy.ai/jobs/) visua
 
 I immediately wondered: what does this look like for the Netherlands and for Europe?
 
-So I built it: [**interactive treemap for the Netherlands and Europe**](/job-market-treemap.html).
+So I built it: [**interactive treemap for the Netherlands and Europe**](/job-market-treemap-interactive.html).
 
-[![Job market treemap](/static/images/16-03-2026-job-market-treemap/preview.svg)](/job-market-treemap.html)
+[![Job market treemap](/static/images/16-03-2026-job-market-treemap/preview.svg)](/job-market-treemap-interactive.html)
 
 The treemap uses [ISCO-08](https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Glossary:International_standard_classification_of_occupations_(ISCO)) occupation categories from the [Eurostat Labour Force Survey](https://ec.europa.eu/eurostat/databrowser/view/LFSA_EGAI2D). Each rectangle's **size** represents employment volume and its **color** represents AI exposure (green = low, red = high). You can toggle between Europe and the Netherlands.
 
@@ -51,6 +51,6 @@ Return only the integer score and a one-sentence rationale."""
 
 **3. Build the treemap**
 
-The [visualisation](/job-market-treemap.html) is a single HTML file using the Canvas API with a [squarified treemap](https://www.win.tue.nl/~vanwijk/stm.pdf) layout algorithm. No dependencies. The data is embedded directly in the HTML as a JavaScript array.
+The [visualisation](/job-market-treemap-interactive.html) is a single HTML file using the Canvas API with a [squarified treemap](https://www.win.tue.nl/~vanwijk/stm.pdf) layout algorithm. No dependencies. The data is embedded directly in the HTML as a JavaScript array.
 
-The full source is in the [repo](https://github.com/emilesilvis/emilesilvis.github.io/blob/main/html/job-market-treemap.html).
+The full source is in the [repo](https://github.com/emilesilvis/emilesilvis.github.io/blob/main/html/job-market-treemap-interactive.html).
