@@ -22,7 +22,7 @@ Some surprises though. Science and engineering professionals: **8/10** — is it
 
 What does this mean? Honestly, it's hard to say. High exposure doesn't necessarily mean displacement — it might just mean augmentation. The same uncertainty applies whether you're an ICT professional or a teacher. We're in genuinely uncharted territory, and I don't think anyone has a confident read on how this plays out job by job.
 
-What I do feel confident about is the longer arc. The things this technology could unlock — accelerated scientific discovery, better medicine, more access to expertise — seem genuinely exciting to me. If the history of productivity-shifting technologies is any guide, the disruption is real but so is what comes after. I'm optimistic about where this leads for humanity, even if the transition is messy!
+What I do feel confident about is the longer arc. The things this technology could unlock — accelerated scientific discovery, better medicine, more access to expertise — seem genuinely exciting to me. If the history of productivity-shifting technologies is any guide, the disruption is real but so is what comes after. I'm optimistic about where this leads for humanity, even if the transition is messy.
 
 ## How I built this
 
