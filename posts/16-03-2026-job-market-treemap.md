@@ -10,7 +10,7 @@ Andrej Karpathy recetly [built this for the US](https://karpathy.ai/jobs/). I wa
 
 [![Job market treemap](/static/images/16-03-2026-job-market-treemap/screenshot.png)](/job-market-treemap-interactive.html)
 
-I see the same pattern as the US: if your whole job happens on a screen, it's not looking great.
+I see the same pattern as the US: knowledge work scores high, physical work scores low.
 
 ICT professionals: **9/10**.
 Business & admin professionals: **8/10**.
@@ -19,6 +19,10 @@ Cleaners: **1/10**.
 Average across all European jobs: **4.9/10**.
 
 Some surprises though. Science and engineering professionals: **8/10** — is it because they write lots of reports? Health professionals: only **5/10** — someone still has to examine the patient, I guess. Teaching professionals: **6/10** — high for a job that's about being in a room with humans.
+
+What does this mean? Honestly, it's hard to say. High exposure doesn't necessarily mean displacement — it might just mean augmentation. The same uncertainty applies whether you're an ICT professional or a teacher. We're in genuinely uncharted territory, and I don't think anyone has a confident read on how this plays out job by job.
+
+What I do feel confident about is the longer arc. The things this technology could unlock — accelerated scientific discovery, better medicine, more access to expertise — seem genuinely exciting to me. If the history of productivity-shifting technologies is any guide, the disruption is real but so is what comes after. I'm optimistic about where this leads for humanity, even if the transition is messy.
 
 ## How I built this
 
