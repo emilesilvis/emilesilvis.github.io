@@ -175,9 +175,48 @@ def main():
 
     # Default SEO image for index page
     default_seo_image = HOSTNAME + "/static/images/profile.png"
-    
+
     index_html = apply_template(SITE_NAME, "\n".join(index_content), main_heading="", seo_image=default_seo_image)
     (OUT / "index.html").write_text(index_html, encoding="utf-8")
+
+    # Generate sitemap.xml
+    sitemap_urls = []
+
+    # Index page
+    sitemap_urls.append({"loc": HOSTNAME + "/", "priority": "1.0"})
+
+    # Pages
+    for md in pages:
+        slug = md.stem
+        sitemap_urls.append({"loc": f"{HOSTNAME}/{slug}.html", "priority": "0.8"})
+
+    # Posts (newest first, already sorted)
+    for md in posts:
+        slug = md.stem.split("-", 3)[-1]
+        parts = md.stem.split("-", 3)[:3]
+        # Convert DD-MM-YYYY to YYYY-MM-DD for sitemap lastmod
+        lastmod = f"{parts[2]}-{parts[1]}-{parts[0]}"
+        sitemap_urls.append({
+            "loc": f"{HOSTNAME}/{slug}.html",
+            "lastmod": lastmod,
+            "priority": "0.6",
+        })
+
+    sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for entry in sitemap_urls:
+        sitemap_xml += "  <url>\n"
+        sitemap_xml += f"    <loc>{entry['loc']}</loc>\n"
+        if "lastmod" in entry:
+            sitemap_xml += f"    <lastmod>{entry['lastmod']}</lastmod>\n"
+        sitemap_xml += f"    <priority>{entry['priority']}</priority>\n"
+        sitemap_xml += "  </url>\n"
+    sitemap_xml += "</urlset>\n"
+    (OUT / "sitemap.xml").write_text(sitemap_xml, encoding="utf-8")
+
+    # Generate robots.txt
+    robots_txt = f"User-agent: *\nAllow: /\n\nSitemap: {HOSTNAME}/sitemap.xml\n"
+    (OUT / "robots.txt").write_text(robots_txt, encoding="utf-8")
 
 
 if __name__ == "__main__":
