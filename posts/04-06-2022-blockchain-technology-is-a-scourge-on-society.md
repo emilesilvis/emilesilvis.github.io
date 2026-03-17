@@ -19,12 +19,6 @@ With that out of the way, here are the reasons I think blockchains (and everythi
 
 My basic position on blockchains (and specifically cryptocurrencies) is the following:
 
-> Emile Silvis @emilesilvis
->
-> @StuartReid1929 The entire premise of decentralising consensus is a problem in search of a solution. We've thrived as a species exactly because we've built centralised institutions which we can trust. Decentralised trust might become the norm in a post-scarcity world, but until then, no need.
->
-> 11:34 AM · May 29, 2022
-
 The argument rests on the following (somewhat abstract) assumptions:
 
 * Resources for survival are limited.
@@ -56,7 +50,7 @@ Just the Bitcoin network alone consumes more energy per year than the entire cou
 
 Because the infrastructure that it depends on is not decentralised. The popular blog post by Signal founder Moxie explores this idea further.
 
-There exists the hope that blockchain technology can enable a world "where unstoppable censorship resistant web apps exist in opposition to authoritarian regimes."""I also hope for that world, but I don't think blockchain technology is the answer there per se (or at least, it can't be the only answer). When Ukraine asked for help, Starlink was the solution, not Skynet.
+There exists the hope that blockchain technology can enable a world "where unstoppable censorship resistant web apps exist in opposition to authoritarian regimes." I also hope for that world, but I don't think blockchain technology is the answer there per se (or at least, it can't be the only answer). When Ukraine asked for help, Starlink was the solution, not Skynet.
 
 A chain is only as decentralised as its weakest link.
 
@@ -70,7 +64,7 @@ Of course, there might be some bias at work here, but the correlation carries we
 
 ## 6. Blockchain-related topics are polarising and often lead to unproductive conversations
 
-I will be the first to admit that, when it comes to this topic, I often engage in conversations in a manner that is unproductive and often downright childish. The Twitter thread that inspired this blog post is an example of that. Twitter is awash with  conversations with similar overtones (just consider the hate @molly0xFFF is receiving — despite it being high in entertainment value, it's not productive).
+I will be the first to admit that, when it comes to this topic, I often engage in conversations in a manner that is unproductive and often downright childish. The Twitter thread that inspired this blog post is an example of that. Twitter is awash with conversations with similar overtones (just consider the hate @molly0xFFF is receiving — despite it being high in entertainment value, it's not productive).
 
 We need more thoughtful dialogue and less throwing stones (and I want to start by taking responsibility for my behaviour — this post is the first step). After all, this is my entire premise against blockchains: humans need to be able to trust each other, and for that, we need to have open and thoughtful dialogues.
 
