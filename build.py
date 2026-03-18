@@ -214,6 +214,45 @@ def main():
     sitemap_xml += "</urlset>\n"
     (OUT / "sitemap.xml").write_text(sitemap_xml, encoding="utf-8")
 
+    # Generate Atom feed (feed.xml)
+    feed_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    feed_xml += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
+    feed_xml += f"  <title>{html.escape(SITE_NAME)}</title>\n"
+    feed_xml += f"  <link href=\"{HOSTNAME}/\" />\n"
+    feed_xml += f"  <link href=\"{HOSTNAME}/feed.xml\" rel=\"self\" />\n"
+    feed_xml += f"  <id>{HOSTNAME}/</id>\n"
+    if posts:
+        newest_parts = posts[0].stem.split("-", 3)[:3]
+        feed_xml += f"  <updated>{newest_parts[2]}-{newest_parts[1]}-{newest_parts[0]}T00:00:00Z</updated>\n"
+    feed_xml += f"  <author><name>{html.escape(BIO['name'])}</name></author>\n"
+    for md in posts:
+        raw = md.read_text(encoding="utf-8")
+        frontmatter = {}
+        if raw.startswith("---"):
+            _, fm_text, content = raw.split("---", 2)
+            for line in fm_text.strip().split("\n"):
+                if ":" in line:
+                    key, value = line.split(":", 1)
+                    frontmatter[key.strip()] = value.strip().strip('"')
+            raw = content.strip()
+        h1, _, body = raw.partition("\n")
+        title = h1.lstrip("# ").strip() or md.stem
+        slug = md.stem.split("-", 3)[-1]
+        parts = md.stem.split("-", 3)[:3]
+        date_iso = f"{parts[2]}-{parts[1]}-{parts[0]}T00:00:00Z"
+        url = f"{HOSTNAME}/{slug}.html"
+        summary = frontmatter.get("seo_description", "")
+        feed_xml += "  <entry>\n"
+        feed_xml += f"    <title>{html.escape(title)}</title>\n"
+        feed_xml += f"    <link href=\"{url}\" />\n"
+        feed_xml += f"    <id>{url}</id>\n"
+        feed_xml += f"    <updated>{date_iso}</updated>\n"
+        if summary:
+            feed_xml += f"    <summary>{html.escape(summary)}</summary>\n"
+        feed_xml += "  </entry>\n"
+    feed_xml += "</feed>\n"
+    (OUT / "feed.xml").write_text(feed_xml, encoding="utf-8")
+
     # Generate robots.txt
     robots_txt = f"User-agent: *\nAllow: /\n\nSitemap: {HOSTNAME}/sitemap.xml\n"
     (OUT / "robots.txt").write_text(robots_txt, encoding="utf-8")
