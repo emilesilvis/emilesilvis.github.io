@@ -25,6 +25,10 @@ BIO = {
         "github": {
             "url": "https://github.com/emilesilvis",
             "icon": "/static/icons/github.svg"
+        },
+        "rss": {
+            "url": "/feed.xml",
+            "icon": "/static/icons/rss.svg"
         }
     }
 }

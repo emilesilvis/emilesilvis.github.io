@@ -78,6 +78,8 @@ def apply_template(title, body_html, seo_image="", seo_description="", date="", 
             .replace("{{bio.social.linkedin.icon}}", BIO["social"]["linkedin"]["icon"])
             .replace("{{bio.social.github.url}}", BIO["social"]["github"]["url"])
             .replace("{{bio.social.github.icon}}", BIO["social"]["github"]["icon"])
+            .replace("{{bio.social.rss.url}}", BIO["social"]["rss"]["url"])
+            .replace("{{bio.social.rss.icon}}", BIO["social"]["rss"]["icon"])
             .replace("{{nav}}", NAV_HTML)
             .replace("{{seo_image}}", seo_image)
             .replace("{{seo_description}}", seo_description)
