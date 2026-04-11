@@ -153,7 +153,7 @@ def main():
         return datetime.strptime("-".join(parts), "%d-%m-%Y")
 
     posts = sorted(POSTS.glob("*.md"), key=post_date, reverse=True)
-    index_items = []
+    posts_by_year = {}
 
     for md in posts:
         title, full_html = build_post(md)
@@ -161,18 +161,19 @@ def main():
         fname = f"{slug}.html"
         (OUT / fname).write_text(full_html, encoding="utf-8")
         date = "-".join(md.stem.split("-", 3)[:3])
-        index_items.append(
+        year = md.stem.split("-")[2]  # DD-MM-YYYY -> YYYY
+        posts_by_year.setdefault(year, []).append(
             f"<li><a href='{fname}'>{title}</a> <small>{date}</small></li>")
 
-    # Create index with posts
+    # Create index with posts grouped by year
     index_content = []
-    
-    # Add posts section
     index_content.append('<div class="main-content">')
     index_content.append('<h1>Posts</h1>')
-    index_content.append("<ul>")
-    index_content.extend(index_items)
-    index_content.append("</ul>")
+    for year in sorted(posts_by_year, reverse=True):
+        index_content.append(f"<h2>{year}</h2>")
+        index_content.append("<ul>")
+        index_content.extend(posts_by_year[year])
+        index_content.append("</ul>")
     index_content.append('</div>')
 
     # Default SEO image for index page
