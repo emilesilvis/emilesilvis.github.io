@@ -5,101 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
     <meta name="description" content="{{seo_description}}">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="article">
     <meta property="og:title" content="{{title}}">
     <meta property="og:description" content="{{seo_description}}">
     <meta property="og:image" content="{{seo_image}}">
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{title}}">
     <meta name="twitter:description" content="{{seo_description}}">
     <meta name="twitter:image" content="{{seo_image}}">
-    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="alternate" type="application/atom+xml" title="{{site_name}}" href="/feed.xml">
-    
+
     <!-- Umami Analytics -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="{{umami_website_id}}"></script>
-    
-    <!-- Theme initialization script (runs immediately to prevent flash) -->
+
+    <!-- Theme initialization (prevents flash) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 
+            var t = localStorage.getItem('theme') ||
                 (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.documentElement.setAttribute('data-theme', t);
         })();
     </script>
 </head>
 <body>
-<!-- Dark mode toggle button -->
-<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <span id="theme-icon">🌙</span>
-</button>
-
-<div class="layout">
-    <div class="main-content">
-        <h1><a href="/">{{site_name}}</a></h1>
-        <main>
-            {{main_heading}}
-            {{content}}
-        </main>
-        <footer>©️ {{year}} {{site_name}}</footer>
-    </div>
-    <aside class="bio-section">
-        <img src="{{bio.image}}" alt="{{bio.name}}" class="bio-image">
-        <p>{{bio.bio}}</p>
-        <div class="social-links">
-            <a href="{{bio.social.x.url}}" class="social-link" target="_blank" rel="noopener noreferrer">
-                <img src="{{bio.social.x.icon}}" alt="X" class="social-icon">
-            </a>
-            <a href="{{bio.social.linkedin.url}}" class="social-link" target="_blank" rel="noopener noreferrer">
-                <img src="{{bio.social.linkedin.icon}}" alt="LinkedIn" class="social-icon">
-            </a>
-            <a href="{{bio.social.github.url}}" class="social-link" target="_blank" rel="noopener noreferrer">
-                <img src="{{bio.social.github.icon}}" alt="GitHub" class="social-icon">
-            </a>
-            <a href="{{bio.social.rss.url}}" class="social-link" rel="noopener noreferrer">
-                <img src="{{bio.social.rss.icon}}" alt="RSS" class="social-icon">
-            </a>
-        </div>
-        <hr>
-        <nav class="main-nav">
+<div class="wrap">
+    <header class="mast">
+        <a href="/" class="name">{{site_name}}</a>
+        <nav>
             {{nav}}
+            <button class="theme" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+                <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v1.5M12 19.5V21M4.2 4.2l1.06 1.06M18.74 18.74l1.06 1.06M3 12h1.5M19.5 12H21M4.2 19.8l1.06-1.06M18.74 5.26l1.06-1.06"/></svg>
+            </button>
         </nav>
-    </aside>
+    </header>
+    <main>
+        {{content}}
+    </main>
+    <footer class="colophon">
+        <span>&copy; {{year}} {{site_name}}</span>
+    </footer>
 </div>
 
-<!-- Dark mode toggle functionality -->
 <script>
     (function() {
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        
-        function updateThemeIcon(theme) {
-            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        var toggle = document.getElementById('theme-toggle');
+        function setTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
         }
-        
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            updateThemeIcon(theme);
-        }
-        
-        // Initialize icon based on current theme
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        updateThemeIcon(currentTheme);
-        
-        // Toggle theme on button click
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
+        toggle.addEventListener('click', function() {
+            var cur = document.documentElement.getAttribute('data-theme') || 'light';
+            setTheme(cur === 'dark' ? 'light' : 'dark');
         });
-        
-        // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
             if (!localStorage.getItem('theme')) {
                 setTheme(e.matches ? 'dark' : 'light');
