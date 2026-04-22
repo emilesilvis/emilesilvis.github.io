@@ -154,6 +154,7 @@
 - *[The Hobbit, or There and Back Again](https://www.goodreads.com/book/show/5907)* — J.R.R. Tolkien *(read: 2001-01-01)*
 - *[The Left Hand of Darkness](https://www.goodreads.com/book/show/18423)* — Ursula K. Le Guin *(read: 2025-02-02)*
 - *[The Lord of the Rings](https://www.goodreads.com/book/show/33)* — J.R.R. Tolkien *(read: 2000-01-01)*
+- *[The MANIAC](https://www.goodreads.com/book/show/75665931)* — Benjamín Labatut
 - *[The Ringmaster's Daughter](https://www.goodreads.com/book/show/25402)* — Jostein Gaarder *(read: 2004-01-01)*
 - *[The Shadow of the Torturer](https://www.goodreads.com/book/show/60211)* — Gene Wolfe
 - *[The Three-Body Problem (Remembrance of Earth's Past, #1)](https://www.goodreads.com/book/show/20518872)* — Liu Cixin
