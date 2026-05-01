@@ -1,129 +1,70 @@
 # Books read
 
-## Non-fiction
-
-### AI & Machine Learning
-- *[The StatQuest Illustrated Guide to Neural Networks and AI: With hands-on examples in PyTorch!!!](https://www.goodreads.com/book/show/223294677)* — Josh Starmer *(read: 2025-12-20)*
-- *[The StatQuest Illustrated Guide To Machine Learning](https://www.goodreads.com/book/show/61063119)* — Josh Starmer *(read: 2025-06-27)*
-- *[What Is ChatGPT Doing... and Why Does It Work?](https://www.goodreads.com/book/show/123245371)* — Stephen Wolfram *(read: 2024-03-27)*
-- *[How to Create a Mind: The Secret of Human Thought Revealed](https://www.goodreads.com/book/show/13589153)* — Ray Kurzweil *(read: 2022-05-29)*
-- *[Superintelligence: Paths, Dangers, Strategies](https://www.goodreads.com/book/show/20527133)* — Nick Bostrom
-
-### Art, Music & Culture
-- *[Graded Go Problems for Beginners Volume One Introductory Problems 30 Kyu to 25 Kyu (Graded Go Problems for Beginners, #1)](https://www.goodreads.com/book/show/910564)* — Yoshinori Kano *(read: 2023-03-20)*
-- *[The Culture Map: Breaking Through the Invisible Boundaries of Global Business](https://www.goodreads.com/book/show/22085568)* — Erin Meyer
-
-### Biology & Evolution
-- *[Other Minds](https://www.goodreads.com/book/show/28116739)* — Peter Godfrey-Smith *(read: 2019-12-26)*
-- *[From Bacteria to Bach and Back: The Evolution of Minds](https://www.goodreads.com/book/show/35167699)* — Daniel C. Dennett
-- *[Metazoa: Animal Life and the Birth of the Mind](https://www.goodreads.com/book/show/50403455)* — Peter Godfrey-Smith
-- *[The Freeze-Frame Revolution](https://www.goodreads.com/book/show/36510759)* — Peter Watts
-- *[The Selfish Gene](https://www.goodreads.com/book/show/61535)* — Richard Dawkins
-
-### Food, Nature & Environment
-- *[Caffeine: How Caffeine Created the Modern World](https://www.goodreads.com/book/show/52300107)* — Michael Pollan *(read: 2024-05-26)*
-- *[How to Change Your Mind: The New Science of Psychedelics](https://www.goodreads.com/book/show/36613747)* — Michael Pollan *(read: 2022-03-08)*
-
-### Geography & Geopolitics
-- *[Prisoners of Geography: Ten Maps That Tell You Everything You Need to Know About Global Politics (Politics of Place, #1)](https://www.goodreads.com/book/show/25135194)* — Tim  Marshall *(read: 2022-01-31)*
-
-### Health & Wellbeing
-- *[Four Thousand Weeks: Time Management for Mortals](https://www.goodreads.com/book/show/54785515)* — Oliver Burkeman *(read: 2024-06-27)*
-- *[The Coaching Habit: Say Less, Ask More & Change the Way You Lead Forever](https://www.goodreads.com/book/show/29342515)* — Michael Bungay Stanier *(read: 2024-04-23)*
-- *[Radical Candor: Be a Kickass Boss Without Losing Your Humanity](https://www.goodreads.com/book/show/29939161)* — Kim Malone Scott *(read: 2024-01-09)*
-- *[Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones](https://www.goodreads.com/book/show/40121378)* — James Clear
-- *[Crucial Conversations: Tools for Talking When Stakes are High](https://www.goodreads.com/book/show/15014)* — Kerry Patterson
-
-### History
-- *[Nexus: A Brief History of Information Networks from the Stone Age to AI](https://www.goodreads.com/book/show/204927599)* — Yuval Noah Harari *(read: 2025-06-17)*
-- *[Homo Deus: A History of Tomorrow](https://www.goodreads.com/book/show/31138556)* — Yuval Noah Harari *(read: 2018-08-13)*
-- *[Where Good Ideas Come From: The Natural History of Innovation](https://www.goodreads.com/book/show/8034188)* — Steven Johnson *(read: 2011-01-01)*
-- *[A Short History of Nearly Everything](https://www.goodreads.com/book/show/21)* — Bill Bryson
-- *[A Time Traveller's Guide to Our Next Ten Years](https://www.goodreads.com/book/show/22473133)* — Frans Cronje
-- *[Sapiens: A Brief History of Humankind](https://www.goodreads.com/book/show/23692271)* — Yuval Noah Harari
-- *[Why the Dutch are Different: A Journey into the Hidden Heart of the Netherlands](https://www.goodreads.com/book/show/25860139)* — Ben Coates
-
-### Mathematics
-- *[A Mind for Numbers: How to Excel at Math and Science (Even If You Flunked Algebra)](https://www.goodreads.com/book/show/18693655)* — Barbara Oakley *(read: 2024-01-01)*
-- *[Chaos: Making a New Science](https://www.goodreads.com/book/show/64582)* — James Gleick *(read: 2008-11-09)*
-
-### Neuroscience & Psychology
-- *[Being You: A New Science of Consciousness](https://www.goodreads.com/book/show/53036979)* — Anil Seth *(read: 2023-10-23)*
-- *[The Man Who Mistook His Wife for a Hat and Other Clinical Tales](https://www.goodreads.com/book/show/63697)* — Oliver Sacks *(read: 2022-08-05)*
-- *[59 Seconds: Think a Little, Change a Lot](https://www.goodreads.com/book/show/6340948)* — Richard Wiseman *(read: 2015-05-06)*
-- *[The Courage to Be Disliked: How to Free Yourself, Change Your Life and Achieve Real Happiness](https://www.goodreads.com/book/show/43306206)* — Ichiro Kishimi
-- *[Thinking, Fast and Slow](https://www.goodreads.com/book/show/11468377)* — Daniel Kahneman
-
-### Philosophy & Science
-- *[Death: A Philosophy Course](https://www.goodreads.com/book/show/11918814)* — Shelly Kagan
-- *[Thank You for Arguing: What Aristotle, Lincoln, and Homer Simpson Can Teach Us About the Art of Persuasion](https://www.goodreads.com/book/show/151751)* — Jay Heinrichs
-- *[Thinking In Systems: A Primer](https://www.goodreads.com/book/show/3828902)* — Donella H. Meadows
-- *[What Is This Thing Called Science?](https://www.goodreads.com/book/show/137314)* — Alan F. Chalmers
-
-### Physics & Cosmology
-- *[The Universe in a Box: Simulations and the Quest to Code the Cosmos](https://www.goodreads.com/book/show/62952127)* — Andrew Pontzen *(read: 2024-12-01)*
-- *[The Demon-Haunted World: Science as a Candle in the Dark](https://www.goodreads.com/book/show/17349)* — Carl Sagan *(read: 2024-08-13)*
-- *[Prince of Networks: Bruno Latour and Metaphysics](https://www.goodreads.com/book/show/6581757)* — Graham Harman *(read: 2015-05-06)*
-
-### Politics & Society
-- *[Blue Like Jazz: Nonreligious Thoughts on Christian Spirituality](https://www.goodreads.com/book/show/7214)* — Donald Miller *(read: 2010-10-01)*
-- *[21 Lessons for the 21st Century](https://www.goodreads.com/book/show/38820046)* — Yuval Noah Harari
-- *[Factfulness: Ten Reasons We're Wrong About the World – and Why Things Are Better Than You Think](https://www.goodreads.com/book/show/34890015)* — Hans Rosling
-- *[The Wisdom of Crowds](https://www.goodreads.com/book/show/68143)* — James Surowiecki
-
-### Software Engineering & Technology
-- *[Sooner Safer Happier: Antipatterns and Patterns for Business Agility](https://www.goodreads.com/book/show/50343488)* — Jonathan  Smart *(read: 2024-05-26)*
-- *[Continuous Discovery Habits: Discover Products that Create Customer Value and Business Value](https://www.goodreads.com/book/show/58046715)* — Teresa  Torres *(read: 2024-01-01)*
-- *[Escaping the Build Trap: How Effective Product Management Creates Real Value](https://www.goodreads.com/book/show/42611483)* — Melissa Perri *(read: 2024-01-01)*
-- *[Good Strategy Bad Strategy: The Difference and Why It Matters](https://www.goodreads.com/book/show/11721966)* — Richard P. Rumelt *(read: 2022-12-31)*
-- *[No Rules Rules: Netflix and the Culture of Reinvention](https://www.goodreads.com/book/show/49099937)* — Reed Hastings *(read: 2022-01-19)*
-- *[Strategize: Product Strategy and Product Roadmap Practices for the Digital Age](https://www.goodreads.com/book/show/29336329)* — Roman Pichler *(read: 2022-01-19)*
-- *[Liberating the Corporate Soul : Building a Visionary Organization](https://www.goodreads.com/book/show/194644)* — Richard Barrett *(read: 2011-12-12)*
-- *[Accelerate: Building and Scaling High Performing Technology Organizations](https://www.goodreads.com/book/show/35747076)* — Nicole Forsgren
-- *[Bitcoin and Cryptocurrency Technologies: A Comprehensive Introduction](https://www.goodreads.com/book/show/29452533)* — Arvind Narayanan
-- *[Finite and Infinite Games: A Vision of Life as Play and Possibility](https://www.goodreads.com/book/show/189989)* — James P. Carse
-- *[How to Measure Anything: Finding the Value of "Intangibles" in Business](https://www.goodreads.com/book/show/444653)* — Douglas W. Hubbard
-- *[Measure What Matters](https://www.goodreads.com/book/show/39286958)* — John Doerr
-- *[Moving the Needle with Lean OKRs](https://www.goodreads.com/book/show/59464293)* — Bart den Haak
-- *[Team Topologies: Organizing Business and Technology Teams for Fast Flow](https://www.goodreads.com/book/show/44135420)* — Matthew    Skelton
-- *[The Lean Startup](https://www.goodreads.com/book/show/10127019)* — Eric Ries
-- *[The Phoenix Project: A Novel About IT, DevOps, and Helping Your Business Win](https://www.goodreads.com/book/show/17255186)* — Gene Kim
-
-## Fiction
 - *[There Is No Antimemetics Division](https://www.goodreads.com/book/show/54870256-there-is-no-antimemetics-division)* — qntm *(read: 2026-05-01)*
 - *[The MANIAC](https://www.goodreads.com/book/show/75665931)* — Benjamín Labatut *(read: 2026-04-22)*
+- *[The StatQuest Illustrated Guide to Neural Networks and AI: With hands-on examples in PyTorch!!!](https://www.goodreads.com/book/show/223294677)* — Josh Starmer *(read: 2025-12-20)*
 - *[A Wizard of Earthsea (Earthsea Cycle, #1)](https://www.goodreads.com/book/show/13642)* — Ursula K. Le Guin *(read: 2025-08-28)*
 - *[A Brief History of Time](https://www.goodreads.com/book/show/3869)* — Stephen W. Hawking *(read: 2025-07-05)*
+- *[The StatQuest Illustrated Guide To Machine Learning](https://www.goodreads.com/book/show/61063119)* — Josh Starmer *(read: 2025-06-27)*
+- *[Nexus: A Brief History of Information Networks from the Stone Age to AI](https://www.goodreads.com/book/show/204927599)* — Yuval Noah Harari *(read: 2025-06-17)*
 - *[The Left Hand of Darkness](https://www.goodreads.com/book/show/18423)* — Ursula K. Le Guin *(read: 2025-02-02)*
 - *[Flatland: A Romance of Many Dimensions](https://www.goodreads.com/book/show/433567)* — Edwin A. Abbott *(read: 2024-12-07)*
+- *[The Universe in a Box: Simulations and the Quest to Code the Cosmos](https://www.goodreads.com/book/show/62952127)* — Andrew Pontzen *(read: 2024-12-01)*
 - *[Dragon's Egg (Cheela, #1)](https://www.goodreads.com/book/show/263466)* — Robert L. Forward *(read: 2024-11-26)*
 - *[Solar Lottery](https://www.goodreads.com/book/show/92504)* — Philip K. Dick *(read: 2024-09-06)*
+- *[The Demon-Haunted World: Science as a Candle in the Dark](https://www.goodreads.com/book/show/17349)* — Carl Sagan *(read: 2024-08-13)*
+- *[Four Thousand Weeks: Time Management for Mortals](https://www.goodreads.com/book/show/54785515)* — Oliver Burkeman *(read: 2024-06-27)*
+- *[Caffeine: How Caffeine Created the Modern World](https://www.goodreads.com/book/show/52300107)* — Michael Pollan *(read: 2024-05-26)*
 - *[Scale](https://www.goodreads.com/book/show/75462275)* — Greg Egan *(read: 2024-05-26)*
+- *[Sooner Safer Happier: Antipatterns and Patterns for Business Agility](https://www.goodreads.com/book/show/50343488)* — Jonathan  Smart *(read: 2024-05-26)*
+- *[The Coaching Habit: Say Less, Ask More & Change the Way You Lead Forever](https://www.goodreads.com/book/show/29342515)* — Michael Bungay Stanier *(read: 2024-04-23)*
+- *[What Is ChatGPT Doing... and Why Does It Work?](https://www.goodreads.com/book/show/123245371)* — Stephen Wolfram *(read: 2024-03-27)*
 - *[Rendezvous with Rama (Rama, #1)](https://www.goodreads.com/book/show/112537)* — Arthur C. Clarke *(read: 2024-03-22)*
 - *[Children of Time (Children of Time, #1)](https://www.goodreads.com/book/show/25499718)* — Adrian Tchaikovsky *(read: 2024-03-17)*
+- *[Radical Candor: Be a Kickass Boss Without Losing Your Humanity](https://www.goodreads.com/book/show/29939161)* — Kim Malone Scott *(read: 2024-01-09)*
+- *[A Mind for Numbers: How to Excel at Math and Science (Even If You Flunked Algebra)](https://www.goodreads.com/book/show/18693655)* — Barbara Oakley *(read: 2024-01-01)*
+- *[Continuous Discovery Habits: Discover Products that Create Customer Value and Business Value](https://www.goodreads.com/book/show/58046715)* — Teresa  Torres *(read: 2024-01-01)*
+- *[Escaping the Build Trap: How Effective Product Management Creates Real Value](https://www.goodreads.com/book/show/42611483)* — Melissa Perri *(read: 2024-01-01)*
 - *[Death's End (The Three-Body Problem, #3)](https://www.goodreads.com/book/show/65645376)* — Cixin Liu *(read: 2023-12-10)*
+- *[Being You: A New Science of Consciousness](https://www.goodreads.com/book/show/53036979)* — Anil Seth *(read: 2023-10-23)*
+- *[Graded Go Problems for Beginners Volume One Introductory Problems 30 Kyu to 25 Kyu (Graded Go Problems for Beginners, #1)](https://www.goodreads.com/book/show/910564)* — Yoshinori Kano *(read: 2023-03-20)*
+- *[Good Strategy Bad Strategy: The Difference and Why It Matters](https://www.goodreads.com/book/show/11721966)* — Richard P. Rumelt *(read: 2022-12-31)*
 - *[The Waste Lands (The Dark Tower, #3)](https://www.goodreads.com/book/show/34084)* — Stephen  King *(read: 2022-12-31)*
 - *[Exhalation](https://www.goodreads.com/book/show/41160292)* — Ted Chiang *(read: 2022-12-26)*
 - *[Stories of Your Life and Others](https://www.goodreads.com/book/show/223380)* — Ted Chiang *(read: 2022-08-05)*
+- *[The Man Who Mistook His Wife for a Hat and Other Clinical Tales](https://www.goodreads.com/book/show/63697)* — Oliver Sacks *(read: 2022-08-05)*
+- *[How to Create a Mind: The Secret of Human Thought Revealed](https://www.goodreads.com/book/show/13589153)* — Ray Kurzweil *(read: 2022-05-29)*
 - *[The Drawing of the Three (The Dark Tower, #2)](https://www.goodreads.com/book/show/5094)* — Stephen  King *(read: 2022-05-01)*
+- *[How to Change Your Mind: The New Science of Psychedelics](https://www.goodreads.com/book/show/36613747)* — Michael Pollan *(read: 2022-03-08)*
+- *[Prisoners of Geography: Ten Maps That Tell You Everything You Need to Know About Global Politics (Politics of Place, #1)](https://www.goodreads.com/book/show/25135194)* — Tim  Marshall *(read: 2022-01-31)*
+- *[No Rules Rules: Netflix and the Culture of Reinvention](https://www.goodreads.com/book/show/49099937)* — Reed Hastings *(read: 2022-01-19)*
+- *[Strategize: Product Strategy and Product Roadmap Practices for the Digital Age](https://www.goodreads.com/book/show/29336329)* — Roman Pichler *(read: 2022-01-19)*
 - *[Project Hail Mary](https://www.goodreads.com/book/show/54493401)* — Andy Weir *(read: 2021-12-28)*
 - *[Where the Crawdads Sing](https://www.goodreads.com/book/show/42583886)* — Delia Owens *(read: 2021-12-28)*
 - *[Instantiation](https://www.goodreads.com/book/show/50641444)* — Greg Egan *(read: 2020-07-27)*
+- *[Other Minds](https://www.goodreads.com/book/show/28116739)* — Peter Godfrey-Smith *(read: 2019-12-26)*
 - *[Distress](https://www.goodreads.com/book/show/13352262)* — Greg Egan *(read: 2019-11-14)*
 - *[Permutation City](https://www.goodreads.com/book/show/15796130)* — Greg Egan *(read: 2018-08-23)*
+- *[Homo Deus: A History of Tomorrow](https://www.goodreads.com/book/show/31138556)* — Yuval Noah Harari *(read: 2018-08-13)*
 - *[Quarantine](https://www.goodreads.com/book/show/20617123)* — Greg Egan *(read: 2018-08-04)*
+- *[59 Seconds: Think a Little, Change a Lot](https://www.goodreads.com/book/show/6340948)* — Richard Wiseman *(read: 2015-05-06)*
+- *[Prince of Networks: Bruno Latour and Metaphysics](https://www.goodreads.com/book/show/6581757)* — Graham Harman *(read: 2015-05-06)*
 - *[Reamde](https://www.goodreads.com/book/show/10552338)* — Neal Stephenson *(read: 2015-05-06)*
+- *[Liberating the Corporate Soul : Building a Visionary Organization](https://www.goodreads.com/book/show/194644)* — Richard Barrett *(read: 2011-12-12)*
 - *[Redemption Ark (Revelation Space, #2)](https://www.goodreads.com/book/show/89190)* — Alastair Reynolds *(read: 2011-12-12)*
 - *[Embassytown](https://www.goodreads.com/book/show/9265453)* — China Miéville *(read: 2011-09-13)*
 - *[Perdido Street Station (New Crobuzon, #1)](https://www.goodreads.com/book/show/6186642)* — China Miéville *(read: 2011-08-31)*
 - *[Chasm City](https://www.goodreads.com/book/show/89185)* — Alastair Reynolds *(read: 2011-01-01)*
 - *[Revelation Space (Revelation Space, #1)](https://www.goodreads.com/book/show/89187)* — Alastair Reynolds *(read: 2011-01-01)*
+- *[Where Good Ideas Come From: The Natural History of Innovation](https://www.goodreads.com/book/show/8034188)* — Steven Johnson *(read: 2011-01-01)*
 - *[The Windup Girl](https://www.goodreads.com/book/show/6597651)* — Paolo Bacigalupi *(read: 2010-12-07)*
+- *[Blue Like Jazz: Nonreligious Thoughts on Christian Spirituality](https://www.goodreads.com/book/show/7214)* — Donald Miller *(read: 2010-10-01)*
 - *[Terminal World](https://www.goodreads.com/book/show/6237781)* — Alastair Reynolds *(read: 2010-09-01)*
 - *[Singularity Sky (Eschaton, #1)](https://www.goodreads.com/book/show/81992)* — Charles Stross *(read: 2010-02-25)*
 - *[Glasshouse](https://www.goodreads.com/book/show/17866)* — Charles Stross *(read: 2008-12-26)*
 - *[Accelerando](https://www.goodreads.com/book/show/17863)* — Charles Stross *(read: 2008-12-10)*
 - *[A Storm of Swords (A Song of Ice and Fire, #3)](https://www.goodreads.com/book/show/62291)* — George R.R. Martin *(read: 2008-11-09)*
+- *[Chaos: Making a New Science](https://www.goodreads.com/book/show/64582)* — James Gleick *(read: 2008-11-09)*
 - *[Maya](https://www.goodreads.com/book/show/25401)* — Jostein Gaarder *(read: 2008-11-09)*
 - *[The White Tiger](https://www.goodreads.com/book/show/1768603)* — Aravind Adiga *(read: 2008-11-09)*
 - *[We](https://www.goodreads.com/book/show/76171)* — Yevgeny Zamyatin *(read: 2008-07-10)*
@@ -146,25 +87,55 @@
 - *[The Lord of the Rings](https://www.goodreads.com/book/show/33)* — J.R.R. Tolkien *(read: 2000-01-01)*
 - *[Through a Glass, Darkly](https://www.goodreads.com/book/show/25405)* — Jostein Gaarder *(read: 2000-01-01)*
 - *[1984](https://www.goodreads.com/book/show/40961427)* — George Orwell
+- *[21 Lessons for the 21st Century](https://www.goodreads.com/book/show/38820046)* — Yuval Noah Harari
 - *[A Dance with Dragons (A Song of Ice and Fire, #5)](https://www.goodreads.com/book/show/10664113)* — George R.R. Martin
 - *[A Feast for Crows (A Song of Ice and Fire, #4)](https://www.goodreads.com/book/show/13497)* — George R.R. Martin
+- *[A Short History of Nearly Everything](https://www.goodreads.com/book/show/21)* — Bill Bryson
+- *[A Time Traveller's Guide to Our Next Ten Years](https://www.goodreads.com/book/show/22473133)* — Frans Cronje
+- *[Accelerate: Building and Scaling High Performing Technology Organizations](https://www.goodreads.com/book/show/35747076)* — Nicole Forsgren
 - *[Anathem](https://www.goodreads.com/book/show/2845024)* — Neal Stephenson
 - *[Animal Farm](https://www.goodreads.com/book/show/170448)* — George Orwell
+- *[Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones](https://www.goodreads.com/book/show/40121378)* — James Clear
+- *[Bitcoin and Cryptocurrency Technologies: A Comprehensive Introduction](https://www.goodreads.com/book/show/29452533)* — Arvind Narayanan
+- *[Crucial Conversations: Tools for Talking When Stakes are High](https://www.goodreads.com/book/show/15014)* — Kerry Patterson
+- *[Death: A Philosophy Course](https://www.goodreads.com/book/show/11918814)* — Shelly Kagan
 - *[Diaspora](https://www.goodreads.com/book/show/156785)* — Greg Egan
+- *[Factfulness: Ten Reasons We're Wrong About the World – and Why Things Are Better Than You Think](https://www.goodreads.com/book/show/34890015)* — Hans Rosling
 - *[Fahrenheit 451](https://www.goodreads.com/book/show/4381)* — Ray Bradbury
+- *[Finite and Infinite Games: A Vision of Life as Play and Possibility](https://www.goodreads.com/book/show/189989)* — James P. Carse
+- *[From Bacteria to Bach and Back: The Evolution of Minds](https://www.goodreads.com/book/show/35167699)* — Daniel C. Dennett
 - *[GO: A Complete Introduction to the Game](https://www.goodreads.com/book/show/677753)* — Chikun Chō
 - *[House of Suns](https://www.goodreads.com/book/show/1126719)* — Alastair Reynolds
+- *[How to Measure Anything: Finding the Value of "Intangibles" in Business](https://www.goodreads.com/book/show/444653)* — Douglas W. Hubbard
 - *[Incandescence](https://www.goodreads.com/book/show/2425528)* — Greg Egan
 - *[Klara and the Sun](https://www.goodreads.com/book/show/54120408)* — Kazuo Ishiguro
+- *[Measure What Matters](https://www.goodreads.com/book/show/39286958)* — John Doerr
+- *[Metazoa: Animal Life and the Birth of the Mind](https://www.goodreads.com/book/show/50403455)* — Peter Godfrey-Smith
+- *[Moving the Needle with Lean OKRs](https://www.goodreads.com/book/show/59464293)* — Bart den Haak
+- *[Sapiens: A Brief History of Humankind](https://www.goodreads.com/book/show/23692271)* — Yuval Noah Harari
 - *[Schild's Ladder](https://www.goodreads.com/book/show/156780)* — Greg Egan
 - *[Snow Crash](https://www.goodreads.com/book/show/877977)* — Neal Stephenson
+- *[Superintelligence: Paths, Dangers, Strategies](https://www.goodreads.com/book/show/20527133)* — Nick Bostrom
+- *[Team Topologies: Organizing Business and Technology Teams for Fast Flow](https://www.goodreads.com/book/show/44135420)* — Matthew    Skelton
 - *[Teranesia](https://www.goodreads.com/book/show/156787)* — Greg Egan
+- *[Thank You for Arguing: What Aristotle, Lincoln, and Homer Simpson Can Teach Us About the Art of Persuasion](https://www.goodreads.com/book/show/151751)* — Jay Heinrichs
 - *[The Atrocity Archives (Laundry Files, #1)](https://www.goodreads.com/book/show/101869)* — Charles Stross
+- *[The Courage to Be Disliked: How to Free Yourself, Change Your Life and Achieve Real Happiness](https://www.goodreads.com/book/show/43306206)* — Ichiro Kishimi
+- *[The Culture Map: Breaking Through the Invisible Boundaries of Global Business](https://www.goodreads.com/book/show/22085568)* — Erin Meyer
 - *[The Curious Incident of the Dog in the Night-Time](https://www.goodreads.com/book/show/1618)* — Mark Haddon
 - *[The Dark Forest (The Three-Body Problem, #2)](https://www.goodreads.com/book/show/66562105)* — Liu Cixin
 - *[The Fifth Season (The Broken Earth, #1)](https://www.goodreads.com/book/show/19161852)* — N.K. Jemisin
+- *[The Freeze-Frame Revolution](https://www.goodreads.com/book/show/36510759)* — Peter Watts
 - *[The Girl Who Played with Fire (Millennium #2)](https://www.goodreads.com/book/show/5060378)* — Stieg Larsson
 - *[The Girl With the Dragon Tattoo (Millennium #1)](https://www.goodreads.com/book/show/5291539)* — Stieg Larsson
 - *[The Gunslinger (The Dark Tower, #1) separate](https://www.goodreads.com/book/show/43615)* — Stephen  King
+- *[The Lean Startup](https://www.goodreads.com/book/show/10127019)* — Eric Ries
+- *[The Phoenix Project: A Novel About IT, DevOps, and Helping Your Business Win](https://www.goodreads.com/book/show/17255186)* — Gene Kim
+- *[The Selfish Gene](https://www.goodreads.com/book/show/61535)* — Richard Dawkins
 - *[The Shadow of the Torturer](https://www.goodreads.com/book/show/60211)* — Gene Wolfe
 - *[The Three-Body Problem (Remembrance of Earth's Past, #1)](https://www.goodreads.com/book/show/20518872)* — Liu Cixin
+- *[The Wisdom of Crowds](https://www.goodreads.com/book/show/68143)* — James Surowiecki
+- *[Thinking In Systems: A Primer](https://www.goodreads.com/book/show/3828902)* — Donella H. Meadows
+- *[Thinking, Fast and Slow](https://www.goodreads.com/book/show/11468377)* — Daniel Kahneman
+- *[What Is This Thing Called Science?](https://www.goodreads.com/book/show/137314)* — Alan F. Chalmers
+- *[Why the Dutch are Different: A Journey into the Hidden Heart of the Netherlands](https://www.goodreads.com/book/show/25860139)* — Ben Coates
