@@ -161,6 +161,7 @@
 - *[The Waste Lands (The Dark Tower, #3)](https://www.goodreads.com/book/show/34084)* — Stephen  King *(read: 2022-12-31)*
 - *[The White Tiger](https://www.goodreads.com/book/show/1768603)* — Aravind Adiga *(read: 2008-11-09)*
 - *[The Windup Girl](https://www.goodreads.com/book/show/6597651)* — Paolo Bacigalupi *(read: 2010-12-07)*
+- *[There Is No Antimemetics Division](https://www.goodreads.com/book/show/54870256-there-is-no-antimemetics-division)* — qntm *(read: 2026-05-01)*
 - *[Through a Glass, Darkly](https://www.goodreads.com/book/show/25405)* — Jostein Gaarder *(read: 2000-01-01)*
 - *[To Kill a Mockingbird](https://www.goodreads.com/book/show/2206723)* — Harper Lee *(read: 2004-01-01)*
 - *[We](https://www.goodreads.com/book/show/76171)* — Yevgeny Zamyatin *(read: 2008-07-10)*
