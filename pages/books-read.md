@@ -1,5 +1,6 @@
 # Books read
 
+- *[Mathematica: A Secret World of Intuition and Curiosity](https://www.goodreads.com/book/show/200128457-mathematica)* — David Bessis *(read: 2026-05-08)*
 - *[There Is No Antimemetics Division](https://www.goodreads.com/book/show/54870256-there-is-no-antimemetics-division)* — qntm *(read: 2026-05-01)*
 - *[The MANIAC](https://www.goodreads.com/book/show/75665931)* — Benjamín Labatut *(read: 2026-04-22)*
 - *[The StatQuest Illustrated Guide to Neural Networks and AI: With hands-on examples in PyTorch!!!](https://www.goodreads.com/book/show/223294677)* — Josh Starmer *(read: 2025-12-20)*
