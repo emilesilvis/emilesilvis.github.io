@@ -165,6 +165,22 @@ pre {
   border-radius: 4px;
 }
 
+/* Tables */
+table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+th, td {
+  border: 1px solid var(--border-color);
+  padding: 0.3rem 0.75rem;
+  text-align: left;
+}
+
+th {
+  background: var(--code-bg);
+}
+
 /* Bio section */
 .bio-section {
     grid-area: bio; /* Assign to bio area for mobile */

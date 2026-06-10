@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 210" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 z" fill="black"/>
+    </marker>
+  </defs>
+  <rect width="380" height="210" fill="white"/>
+
+  <!-- Mux -->
+  <rect x="100" y="60" width="70" height="64" fill="#eeeeee" stroke="black" stroke-width="1.5"/>
+  <text x="135" y="97" text-anchor="middle">Mux</text>
+  <text x="107" y="83" font-size="12">b</text>
+  <text x="107" y="111" font-size="12">a</text>
+
+  <!-- DFF -->
+  <rect x="230" y="60" width="70" height="64" fill="#eeeeee" stroke="black" stroke-width="1.5"/>
+  <text x="265" y="97" text-anchor="middle">DFF</text>
+  <!-- clock input triangle on the DFF's bottom edge -->
+  <path d="M258,124 L272,124 L265,113 z" fill="white" stroke="black" stroke-width="1.5"/>
+
+  <!-- in : into the Mux's b input -->
+  <text x="36" y="83" text-anchor="end">in</text>
+  <line x1="42" y1="78" x2="98" y2="78" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- load : into the Mux's selector, from above -->
+  <text x="135" y="18" text-anchor="middle">load</text>
+  <line x1="135" y1="26" x2="135" y2="58" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Mux out to DFF in -->
+  <line x1="170" y1="92" x2="228" y2="92" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- DFF out to the chip's out pin -->
+  <line x1="300" y1="92" x2="352" y2="92" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="358" y="97">out</text>
+
+  <!-- feedback: tap the out wire, loop back into the Mux's a input -->
+  <circle cx="322" cy="92" r="3" fill="black"/>
+  <polyline points="322,92 322,168 70,168 70,106 98,106" fill="none" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>

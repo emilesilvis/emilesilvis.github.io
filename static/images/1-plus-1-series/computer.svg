@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 230" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 z" fill="black"/>
+    </marker>
+  </defs>
+  <rect width="500" height="230" fill="white"/>
+
+  <!-- ROM -->
+  <rect x="40" y="70" width="100" height="64" fill="#eeeeee" stroke="black" stroke-width="1.5"/>
+  <text x="90" y="107" text-anchor="middle">ROM32K</text>
+
+  <!-- CPU -->
+  <rect x="210" y="70" width="80" height="64" fill="#eeeeee" stroke="black" stroke-width="1.5"/>
+  <text x="250" y="107" text-anchor="middle">CPU</text>
+
+  <!-- Memory -->
+  <rect x="360" y="70" width="100" height="64" fill="#eeeeee" stroke="black" stroke-width="1.5"/>
+  <text x="410" y="107" text-anchor="middle">Memory</text>
+
+  <!-- ROM hands the CPU the current instruction -->
+  <line x1="140" y1="102" x2="208" y2="102" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="174" y="92" text-anchor="middle" font-size="12">instruction</text>
+
+  <!-- CPU writes Memory -->
+  <line x1="290" y1="88" x2="358" y2="88" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="324" y="78" text-anchor="middle" font-size="12">writes</text>
+
+  <!-- CPU reads Memory -->
+  <line x1="360" y1="116" x2="292" y2="116" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="326" y="132" text-anchor="middle" font-size="12">reads</text>
+
+  <!-- the PC tells the ROM where we are -->
+  <polyline points="250,134 250,186 90,186 90,138" fill="none" stroke="black" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="170" y="178" text-anchor="middle" font-size="12">pc</text>
+</svg>

@@ -50,6 +50,7 @@ def render(markdown_text):
         extensions=[
             "fenced_code",
             "codehilite",
+            "tables",
         ],
         extension_configs={
             "codehilite": {
