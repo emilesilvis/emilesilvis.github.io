@@ -50,8 +50,6 @@ After four parts of machinery, the arrival of the answer is a single write, to a
 
 Now climb back up, in one breath. That 2 in a memory cell *is* the value on the VM's stack, *is* what the variable `x` holds. Not "becomes". *Is*. The same sixteen bits, seen from different floors of the tower. The answer has surfaced through every layer it descended in part 1.
 
-To be fully honest, one step remains: our little program stops there, with the 2 sitting in memory. Nothing in those 97 lines draws anything. Putting the 2 on your screen would take a few more instructions, copying those same sixteen bits to an address above `0x4000`, where, as we saw in part 4, writes become pixels.
-
 ## The same instruction does both
 
 One more thing, and it's my favourite idea in the whole series. Remember the `M=D` instruction that landed the 2 at `x`? If the destination address had been `0x4000` or higher, the exact same instruction would have drawn on the screen. Nothing about the instruction changes. Only the address. The CPU has no idea whether it's writing to storage or to pixels; the Memory chip from part 4 decides what an address means, and the CPU just writes.
