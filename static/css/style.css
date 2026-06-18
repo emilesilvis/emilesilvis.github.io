@@ -244,6 +244,12 @@ th {
     height: 100%;
 }
 
+/* In dark mode the monochrome (black) icons are invisible on the dark
+   background. They're loaded as <img>, so flip them to white with a filter. */
+[data-theme="dark"] .social-icon {
+    filter: invert(1);
+}
+
 /* Content wrapper and sidebar */
 .content-wrapper {
     display: grid;
