@@ -47,6 +47,20 @@
             {{content}}
         </main>
         <footer>©️ {{year}} {{site_name}}</footer>
+
+        <!-- TownSquare presence widget -->
+        <link rel="stylesheet" href="https://townsquare.cauenapier.com/widget.css" />
+        <div id="townsquare-root"></div>
+        <script type="module">
+          import { mountTownSquare } from "https://townsquare.cauenapier.com/townsquare.mjs";
+
+          mountTownSquare(document.getElementById("townsquare-root"), {
+            serverOrigin: "https://townsquare.cauenapier.com",
+            siteKey: "site_5uzYK6UdzyWi8nd0",
+            scene: {"benches":2,"benchXs":[0.2,0.72],"trees":1,"treeXs":[0.8],"lamps":1,"lampXs":[0.12],"birds":3},
+            theme: "host"
+          });
+        </script>
     </div>
     <aside class="bio-section">
         <img src="{{bio.image}}" alt="{{bio.name}}" class="bio-image">
@@ -81,16 +95,24 @@
         function updateThemeIcon(theme) {
             themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
-        
+
+        // Keep the TownSquare widget's theme in sync with the site toggle
+        function syncTownSquareTheme(theme) {
+            const root = document.getElementById('townsquare-root');
+            if (root) root.setAttribute('data-townsquare-theme', theme === 'dark' ? 'dark' : 'light');
+        }
+
         function setTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
             updateThemeIcon(theme);
+            syncTownSquareTheme(theme);
         }
-        
+
         // Initialize icon based on current theme
         const currentTheme = document.documentElement.getAttribute('data-theme');
         updateThemeIcon(currentTheme);
+        syncTownSquareTheme(currentTheme);
         
         // Toggle theme on button click
         themeToggle.addEventListener('click', function() {
