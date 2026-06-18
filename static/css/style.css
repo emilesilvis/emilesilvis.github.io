@@ -427,3 +427,10 @@ img {
 #townsquare-root#townsquare-root .townsquare__ground {
   background: var(--ground);
 }
+
+/* TownSquare's tokens.css declares `:root { --accent: var(--you) }` (terracotta) and
+   loads after this stylesheet, so on equal specificity it would win the cascade and
+   recolor every link/nav/accent orange. Reassert the brand blue at higher specificity
+   (html:root beats a bare :root) so it always wins regardless of load order. */
+html:root { --accent: #0069ff; }
+html:root[data-theme="dark"] { --accent: #4a9eff; }
