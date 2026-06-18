@@ -49,7 +49,11 @@
         <footer>©️ {{year}} {{site_name}}</footer>
 
         <!-- TownSquare presence widget -->
-        <link rel="stylesheet" href="https://townsquare.cauenapier.com/widget.css" />
+        <!-- Load the third-party stylesheet non-render-blocking so it never delays
+             the rest of the page (e.g. the bio box that follows it in the DOM).
+             media="print" makes it inapplicable to screen until it has loaded,
+             then onload flips it to all. -->
+        <link rel="stylesheet" href="https://townsquare.cauenapier.com/widget.css" media="print" onload="this.media='all'">
         <div id="townsquare-root"></div>
         <script type="module">
           import { mountTownSquare } from "https://townsquare.cauenapier.com/townsquare.mjs";
