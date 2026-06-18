@@ -11,7 +11,7 @@ UMAMI = {
 # Bio configuration
 BIO = {
     "name": "Emile Silvis",
-    "bio": "Hello, I'm Emile 👋 I'm grateful for the 173,000 terawatts of solar energy.",
+    "bio": "Welcome to my corner of the web.",
     "image": "/static/images/profile.png",
     "social": {
         "x": {
