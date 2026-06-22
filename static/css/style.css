@@ -294,6 +294,18 @@ footer {
     transition: color 0.2s ease, border-color 0.2s ease;
 }
 
+/* IndieWeb webring navigation */
+.webring {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-lighter);
+    text-align: center;
+}
+
+.webring a {
+    color: var(--accent);
+}
+
 /* Accessibility */
 a:focus,
 button:focus,

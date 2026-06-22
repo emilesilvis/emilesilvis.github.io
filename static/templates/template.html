@@ -48,6 +48,15 @@
         </main>
         <footer>©️ {{year}} {{site_name}}</footer>
 
+        <!-- IndieWeb Webring navigation (🕸️💍.ws / xn--sr8hvo.ws).
+             The previous/next endpoints identify this site via the HTTP Referer,
+             so these links must NOT carry rel="noreferrer" or navigation breaks. -->
+        <nav class="webring" aria-label="IndieWeb Webring">
+            <a href="https://xn--sr8hvo.ws/previous" title="Previous site in the ring">←</a>
+            An <a href="https://xn--sr8hvo.ws">IndieWeb Webring</a> 🕸️💍
+            <a href="https://xn--sr8hvo.ws/next" title="Next site in the ring">→</a>
+        </nav>
+
         <!-- TownSquare presence widget -->
         <!-- Load the third-party stylesheet non-render-blocking so it never delays
              the rest of the page (e.g. the bio box that follows it in the DOM).
