@@ -70,6 +70,7 @@ def apply_template(title, body_html, seo_image="", seo_description="", date="", 
             .replace("{{content}}", body_html)
             .replace("{{year}}", str(datetime.now().year))
             .replace("{{site_name}}", SITE_NAME)
+            .replace("{{hostname}}", HOSTNAME)
             .replace("{{bio.name}}", BIO["name"])
             .replace("{{bio.bio}}", BIO["bio"])
             .replace("{{bio.image}}", BIO["image"])

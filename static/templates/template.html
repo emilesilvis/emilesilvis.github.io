@@ -48,6 +48,15 @@
         </main>
         <footer>©️ {{year}} {{site_name}}</footer>
 
+        <!-- IndieWeb Webring navigation (🕸️💍.ws / xn--sr8hvo.ws).
+             The previous/next endpoints identify this site via the HTTP Referer,
+             so these links must NOT carry rel="noreferrer" or navigation breaks. -->
+        <nav class="webring" aria-label="IndieWeb Webring">
+            <a href="https://xn--sr8hvo.ws/previous" title="Previous site in the ring">←</a>
+            An <a href="https://xn--sr8hvo.ws">IndieWeb Webring</a> 🕸️💍
+            <a href="https://xn--sr8hvo.ws/next" title="Next site in the ring">→</a>
+        </nav>
+
         <!-- TownSquare presence widget -->
         <!-- Load the third-party stylesheet non-render-blocking so it never delays
              the rest of the page (e.g. the bio box that follows it in the DOM).
@@ -66,9 +75,15 @@
           });
         </script>
     </div>
-    <aside class="bio-section">
-        <img src="{{bio.image}}" alt="{{bio.name}}" class="bio-image">
-        <p>{{bio.bio}}</p>
+    <!-- Representative h-card (microformats2) so the IndieWeb Webring directory
+         can read the name (p-name, from the photo's alt), photo (u-photo) and
+         note (p-note). u-url + u-uid both point to the homepage, which makes
+         this the representative h-card when the ring fetches https://emilesilvis.com/. -->
+    <aside class="bio-section h-card">
+        <a class="bio-image-link u-url u-uid" href="{{hostname}}/">
+            <img src="{{bio.image}}" alt="{{bio.name}}" class="bio-image u-photo p-name">
+        </a>
+        <p class="p-note">{{bio.bio}}</p>
         <div class="social-links">
             <a href="{{bio.social.x.url}}" class="social-link" target="_blank" rel="noopener noreferrer">
                 <img src="{{bio.social.x.icon}}" alt="X" class="social-icon">
