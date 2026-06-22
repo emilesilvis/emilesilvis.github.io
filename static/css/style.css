@@ -196,6 +196,14 @@ th {
     border: 1px solid var(--border-color);
 }
 
+/* Avatar is wrapped in a homepage link for the h-card's u-url/u-uid; keep it
+   block-level and centered so the circular photo sits exactly as before. */
+.bio-image-link {
+    display: block;
+    width: 120px;
+    margin: 0 auto;
+}
+
 .bio-image {
     width: 120px;
     height: 120px;
