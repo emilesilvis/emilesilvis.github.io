@@ -69,3 +69,5 @@ Bull and bear mostly agree the technology is real. They disagree on the clocks.
 Where do I land? I'm on the bearish side for now, but I'm watching these three clocks.
 
 We may still get an AI revolution. Just not one that rewards today's investors.
+
+[What do you think?](https://x.com/emilesilvis/status/2069844973759905817)
