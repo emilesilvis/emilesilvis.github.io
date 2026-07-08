@@ -2,7 +2,7 @@
 from config import SITE_NAME, BIO, HOSTNAME, UMAMI, NAVIGATION
 from pathlib import Path
 from datetime import datetime
-import shutil, re, html
+import shutil, re, html, hashlib
 import markdown  # only external dependency
 
 
@@ -11,6 +11,10 @@ POSTS = ROOT / "posts"
 PAGES = ROOT / "pages"
 OUT = ROOT / "out"
 TEMPL = (ROOT / "static" / "templates" / "template.html").read_text(encoding="utf-8")
+
+# cache-bust the stylesheet: append a content hash so browsers pick up CSS changes
+_css_hash = hashlib.md5((ROOT / "static" / "css" / "style.css").read_bytes()).hexdigest()[:8]
+TEMPL = TEMPL.replace('/static/css/style.css', f'/static/css/style.css?v={_css_hash}')
 def _nav_href(path):
     path = path.strip("/")
     return "/" if not path else f"/{path}.html"
