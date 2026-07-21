@@ -139,6 +139,17 @@ def main():
     if static_dir.exists():
         shutil.copytree(static_dir, OUT / "static")
 
+    # copy self-contained apps verbatim: apps/<name>/ -> /<name>. Drop a folder
+    # in (a landing page, a game build, anything that ships as-is) and it's
+    # served at its own path — no code change here. Godot web builds must be the
+    # single-thread export; Pages can't send the COOP/COEP headers threads need.
+    apps_dir = ROOT / "apps"
+    if apps_dir.exists():
+        for app in sorted(apps_dir.iterdir()):
+            if app.is_dir():
+                shutil.copytree(app, OUT / app.name,
+                                ignore=shutil.ignore_patterns(".DS_Store"))
+
     # copy standalone HTML pages to output root
     html_dir = ROOT / "html"
     if html_dir.exists():
