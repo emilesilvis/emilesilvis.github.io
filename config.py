@@ -40,6 +40,10 @@ NAVIGATION = [
         "path": "/"
     },
     {
+        "title": "Projects",
+        "path": "/projects"
+    },
+    {
         "title": "Books read",
         "path": "/books-read"
     },
