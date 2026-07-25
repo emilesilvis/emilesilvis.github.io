@@ -349,6 +349,7 @@
 </div>
 <p>The first five form a chain, and presentation surrounds all of them — it cannot create depth, but it reveals, amplifies, or hides it.</p>
 <p>The chain is a way to locate a problem, not a production schedule. You will move in both directions: prototypes expose the real system, puzzles reveal missing or dominant mechanics, optimization shows whether your trade-offs are real, and any of those can send you back to redesign a mechanic or the domain itself.</p>
+<p><strong>The bar the chain serves.</strong> Underneath all five layers is one test: does the finished game admit genuinely different solutions to the same puzzle, or only one recipe in different clothes? Domain, mechanics, systems, puzzles and metrics are all in service of that single property — <strong>solution diversity</strong> <span class="id"><a class="id" href="#g041">G041</a></span>. A game that fails it is a <em>recipe-follower</em>: the player transcribes a fixed chain of transformations instead of designing one. Rule 2 above is how a single puzzle holds that line; every chapter that follows is an implementation of it — <a href="#puzzles">§8</a> builds to it, <a href="#optimization">§9</a> rewards it, <a href="#failure">§14</a> catches how it breaks.</p>
 <div class="box">
 <p><strong>When two good ideas conflict</strong>, this is the order. Player trust — determinism, fairness, consistent rules — first. Then the experience you intended. Then the quality of the build–run–inspect–edit loop. Then clarity. Then meaningful choice, accessibility, pacing, content quantity, and spectacle, in that order. Nothing outranks the player's ability to trust the simulator.</p>
 </div>
@@ -1579,7 +1580,7 @@ LIMITS   none — the bench edge is the only bound</p>
 </ul>
 </div>
 <div class="box">
-<p><strong>The standard.</strong> The player should be able to understand each rule, trace each consequence, build something that is recognisably theirs, and still be surprised by what the rules permit together.</p>
+<p><strong>The standard.</strong> The player should be able to understand each rule, trace each consequence, build something that is recognisably theirs, and still be surprised by what the rules permit together. Every item above is a facet of one gate — <strong>solution diversity</strong> <span class="id"><a class="id" href="#g041">G041</a></span>: radically different machines must pass the same puzzle, or the game is a recipe-follower, however well it scores on everything else.</p>
 <p><strong>The guiding rule.</strong> Build the smallest game that fully delivers that experience, then improve it by watching people play rather than by assuming.</p>
 </div>
 
@@ -1686,6 +1687,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <tr id="g029"><td class="mono"><strong>G029</strong></td><td><strong>Sandbox</strong></td><td>An open space with every mechanic unlocked, no target, and deliberately no score. <em class="treat">Where a campaign should end. Scoring a sandbox punishes the experimenting it exists to invite.</em></td><td class="mono"><a href="#puzzles">§8</a></td></tr>
 <tr id="g030"><td class="mono"><strong>G030</strong></td><td><strong>Score</strong></td><td>A reported measurement that invites improvement but never decides validity. <em class="treat">The line between a score and a hard limit is the line between a hobby and a wall. Keep it sharp.</em></td><td class="mono"><a href="#optimization">§9</a></td></tr>
 <tr id="g031"><td class="mono"><strong>G031</strong></td><td><strong>Semantic zoom</strong></td><td>Zooming out simplifies detail but keeps meaning — identity, connections, direction, state and faults survive. <em class="treat">The fix for large machines becoming unreadable. Plain graphical zoom-out turns an architecture into a grey smear.</em></td><td class="mono"><a href="#presentation">§10</a></td></tr>
+<tr id="g041"><td class="mono"><strong>G041</strong></td><td><strong>Solution diversity</strong></td><td>Whether a puzzle admits genuinely different architectures, or only one process in different clothes. The genre's defining gate. <em class="treat">The standard the solution family [[G032]] exists to produce. A game clears it when its puzzles provoke distinct decompositions [[G011]], topologies [[G036]] or logical routes; it fails as a recipe-follower when every solution is the same transformation chain rearranged. Screened by rule 2 in §2, the two-families test in §8, contract-not-recipe [[P009]], and the "one dominant architecture" failure in §14.</em></td><td class="mono"><a href="#what">§2</a></td></tr>
 <tr id="g032"><td class="mono"><strong>G032</strong></td><td><strong>Solution family</strong></td><td>A group of solutions sharing an architecture. Members differ in detail; different families differ in idea. <em class="treat">Author at least two per puzzle. They are what produces a second hump on the histogram.</em></td><td class="mono"><a href="#puzzles">§8</a></td></tr>
 <tr id="g033"><td class="mono"><strong>G033</strong></td><td><strong>Spec</strong></td><td>What a puzzle requires at the boundary — inputs, required outputs, test cases, quota and hard limits. <em class="treat">You author the spec and deliberately not a solution. That is the mechanical reason many different machines can pass.</em></td><td class="mono"><a href="#puzzles">§8</a></td></tr>
 <tr id="g034"><td class="mono"><strong>G034</strong></td><td><strong>Throughput</strong></td><td>How much a machine produces per unit of time. <em class="treat">The thing a pipeline is built to raise. Watch for it becoming the answer to every problem — that is how a puzzle game decays into a factory game.</em></td><td class="mono"><a href="#systems">§7</a></td></tr>
@@ -1991,7 +1993,7 @@ LIMITS   none — the bench edge is the only bound</p>
 
 <h2 id="games">E · Games to learn from</h2>
 <p>Where these principles came from. Calibration, not a recipe — play them, and read the column that matters.</p>
-<p>If you are new to the genre, start with the second column and pick two that sound unlike each other; <a href="#zachlike">§1</a> suggests one generous and one starved. If you already know these games, the fourth column is the one with the argument in it — each row is the lesson this guide took from that game, including where the game got it wrong.</p>
+<p>If you are new to the genre, start with the second column and pick two that sound unlike each other; <a href="#zachlike">§1</a> suggests one generous and one starved. If you already know these games, the fourth column is the one with the argument in it — each row is the lesson this guide took from that game, including where the game got it wrong. The fifth judges each against the one bar the genre lives or dies on — <strong>solution diversity</strong> <span class="id"><a class="id" href="#g041">G041</a></span>.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -1999,6 +2001,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <th>What you do in it</th>
 <th>Board &amp; metrics</th>
 <th>What to take from it</th>
+<th>Clears the bar?</th>
 </tr>
 </thead>
 <tbody>
@@ -2007,90 +2010,105 @@ LIMITS   none — the bench edge is the only bound</p>
 <td>Draw looping instruction tracks for two waldos that grab, bond and split atoms inside a reactor</td>
 <td>Tight bounded reactor, two concurrent path-followers · cycles / symbols / reactors</td>
 <td>The canonical mistake: real-time randomised bosses on the mandatory path, after which ~2% of tracked players finished</td>
+<td>Yes — rival track topologies</td>
 </tr>
 <tr>
 <td><strong>Infinifactory</strong></td>
 <td>Build 3D assembly lines from conveyors, welders and pushers, walking around inside your own factory</td>
 <td>Open 3D chamber · cycles / footprint / blocks</td>
 <td>Difficulty order fixed by measured playtest, not intuition</td>
+<td>Yes — many open routings</td>
 </tr>
 <tr>
 <td><strong>TIS-100</strong></td>
 <td>Write assembly for a corrupted parallel computer whose nodes hold almost no state and talk only to their neighbours</td>
 <td>Fixed node mesh, memory-starved · cycles / instructions / nodes</td>
 <td>The manual <em>is</em> the teacher, and documentation-as-onboarding works</td>
+<td>Yes — rival routing strategies</td>
 </tr>
 <tr>
 <td><strong>SHENZHEN I/O</strong></td>
 <td>Wire cheap microcontrollers together and program them to make consumer electronics work, under a parts budget</td>
 <td>Fixed board plus a cost budget · cost / power / lines</td>
 <td>Learning the parts is the wall; too tight reads as unfair</td>
+<td>Yes — budget forces distinct splits</td>
 </tr>
 <tr>
 <td><strong>Opus Magnum</strong></td>
 <td>Program mechanical arms to rotate, grab and transmute atoms into an alchemical product</td>
 <td>Near-infinite hex, uncapped · cost / cycles / area</td>
 <td>The sweet spot: completion gentle, optimization bottomless</td>
+<td>Yes — the canonical case</td>
 </tr>
 <tr>
 <td><strong>EXAPUNKS</strong></td>
 <td>Send small mobile programs into networked machines to read, alter and carry data back out</td>
 <td>Host-and-link graph, mobile agents · cycles / size / activity</td>
 <td>Space deliberately relaxed, so solving is approachable and optimizing is hard</td>
+<td>Yes — distinct agent strategies</td>
 </tr>
 <tr>
 <td><strong>MOLEK-SYNTEZ</strong></td>
 <td>Fold and bond molecules on a small hex bed with edge-mounted manipulators</td>
 <td>Finite hex, edge manipulators · cycles / instructions / modules</td>
 <td>A steep steady ramp earns a brutal reputation; unrepeatable vignettes frustrate players</td>
+<td>Yes, though the tight bed narrows it</td>
 </tr>
 <tr>
 <td><strong>Human Resource Machine</strong></td>
 <td>Order an office worker about with roughly a dozen commands to sort and process boxes</td>
 <td>Fixed floor, tiny command set · size / speed, optional</td>
 <td>One new command per level. Also: forced manual unrolling is labour, not difficulty</td>
+<td>Marginal — few logical routes</td>
 </tr>
 <tr>
 <td><strong>Turing Complete</strong></td>
 <td>Build a working computer upward from NAND gates, keeping each solved component as a new part</td>
 <td>Open canvas, exhaustive I/O tests · gates / delay / ticks</td>
 <td>Solved components become reusable parts — modularity as the curriculum</td>
+<td>Yes — radically different circuits</td>
 </tr>
 <tr>
 <td><strong>Baba Is You</strong></td>
 <td>Push the words that state the rules, rewriting what the level means while you are inside it</td>
 <td>Bounded grid, deterministic, small · no metrics</td>
 <td>Rule manipulation as a foundation, taught wordlessly. Comprehension <em>is</em> the difficulty</td>
+<td>No — single-insight puzzles</td>
 </tr>
 <tr>
 <td><strong>The Witness</strong></td>
 <td>Trace lines through panels whose grammar you are never told, on an island that teaches by arrangement</td>
 <td>Panel grammar, non-linear island · no metrics</td>
 <td>A new rule alone on a teaching panel, then combined. Puzzles whose <em>subject</em> is unclear read as unfair</td>
+<td>No — one hidden answer</td>
 </tr>
 <tr>
 <td><strong>Manufactoria</strong></td>
 <td>Lay conveyors and stampers that accept or reject strings of coloured tape — a Turing machine you can watch</td>
 <td>Bounded grid · parts / area</td>
 <td>Formal computation made spatial and watchable</td>
+<td>Yes — rival machines, one language</td>
 </tr>
 <tr>
 <td><strong>Silicon Zeroes</strong></td>
 <td>Assemble processor components into working hardware while a startup plot unfolds around you</td>
 <td>Fixed board · cost / speed</td>
 <td>Character-voiced briefs plus post-solve dialogue as a reward. Over-restricted palettes collapse open-endedness</td>
+<td>At risk — the palette can over-restrict</td>
 </tr>
 <tr>
 <td><strong>shapez</strong></td>
 <td>Cut, rotate and stack geometric shapes on an endless plane to hit escalating delivery targets</td>
 <td>Open canvas · self-imposed throughput</td>
 <td>Produce X to unlock the next building — and the grind that follows once targets randomise</td>
+<td>Weak — grind replaces solving</td>
 </tr>
 <tr>
 <td><strong>Factorio</strong> <em>(contrast)</em></td>
 <td>Build and defend an ever-growing automated factory on an unbounded map</td>
 <td>Unbounded — not a puzzle game · throughput, self-imposed</td>
 <td>Cautionary: &quot;build bigger&quot; is an escape valve, and players re-impose constraints to stay interested</td>
+<td>No — &quot;build bigger&quot; escape</td>
 </tr>
 </tbody>
 </table></div>
