@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How to Make a Zachlike</title>
+<title>How to Design a Zachlike</title>
 <style>
 :root{
     --paper:#fbfbfa; --ink:#1a1c1a; --muted:#5c605c; --rule:#dcdcd6;
@@ -141,13 +141,14 @@
 
 <main>
 <p class="eyebrow">A guide</p>
-<h1 id="front">How to make a Zachlike</h1>
-<p class="lede">A Zachlike is an engineering puzzle game. The player builds a machine, runs it, watches it fail, and fixes it. This is how to make one.</p>
+<h1 id="front">How to design a Zachlike</h1>
+<p class="lede">A Zachlike is an engineering puzzle game. The player builds a machine, runs it, watches it fail, and fixes it. This is how to design one.</p>
 <p>You are aiming for one thing: <strong>a small set of understandable rules whose interactions produce a large space of solutions, presented so the player can see every consequence.</strong></p>
 <p>Both halves matter. Rules that interact but stay hidden produce cleverness the player cannot check. Rules that are visible but never interact produce a list of chores.</p>
 <h3>Who this is for</h3>
 <p>Someone who wants to make one of these and has not made one before. It assumes you can build software, or can work with someone who can. It assumes nothing about puzzle design, and nothing about the genre — <a href="#zachlike">§1</a> starts by describing what one of these games is actually like to play.</p>
-<p>You do not need a large team, a physics engine, or an art budget. Most games in this genre were made by one to five people, and most of the work is deciding what to leave out. The hard parts are not technical: they are choosing a small enough rule set, writing puzzles that admit more than one answer, and making the machine explain itself when it fails.</p>
+<p>You do not need a large team, a physics engine, or an art budget. Most games in this genre were made by one to five people, and most of the work is deciding what to leave out. The hard parts are choosing a small enough rule set, writing puzzles that admit more than one answer, and making the machine explain itself when it fails.</p>
+<p><strong>What this does not cover.</strong> This is a guide to the design, not the build. It will tell you which systems have to exist — a deterministic tick, a solver, per-metric histograms, named solution branches — and never how to write them. Engine choice, simulator architecture, save formats, and shipping are out of scope.</p>
 <h3>How this guide is built</h3>
 <p>There are two kinds of material here, and they are read differently.</p>
 <p><strong>The chapters</strong> run in build order — what a Zachlike is, what you are making, the smallest version of it, a worked example, then the five layers a design is made of, then the craft around them, then how to work and what to do when it breaks. Read them in order the first time. They argue; they are meant to be read.</p>
