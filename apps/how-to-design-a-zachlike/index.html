@@ -133,8 +133,8 @@
   <div class="navhead">Reference</div>
   <a href="#reg-g">A · Glossary <span style="opacity:.6">G001–040</span></a>
   <a href="#reg-m">B · Mechanics <span style="opacity:.6">M001–135</span></a>
-  <a href="#reg-p">C · Presentation <span style="opacity:.6">P001–069</span></a>
-  <a href="#reg-l">D · Puzzles <span style="opacity:.6">L001–015</span></a>
+  <a href="#reg-p">C · Presentation <span style="opacity:.6">P001–070</span></a>
+  <a href="#reg-l">D · Puzzles <span style="opacity:.6">L001–016</span></a>
   <a href="#games">E · Games</a>
   <a href="#reg-src">F · Sources</a>
 </nav>
@@ -296,7 +296,7 @@
 <ol>
 <li><strong>The player builds something that runs.</strong> The same object is built, executed, inspected, debugged, revised, optimized, saved, and shared. <span class="id"><a class="id" href="#p001">P001</a></span></li>
 <li><strong>The puzzle says what, not how.</strong> The spec describes behaviour at the boundary. Two completely different machines must both pass if they satisfy it. <span class="id"><a class="id" href="#p009">P009</a> · <a class="id" href="#l001">L001</a></span></li>
-<li><strong>Correctness is judged on behaviour.</strong> You test what the machine does, never whether it resembles a hidden reference. <span class="id"><a class="id" href="#p002">P002</a> · <a class="id" href="#m001">M001</a></span></li>
+<li><strong>Correctness is judged on behaviour, and every case you test is inferable from the ones you showed.</strong> You test what the machine does, never whether it resembles a hidden reference — and never on a case a player could not have known to reason about. <span class="id"><a class="id" href="#p002">P002</a> · <a class="id" href="#m001">M001</a></span></li>
 <li><strong>Execution is deterministic, discrete, and inspectable.</strong> Same machine, same input, same sequence, every time. Time, order, state, waiting, blocking, and failure can all be looked at. <span class="id"><a class="id" href="#p005">P005</a></span></li>
 <li><strong>Failure explains itself.</strong> A failed run points at the earliest thing that went wrong and keeps enough state to inspect it. It answers &quot;where was my reasoning wrong?&quot;, never &quot;which hidden rule fired?&quot; <span class="id"><a class="id" href="#p007">P007</a></span></li>
 <li><strong>Correct beats optimal.</strong> A messy but honest machine passes. Progression never requires a good score unless the score is the explicit subject of that puzzle. <span class="id"><a class="id" href="#p003">P003</a> · <a class="id" href="#l004">L004</a></span></li>
@@ -508,6 +508,94 @@ LIMITS   none — the bench edge is the only bound</p>
 <div class="eg">
 <p><strong>On the Dye Bench.</strong> The domain is not &quot;colour&quot; — it is <em>a dye works</em>, a process someone performs. That is what handed over pour, mix, heat and dispense without anyone having to invent them, and what makes a vat holding four units feel like a fact about the world rather than a rule imposed by a designer (<a href="#example">§4</a>).</p>
 </div>
+<h3>Where to find one</h3>
+<p>Do not brainstorm settings. Go and find a process. Three properties make one work, and the third is the one that does the filtering:</p>
+<ul>
+<li><strong>Someone performs it.</strong> A real job, craft or trade, with practitioners who would recognise your verbs. That is what lets the fiction answer design questions instead of needing them answered.</li>
+<li><strong>One person can see the whole of it.</strong> A bench, a room, a shop floor. Not an industry — you need a scale at which every consequence can be on screen at once.</li>
+<li><strong>It already has something scarce in it.</strong> Capacity, reach, a timing window, a material that runs out. If the real process is short of nothing, it will not hand you a puzzle.</li>
+</ul>
+<p>&quot;A game about music&quot; fails all three. <em>Voicing a pipe organ</em> — one bellows shared by every rank sounding at once — passes all three, and hands you the scarcity before you have designed anything.</p>
+<p>Nine processes the genre has not used, to calibrate what a domain looks like when it is doing its job. Read the third column first: that is the one that becomes your mechanics.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Process</th>
+<th>Verbs it hands over</th>
+<th>The scarcity that comes free</th>
+<th>Family</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Change ringing</strong></td>
+<td>ring, hunt, dodge, place</td>
+<td>A bell can move only one position per change</td>
+<td><a href="#mfam-e">E</a></td>
+</tr>
+<tr>
+<td><strong>Railway interlocking</strong></td>
+<td>set, lock, clear, release</td>
+<td>Two routes may never claim the same rail</td>
+<td><a href="#mfam-e">E</a> · <a href="#mfam-d">D</a></td>
+</tr>
+<tr>
+<td><strong>Foundry casting</strong></td>
+<td>pour, gate, vent, chill</td>
+<td>Metal freezes as it flows — the mould must fill before it sets</td>
+<td><a href="#mfam-b">B</a></td>
+</tr>
+<tr>
+<td><strong>Organ building</strong></td>
+<td>rank, wind, couple, voice</td>
+<td>One wind supply, divided among everything currently sounding</td>
+<td><a href="#mfam-b">B</a></td>
+</tr>
+<tr>
+<td><strong>Darkroom developing</strong></td>
+<td>expose, develop, stop, fix</td>
+<td>Every bath is timed, and nothing is reversible</td>
+<td><a href="#mfam-c">C</a></td>
+</tr>
+<tr>
+<td><strong>Jacquard weaving</strong></td>
+<td>warp, shed, pick, beat</td>
+<td>The pattern is committed to cards before a thread moves</td>
+<td><a href="#mfam-f">F</a></td>
+</tr>
+<tr>
+<td><strong>Compounding pharmacy</strong></td>
+<td>measure, triturate, dissolve, titrate</td>
+<td>Dose tolerance, and a shelf life that starts when you open the jar</td>
+<td><a href="#mfam-c">C</a></td>
+</tr>
+<tr>
+<td><strong>A telephone exchange</strong></td>
+<td>patch, ring, hold, release</td>
+<td>Finite jacks, and fewer trunk lines than callers</td>
+<td><a href="#mfam-b">B</a> · <a href="#mfam-e">E</a></td>
+</tr>
+<tr>
+<td><strong>Canal locks</strong></td>
+<td>sluice, fill, lock, divert</td>
+<td>Every boat locked through spends water that runs downhill for good</td>
+<td><a href="#mfam-b">B</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>Same warning as <a href="#mechanics">§6</a>'s families: this is here to show you the shape, not to be chosen from. A domain you picked off a list is one you have no instinct about, and instinct is the whole reason to have a domain.</p>
+<div class="move">
+<p><strong>Do this.</strong> Name three processes you could watch someone perform in a single room. For each, write the four verbs and the one thing that is scarce. Discard any where the scarcity column comes out empty — that is the one that was never going to become a game.</p>
+</div>
+<h3>Will anyone else understand it?</h3>
+<p>The question this chapter is usually missing. A domain you have to teach before the game can start is a domain that spends its first two hours on vocabulary.</p>
+<p>Two costs, and they are not the same size:</p>
+<ul>
+<li><strong>Learning the fiction is free</strong>, and is often the pleasure. Nobody knows alchemy. Opus Magnum costs nothing to enter anyway, because every rule it runs on is on the screen.</li>
+<li><strong>Learning the real process is expensive.</strong> SHENZHEN I/O asks you to read datasheets before you can build, and <a href="#games">Appendix E</a> records the result: learning the parts is that game's wall. It is a deliberate choice there. Make it deliberately or not at all.</li>
+</ul>
+<p>So: your domain may be as obscure as you like, provided nothing the player <em>must</em> know lives outside the game. Invented physics is the safer bet precisely because invented physics cannot have a right answer the player is supposed to arrive already holding.</p>
+<p>The test is the screenshot test again, aimed at the domain rather than the interface. Hand a paused frame to someone who has never heard of your process. If what a part does depends on whether they happen to know the trade, the domain is carrying weight the representation should be carrying. <span class="id"><a class="id" href="#p015">P015</a></span></p>
 <h3>What a good domain gives you</h3>
 <ul>
 <li><strong>Verbs.</strong> Molecular engineering suggests bonding, splitting, rotating, transporting. Distributed computation suggests storing, transmitting, waiting, synchronising, branching.</li>
@@ -526,7 +614,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <p><strong>Fix the fiction early, and use it as an oracle.</strong> When you are unsure how something should work, ask how it would work in the world. This is the most consistently reported working method in the genre. It is not decoration — it is how a list of puzzles acquires a reason to exist (<a href="#story">§12</a>).</p>
 </div>
 <div class="box">
-<p><strong>You have a domain when</strong> you can name the process in a short phrase; when four or five verbs fall out of it without effort; when at least two constraints feel like facts about the world rather than rules you imposed; and when you can answer &quot;how should this behave?&quot; by asking what would happen in the world instead of by deciding.</p>
+<p><strong>You have a domain when</strong> you can name the process in a short phrase; when four or five verbs fall out of it without effort; when at least two constraints feel like facts about the world rather than rules you imposed; when nothing the player has to know about the process lives outside the game; and when you can answer &quot;how should this behave?&quot; by asking what would happen in the world instead of by deciding.</p>
 <p>Next: <a href="#mechanics">§6</a> turns those verbs into a small set of parts.</p>
 </div>
 
@@ -885,6 +973,17 @@ LIMITS   none — the bench edge is the only bound</p>
 </svg>
 <figcaption><strong>Figure 5.</strong> The two architectures the puzzle admits, drawn as architectures rather than as layouts — many arrangements of tiles realise each one. The parallel build is made entirely of parts already on the palette, which is what makes it a fair reframing rather than a trick <span class="id"><a class="id" href="#l005">L005</a></span>. The vats are doing two jobs at once here: absorbing timing slack, and being the only part that can supply two mixers, since a pipe feeds exactly one tile — and it takes one per colour, because a vat hands out whatever reached it first and a mixer needs one of each (<a href="#example">§4</a>). Neither architecture dominates: the serial build is smaller and cleaner, the parallel one faster and far more wasteful. Authoring both families is how the second hump in the distribution gets there on purpose (<a href="#optimization">§9</a>).</figcaption>
 </figure>
+<h3>Measure the diversity, do not assert it</h3>
+<p>Two authored families are an intention, not a measurement. You wrote both, so of course they exist. What you cannot see from the inside is whether a player who never read your notes finds a third, or whether your two collapse into one the moment somebody optimizes them. Three instruments, cheapest first. <span class="id"><a class="id" href="#l016">L016</a></span></p>
+<p><strong>Pull a part out of the palette.</strong> Free, and available before anything is built. Take your reference solution, delete one part type from the palette, and solve the puzzle again. If it becomes unsolvable, that part is load-bearing and you have one architecture in a costume. If a different route appears, you have just found your second family — and you found it the way a player does, by not having the part you meant them to use. Once per part type.</p>
+<p><strong>Fingerprint the corpus.</strong> The moment playtesting produces solutions, stop comparing scores. Scores collide: two unrelated machines routinely land on the same cycle count, and one machine tuned two ways lands on two. Compare structure instead — the count of each part type, the multiset of which types sit adjacent to which, or the shape of the flow graph. Members of one family have near-identical fingerprints. The number you want is distinct fingerprints, never distinct scores.</p>
+<p>This is also how you tell a real second hump from a false one (<a href="#optimization">§9</a>). Two humps made of two fingerprints is a puzzle with two architectures. Two humps made of one fingerprint is a single architecture executed well and badly — a difficulty spread wearing a diversity spread.</p>
+<p><strong>Enumerate the frontier where you can.</strong> The solver from <a href="#method">§13</a> does this properly: generate every solution under a bounded board and a cycle cap, fingerprint them all, and count the distinct structures on or near the Pareto frontier. Nothing else measures diversity directly.</p>
+<p>Be honest about when that is affordable. Enumeration explodes, and past the first act it usually is not. Bound it deliberately — small board, low cycle cap, early puzzles only — and read the result as calibration for the puzzles you cannot enumerate. A solver covering a fifth of the campaign still answers the question you most need answered early: whether your <em>mechanics</em> generate diversity at all (<a href="#mechanics">§6</a>).</p>
+<p><strong>What failure looks like.</strong> A broad, well-populated frontier on which every point has the same fingerprint. That is the recipe-follower <a href="#what">§2</a> warns about, and it is invisible to every other instrument in this guide — the scores spread, the histogram has shape, playtesters call the puzzle hard. They are all tuning the same machine.</p>
+<div class="move">
+<p><strong>Do this.</strong> Run the palette-removal test on each puzzle before you author the next one. It costs ten minutes and it is the only diversity check that works before you have players.</p>
+</div>
 <h3>Order by watching, and keep walls off the path</h3>
 <p>Difficulty order is edited after observation, never authored by intuition. Sketch the set, estimate, watch a small group play, then do three things: <strong>reorder</strong> by measured difficulty, <strong>delete</strong> puzzles whose insight you already taught, and <strong>insert</strong> a bridge where the jump is too large. A drop-off in completion is design evidence, not player failure. <span class="id"><a class="id" href="#l009">L009</a></span></p>
 <p>Open-ended difficulty is very individual — one player's wall is another's warm-up — so a single hard gate blocks a large fraction of players outright. Use both remedies: <span class="id"><a class="id" href="#l010">L010</a></span></p>
@@ -1096,6 +1195,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <li><strong>Waiting and blocking are states, not crashes.</strong> <strong>Blocking</strong> <span class="id"><a class="id" href="#g003">G003</a></span> is a part that cannot act yet holding its place. Show what is waiting, what it is waiting for, which resource is occupied, and whether the system is <strong>deadlocked</strong> <span class="id"><a class="id" href="#g010">G010</a></span> or merely slow. <span class="id"><a class="id" href="#p036">P036</a></span></li>
 <li><strong>Diagnose the first fault, not the last.</strong> Identify the earliest real violation, preserve the failing state, and line up expected against actual output in one coordinate system. A readable <strong>trace</strong> <span class="id"><a class="id" href="#g037">G037</a></span> of what happened, step by step, is the difference between &quot;it failed&quot; and &quot;it failed here, because of this&quot;. Cascading later faults must not bury the first divergence. <span class="id"><a class="id" href="#p038">P038</a> · <a class="id" href="#p039">P039</a></span></li>
 <li><strong>Failure is spectacle, not punishment.</strong> Make crashes enjoyable to watch but fast, local, informative, and costless. The effect should centre on the offending part rather than cover it. <span class="id"><a class="id" href="#p065">P065</a></span></li>
+<li><strong>Let the machine be audible.</strong> A tick you can hear, one short voice per operation, and a different texture when it stalls. Players hear a jam before they find it, rhythm is how they notice a machine has settled, and the sound is half of any replay they share. Every cue duplicates something visible — nothing is stated in audio alone. <span class="id"><a class="id" href="#p070">P070</a></span></li>
 </ul>
 <h3>Trust and access</h3>
 <ul>
@@ -1247,6 +1347,15 @@ LIMITS   none — the bench edge is the only bound</p>
 
 <h2 id="method">13 · How to work</h2>
 <p>This chapter is two forms and a routine. They look like bureaucracy and they are not — they are the smallest amount of writing that stops you discovering a structural problem after authoring thirty puzzles on top of it. Each blank template below is followed by the same form filled in for the Dye Bench of <a href="#example">§4</a>, because a template is much easier to use once you have seen one completed.</p>
+<h3>How big is a campaign</h3>
+<p>The number nobody states, and the one everything below quietly assumes.</p>
+<p>Do not pick it — derive it. <a href="#teaching">§11</a> says each new idea needs a cluster: introduce, develop, twist, conclude, which is about four puzzles. <a href="#mechanics">§6</a> says you should be able to list your mechanics on one hand. Five parts at four puzzles each is twenty. Add three or four anchors where several ideas recombine, an act ending or two, and a sandbox, and you land near thirty.</p>
+<p>That is the shape of a shipped campaign in this genre, which runs roughly twenty to sixty. The arithmetic is worth doing early because of what it catches. If it says ninety, you do not have a long game — you have too many mechanics, and <a href="#failure">§14</a>'s first row is already true of your design. If it says twelve, you have a demo, and the honest move is to ship it as one rather than pad it with quotas <a href="#puzzles">§8</a> has already told you not to raise.</p>
+<p><strong>Then budget the authoring, not just the count.</strong> What follows is a planning figure derived from the workflow below, not telemetry from anyone's shipped project: a per-puzzle sheet is an afternoon, implementing and verifying it is another, and the reorder-and-bridge pass after playtest adds about a third on top. Two days per shipped puzzle is a defensible number to plan against. Author a fifth more than you intend to ship, because deleting the duplicates is part of the method rather than evidence it went wrong.</p>
+<p>Thirty puzzles is therefore something like three months of puzzle work, on top of the engine and after it. The engine is the part you already know how to estimate. This is the part that gets discovered late.</p>
+<div class="box">
+<p><strong>The ratio worth knowing.</strong> Almost none of the cost of a Zachlike is art, and much more of it than you expect is level authoring. If your schedule treats content as the tail end of an engine project, it is the wrong way round: the engine exists so that authoring can happen, and the four supporting systems at the end of this chapter have to be running before authoring is even efficient.</p>
+</div>
 <h3>The one-page definition</h3>
 <p>Write this before full production. Every later decision refers back to it. One page.</p>
 <div class="tw"><table>
@@ -1854,7 +1963,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <tr id="m135"><td class="mname"><strong>M135</strong><br>Assembly-into-world narrative payoff</td><td>The player’s solved machines and products visibly feed the game world or story, answering “why am I building this?”</td><td>Solve, then watch products appear in the world or cutscenes.</td><td>Authoring cost</td><td>—</td><td>Low</td><td>Infinifactory, shapez, Factorio, Opus Magnum</td><td class="mono"><a href="#m118">M118</a>, <a href="#m129">M129</a></td></tr>
 </table></div>
 
-<h2 id="reg-p">C · Presentation register <span class="regcount">P001–P069</span></h2>
+<h2 id="reg-p">C · Presentation register <span class="regcount">P001–P070</span></h2>
 <p>The interface, simulation, and presentation principles behind <a href="#presentation">§10</a>, <a href="#teaching">§11</a>, and the seven rules in <a href="#what">§2</a>. Essential marks the genre and usability foundation; Important marks major quality multipliers; Useful marks valuable additions where concept and scope support them. Each review test is meant to be run at concept, prototype, vertical-slice, and polish stages.</p>
 <h3>Core loop</h3>
 <p class="note">What makes the experience a Zachlike rather than a conventional logic puzzle.</p>
@@ -1926,6 +2035,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <tr id="p039"><td class="mono"><strong>P039</strong></td><td><strong>Stop on the earliest meaningful fault, but let players inspect or continue</strong></td><td>The first fault is usually causal; later faults are noise.</td><td>Preserve the state and offer reset, step-back/replay, or continue when useful.</td><td>Freeze on collision/invalid output; highlight offenders; retain timeline position and camera. <em class="treat">Treatment:</em> Strong local marker plus concise textual reason.</td><td>Instant reset; long cascade before report; fault dialog covers the machine.</td><td>Can the player inspect the exact pre-fault configuration?</td><td class="mono">Essential</td></tr>
 <tr id="p040"><td class="mono"><strong>P040</strong></td><td><strong>Make performance costs observable during execution where possible</strong></td><td>Optimization is easier when a score can be connected to visible behavior.</td><td>Pure end totals do not explain where cycles, power, or area are spent.</td><td>Live counters, per-cycle power, occupied bounding box, active component cost, or idle-time visualization. <em class="treat">Treatment:</em> Counters update without dominating; selecting a metric can reveal contributing elements.</td><td>Score changes mysteriously; metrics only appear after exit; no attribution.</td><td>Can a player form a concrete optimization hypothesis from the run, not just the final number?</td><td class="mono">Important</td></tr>
 <tr id="p065"><td class="mono"><strong>P065</strong></td><td><strong>Make failure spectacle, not punishment</strong></td><td>Make crashes satisfying to witness while keeping them fast, local, informative, and materially costless.</td><td>Players fail repeatedly. Entertaining failure sustains experimentation; punitive failure teaches caution and discourages learning.</td><td>Center the visual effect on the causal fault, halt quickly, preserve the state, and return to editing without delay or resource loss. <em class="treat">Treatment:</em> Use a brief explosion, clatter, spark, or collapse that emphasizes the offending parts rather than covering them.</td><td>A long generic failure animation delays iteration, or the spectacle obscures the actual cause.</td><td>Does failure make the player smile and immediately understand what to change?</td><td class="mono">Important</td></tr>
+<tr id="p070"><td class="mono"><strong>P070</strong></td><td><strong>Let the machine be audible</strong></td><td>A running construction should sound like a mechanism — a steady tick, a distinct voice per operation, and an audibly different texture when it stalls — while never being the only place a fact is stated.</td><td>Rhythm is how players notice a machine has settled into a steady state, and how they hear a stall several seconds before they find it on screen. Audio is also half of any replay they share, and the largest part of why a mature machine is pleasurable to watch.</td><td>Tie a sound to the tick, give each operation its own short voice, and change the texture on blocked, waiting, and jammed. Keep every one of these a duplicate of something visible. <em class="treat">Treatment:</em> Layer rather than sequence, so a busy machine reads as polyrhythm instead of noise; scale density with simulation speed; keep fast-forward listenable or silent.</td><td>A jam that sounds identical to normal running; a cue that carries information available nowhere else; audio that becomes a wall of clicks at high speed.</td><td>With the screen covered, can a player tell a running machine from a stalled one? With the sound off, have they lost any information?</td><td class="mono">Useful</td></tr>
 </table></div>
 <h3>Onboarding &amp; reference</h3>
 <p class="note">How the game teaches a technical system without flattening its depth or interrupting flow.</p>
@@ -1971,7 +2081,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <tr id="p060"><td class="mono"><strong>P060</strong></td><td><strong>Make the simulator feel impartial</strong></td><td>Rules, ordering, scoring, and validation must be stable, inspectable, and free of hidden exceptions.</td><td>Players invest substantial reasoning; any sense that the game cheated is corrosive.</td><td>Document edge ordering, show first failing test, make metrics exact, and avoid silently changing inputs or component behavior. <em class="treat">Treatment:</em> Consistent tick display and reproducible replay; explicit version changes when rules evolve.</td><td>Hidden test randomization; undocumented patch changes invalidate designs; score rounding changes rank.</td><td>Can a disputed result be reproduced and explained from visible rules?</td><td class="mono">Essential</td></tr>
 </table></div>
 
-<h2 id="reg-l">D · Puzzle and curriculum register <span class="regcount">L001–L015</span></h2>
+<h2 id="reg-l">D · Puzzle and curriculum register <span class="regcount">L001–L016</span></h2>
 <p>The puzzle- and level-design principles. Unlike the mechanics and presentation registers, these are argued in full in the chapters rather than summarised from them — the <em>Expanded in</em> column points at the chapter that carries the reasoning.</p>
 <div class="tw"><table class="reg">
 <tr><th>ID</th><th>Principle</th><th>Statement</th><th>Design move</th><th>Expanded in</th></tr>
@@ -1990,6 +2100,7 @@ LIMITS   none — the bench edge is the only bound</p>
 <tr id="l013"><td class="mono"><strong>L013</strong></td><td><strong>Teach in the puzzle and the reference, not a tutorial</strong></td><td>Teach by having the player use the mechanic, and offload the rest onto in-world reference material treated as a core design surface. A rule a well-formed system can show should not be told in a text box.</td><td>If a new part cannot be taught by puzzle shape plus a self-displaying face, the teaching is unbuilt — fix the representation, do not add a paragraph.</td><td class="mono"><a href="#teaching">§11</a></td></tr>
 <tr id="l014"><td class="mono"><strong>L014</strong></td><td><strong>Cramp and nest only in optional or late content</strong></td><td>Resource-cramping is where “tight and clever” tips into “tight and unfair”; nesting is the genre's emotional peak but raises cognitive load steeply.</td><td>Keep early and mid puzzles to one transformation stage on a comfortable board. Never introduce cramping and nesting in the same new puzzle.</td><td class="mono"><a href="#puzzles">§8</a></td></tr>
 <tr id="l015"><td class="mono"><strong>L015</strong></td><td><strong>End on a sandbox, framed as graduation</strong></td><td>A final unconstrained space with every mechanic unlocked, no target, and deliberately no score, framed diegetically as earned rather than offered as a menu item.</td><td>Preserve the sandbox as the unscored graduation lap; share sandbox creations separately from ranked solutions.</td><td class="mono"><a href="#puzzles">§8</a></td></tr>
+<tr id="l016"><td class="mono"><strong>L016</strong></td><td><strong>Measure solution diversity; never assert it</strong></td><td>Two authored families are an intention, not a measurement. Test by removing each part type from the palette and re-solving, by fingerprinting the playtest corpus structurally rather than by score, and — where enumeration is affordable — by counting distinct structures on the Pareto frontier. A populated frontier whose points all share one fingerprint is a recipe-follower that every other instrument reports as healthy.</td><td>Run the palette-removal test on each puzzle before authoring the next one.</td><td class="mono"><a href="#puzzles">§8</a></td></tr>
 </table></div>
 
 <h2 id="games">E · Games to learn from</h2>
