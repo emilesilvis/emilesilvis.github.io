@@ -353,7 +353,7 @@ table.reg tr:target td:first-child {
 <li><strong>Its relevant state fits in one view.</strong> The player can inspect the causes that matter.</li>
 <li><strong>It contains pressure.</strong> Capacity, timing, reach, scarcity, or irreversibility can force decisions.</li>
 </ul>
-<p>Three contrasting prompts show the pattern:</p>
+<p>Four contrasting prompts show the pattern:</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -377,6 +377,11 @@ table.reg tr:target td:first-child {
 <td><strong>Darkroom developing</strong></td>
 <td>expose, develop, stop, fix</td>
 <td>Baths are timed and some changes are irreversible</td>
+</tr>
+<tr>
+<td><strong>Ore smelting line</strong></td>
+<td>feed, move, smelt, cast</td>
+<td>One furnace's rate paces every line that feeds it</td>
 </tr>
 </tbody>
 </table></div>
@@ -502,28 +507,28 @@ table.reg tr:target td:first-child {
 </tbody>
 </table></div>
 <p>If the honest answer is “nothing in particular,” check whether construction has become work without a decision.</p>
-<p>The separate <a href="mechanics.html#reg-m">mechanics catalog</a> maps nine broad families. Open it after you can name the domain and pressure; use it to find interactions, not to fill a palette.</p>
+<p>The separate <a href="mechanics.html#reg-m">mechanics catalog</a> maps nine broad families. Its rows are finer-grained than the count above: one mechanic as counted here — one rule the player learns as a unit — often spans several rows. Open it after you can name the domain and pressure; use it to find interactions, not to fill a palette.</p>
 <div class="box">
 <p><strong>The mechanic set is coherent when</strong> it fits on one hand, survives the five questions, and creates a pressure you can name in one sentence.</p>
 <p>Next: <a href="#systems">§3</a> asks what those rules do together.</p>
 </div>
 
 <h2 id="systems">3 · Systems</h2>
-<p>A system is what emerges when mechanics interact: pipelines, clocks, state machines, routing architectures, and feedback.</p>
-<p>You write local rules; the system is what they do together. Useful complexity comes from composition, not from ambiguity inside one part.</p>
+<p>A system is what emerges when mechanics interact. Take the smelting line from <a href="#domain">§1</a>. Three local rules — a belt moves items one cell per tick, an arm moves one item between adjacent cells, a furnace consumes two items to emit one — already produce behaviour none of them mentions: queues, stalls, races over a shared cell, throughput that depends on layout.</p>
+<p>You write local rules; the system is what they do together. Useful complexity comes from composition — many small, unambiguous rules interacting — not from ambiguity inside one part.</p>
 <h3>Freeze the core contract</h3>
-<p>Define and test the rules that every later mechanic depends on:</p>
+<p>Define and test the rules that every later mechanic depends on. Each category is a set of questions the system must always answer the same way:</p>
 <ul>
-<li>object identity and transformation;</li>
-<li>connections, capacity, and transfer;</li>
-<li>time, update phases, and arbitration; and</li>
-<li>failure, completion, and editing during a run.</li>
+<li><strong>Object identity and transformation.</strong> When are two items the same item? What exactly does the furnace emit for each input it accepts?</li>
+<li><strong>Connections, capacity, and transfer.</strong> What may connect to what, how much fits in one cell or container, and when does a transfer refuse to happen?</li>
+<li><strong>Time, update phases, and arbitration.</strong> How long is a tick, in what order do parts act inside it, and when two arms grab the same item in the same tick, which wins?</li>
+<li><strong>Failure, completion, and editing.</strong> What counts as a crash, a spill, or a finished run, and what may the player change while the machine runs?</li>
 </ul>
-<p>The same machine, input, rules, and seed should produce the same visible sequence. Seeded variation is compatible with that standard when every failure can be replayed.</p>
+<p>These rules are the contract because determinism rests on them: the same machine, input, rules, and seed must produce the same visible sequence. Seeded variation meets that standard when replaying a seed reproduces every failure exactly.</p>
 <p>Revise unfinished rules freely. Once players save solutions against a released rule, change it only deliberately, visibly, and with compatibility in mind.</p>
 <h3>Design interactions, not inventories</h3>
-<p>For every pair of core mechanics, ask whether one changes the value, cost, timing, or failure modes of the other. Formal connectivity alone is not an interaction.</p>
-<p>For <em>n</em> mechanics, inspect <em>n(n−1)/2</em> unordered pairs. Four mechanics produce six pairs; seven produce twenty-one.</p>
+<p>For every pair of core mechanics, ask whether one changes the value, cost, timing, or failure modes of the other. Formal connectivity alone is not an interaction: an arm can load a belt, but if the belt treats every item alike, <em>arm × belt</em> has created no new decision.</p>
+<p>Put the pairs in a matrix — mechanics on both axes, one cell per unordered pair. For <em>n</em> mechanics that is <em>n(n−1)/2</em> cells; four mechanics produce six, seven produce twenty-one. Answer three questions per cell:</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -540,10 +545,16 @@ table.reg tr:target td:first-child {
 <td>How can the player predict and inspect it?</td>
 <td>Does either rule earn its place only through this pair?</td>
 </tr>
+<tr>
+<td><em>belt × furnace</em></td>
+<td>Feed rate becomes a choice: an overfed furnace backs its belt up</td>
+<td>The queue is visible on the belt itself</td>
+<td>No — each also interacts with the arm</td>
+</tr>
 </tbody>
 </table></div>
 <div class="move">
-<p><strong>Do this.</strong> Fill the matrix, then inspect weak rows and dominant cells. A weak row is a cut candidate. A dominant cell needs puzzle tests to show that it creates more than one recipe.</p>
+<p><strong>Do this.</strong> Fill the matrix, then read it two ways. A weak <strong>row</strong> — a mechanic that changes little no matter what it is paired with — is a cut candidate. A dominant <strong>cell</strong> — one pair carrying most of the system's interest — needs puzzle tests to show it creates more than one recipe.</p>
 </div>
 <h3>Specify observable state</h3>
 <p>Define which facts any presentation must expose. Objects, values, and control need traceable paths; transformations need inspectable inputs, conditions, and outputs.</p>
@@ -578,8 +589,54 @@ table.reg tr:target td:first-child {
 </tr>
 </tbody>
 </table></div>
-<p>Shared capacity, synchronization, feedback, alternate routes, irreversible operations, limited state, and topology can all create global complexity while remaining locally predictable.</p>
-<p>Backpressure is a full destination stalling supply upstream. Deadlock is a cycle of parts waiting on one another. If the system permits either, show where the chain or cycle begins.</p>
+<p>Local rules can create global complexity while staying locally predictable. Seven mechanisms do most of that work:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Local rule</th>
+<th>Global consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Shared capacity</strong></td>
+<td>one furnace serves two lines</td>
+<td>feeding one line starves the other</td>
+</tr>
+<tr>
+<td><strong>Synchronization</strong></td>
+<td>parts act on fixed phases</td>
+<td>distant parts must agree about timing</td>
+</tr>
+<tr>
+<td><strong>Feedback</strong></td>
+<td>output routed back as input</td>
+<td>small changes amplify or damp instead of staying local</td>
+</tr>
+<tr>
+<td><strong>Alternate routes</strong></td>
+<td>more than one path reaches the goal</td>
+<td>congestion moves rather than disappears</td>
+</tr>
+<tr>
+<td><strong>Irreversibility</strong></td>
+<td>the furnace cannot un-smelt</td>
+<td>operation order becomes a commitment</td>
+</tr>
+<tr>
+<td><strong>Limited state</strong></td>
+<td>a latch holds one bit</td>
+<td>history must be encoded in position or timing</td>
+</tr>
+<tr>
+<td><strong>Topology</strong></td>
+<td>behaviour follows the wiring</td>
+<td>rearranging connections changes outcomes without new parts</td>
+</tr>
+</tbody>
+</table></div>
+<p>Backpressure is a full destination stalling supply upstream: the furnace stops accepting, the belt behind it fills, the arm behind that waits. Deadlock is a cycle of parts each waiting on the next. If the system permits either, show where the chain or cycle begins.</p>
 <p>Hidden state, inconsistent exceptions, visual ambiguity, and sheer scale usually add confusion rather than useful depth.</p>
 <div class="box">
 <p><strong>The system is coherent when</strong> its core rules are explicit, several interactions create decisions, and an experienced player can predict a tie, collision, and full container.</p>
@@ -597,7 +654,7 @@ table.reg tr:target td:first-child {
 <p><strong>Do this.</strong> Write the contract, build the obvious route, then find a contrasting route with the same palette. If the alternative fails only because it differs from your favourite, fix the validator.</p>
 </div>
 <h3>Pressure one facet</h3>
-<p>Name the bottleneck before building the puzzle: routing, synchronization, storage, geometry, state, collision, transformation order, or topology.</p>
+<p>Name the bottleneck before building the puzzle: routing, synchronization, storage, geometry, state, collision, transformation order, or topology. Pick the facet that expresses the central pressure from <a href="#mechanics">§2</a>; a game whose scarce thing is flow pressures routing and storage before geometry.</p>
 <p>If the honest answer is “the previous puzzle, but more,” re-aim it or cut it. Raise a quota only until startup, steady state, or a timing interaction becomes visible.</p>
 <div class="tw"><table>
 <thead>
@@ -632,7 +689,7 @@ table.reg tr:target td:first-child {
 </div>
 <h3>Seek contrasting solution families</h3>
 <p>A solution family groups builds that share an architecture. Families differ in decomposition, topology, scheduling, use of state, or metric priority; layouts within one family differ only in detail.</p>
-<p>For each open puzzle, construct two plausible same-palette references. They should differ in decomposition, topology, schedule, state, or metric priority.</p>
+<p>For each open puzzle, construct two plausible same-palette references from different families.</p>
 <p>Two references show possibility, not prevalence. Their purpose here is to expose a contract that accidentally permits only one recipe.</p>
 <p>Scores alone do not show diversity. Unrelated machines can share a score, and one architecture can span many scores.</p>
 <h3>Use metrics only when they reshape the puzzle</h3>
@@ -666,7 +723,7 @@ table.reg tr:target td:first-child {
 </tr>
 </tbody>
 </table></div>
-<p>The mechanics catalog is deliberately broad. Each row records a rule, the action it creates, its constraints, possible optimization axes, examples to inspect, and other mechanics that may change it.</p>
+<p>The mechanics catalog is deliberately broad. Each row records a rule, the action it creates, its constraints, possible optimization axes, an editorial emergence rating, examples to inspect, and other mechanics that may change it.</p>
 <p>Read the <em>combines with</em> column first. A mechanic earns its place through the decisions it creates with other rules, not through novelty alone.</p>
 
 <h2 id="reg-src">B · Sources</h2>
@@ -708,6 +765,11 @@ table.reg tr:target td:first-child {
 <tr>
 <td><a href="https://www.gdcvault.com/play/1014982/Truth-in-Game"><em>Truth in Game Design</em></a>, GDC Europe 2011</td>
 <td>An argument for discovering consequences in algorithmic systems</td>
+<td><a href="#systems">§3</a></td>
+</tr>
+<tr>
+<td><a href="https://www.factorio.com/blog/"><em>Factorio Friday Facts</em></a></td>
+<td>Design notes on belts, splitters, and rail signals as capacity and arbitration problems in a shipped system</td>
 <td><a href="#systems">§3</a></td>
 </tr>
 </tbody>
