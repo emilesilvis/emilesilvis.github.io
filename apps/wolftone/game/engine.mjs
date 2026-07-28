@@ -69,6 +69,17 @@ export function measureScore(machine, { playerPartCount, runs = null }) {
   };
 }
 
+export function mergeBestScore(previous, candidate) {
+  if (!previous) return { ...candidate };
+  return {
+    parts: Math.min(previous.parts, candidate.parts),
+    wire: Math.min(previous.wire, candidate.wire),
+    time: previous.time === null ? candidate.time
+      : candidate.time === null ? previous.time
+        : Math.min(previous.time, candidate.time),
+  };
+}
+
 function outWireIndex(machine, partId, port) {
   return machine.wires.findIndex((w) => w.from.part === partId && w.from.port === port);
 }

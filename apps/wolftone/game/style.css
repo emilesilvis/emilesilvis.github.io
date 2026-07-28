@@ -258,7 +258,13 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 .score-hint { grid-column: 1 / -1; margin-bottom: 4px; color: var(--paper-ink-dim); font-size: 8px; letter-spacing: 1.5px; }
 .score-measure { display: flex; align-items: baseline; gap: 6px; }
 .score-measure small { color: var(--paper-ink-dim); font-size: 9px; letter-spacing: 1px; }
-.score-measure output { font: 16px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.score-measure output { color: var(--paper-ink); font: 16px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.personal-best {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top-style: dashed;
+}
+.personal-best output { color: var(--accent); }
 
 /* ── parts tray / workspace ──────────────────────────── */
 

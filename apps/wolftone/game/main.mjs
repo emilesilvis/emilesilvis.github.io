@@ -4,34 +4,19 @@
 
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
-  wireTicks, measureScore, makeRun, stepRun, runCase,
+  wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
 } from './engine.mjs';
-import { PUZZLES } from './puzzles.mjs';
-import { CAMPAIGN } from './campaign.mjs';
-import { CHAPTER_ORDER } from './chapters.mjs';
+import { LEVELS, showsWalkthrough } from './levels.mjs';
 import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs';
+import { couplingRouteText } from './board-layout.mjs';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
 } from './audio.mjs';
 
-// Chapters interleave the two sources: the first six open with teaching levels
-// (authored, puzzles.mjs) and continue with searched commissions (generated,
-// campaign.mjs); the final chapter is all searched capstones. Everything
-// downstream indexes LEVELS. The sources differ in provenance and in one
-// behaviour — teaching levels show
-// their walkthrough deck, commissions show theirs only in reference mode
-// (see deckShown). A level naming an unknown chapter is appended at the end
-// and warned about, never silently dropped — a level that vanishes from the
-// list looks exactly like a level that never existed.
-const ALL = [...PUZZLES, ...CAMPAIGN];
-const LEVELS = CHAPTER_ORDER.flatMap((ch) => ALL.filter((p) => p.chapter === ch));
-for (const p of ALL) {
-  if (!LEVELS.includes(p)) {
-    console.warn(`level ${p.id} names unknown chapter ${p.chapter} — appended out of order`);
-    LEVELS.push(p);
-  }
-}
+// Teaching and advanced levels show walkthrough decks; searched introductory
+// commissions stay quiet in normal play. ?reference reveals every deck and
+// places any shipped witness on request (see deckShown).
 
 // The Godot score was written as a progression from workshop craft to the
 // forbidden commission. The web campaign has more levels, so cues belong to
@@ -47,7 +32,9 @@ const CHAPTER_MUSIC = {
   'IV · Wolf notes': ['07-the-wolf-tone.mp3'],
   'V · Entanglements': ['09-bookmatched.mp3'],
   'VI · Tempo': ['08-winding.mp3'],
-  'VII · Concerto': ['10-larger-inside.mp3', '11-an-improper-commission.mp3'],
+  'VII · Concerto': ['10-larger-inside.mp3'],
+  'VIII · Journeymen': ['11-an-improper-commission.mp3'],
+  'IX · Masterworks': ['12-the-workshop-at-rest.mp3'],
 };
 const GRADUATION_TRACK = '13-graduation.mp3';
 
@@ -106,7 +93,7 @@ function loadSave() {
 // level sources, so an index means a different level every time the campaign
 // regenerates or reorders. Old saves carried a numeric `level`; it is
 // ignored and those players resume at their first unsolved level instead.
-const save = { solved: [], machines: {}, ...loadSave() };
+const save = { solved: [], machines: {}, bests: {}, ...loadSave() };
 function persist() {
   if (REFERENCE_MODE) return;
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch {}
@@ -236,8 +223,10 @@ function verifyAll({ quiet = false } = {}) {
   caseStatuses = runs.map((r) => (r.verdict === 'resonant' ? 'pass' : 'fail'));
   const allPass = caseStatuses.every((s) => s === 'pass');
   verifiedRuns = allPass ? runs : null;
-  if (allPass && !save.solved.includes(p.id)) {
-    save.solved.push(p.id);
+  if (allPass && !REFERENCE_MODE) {
+    const score = measureScore(machine(), { playerPartCount: playerParts.length, runs });
+    save.bests[p.id] = mergeBestScore(save.bests[p.id] ?? null, score);
+    if (!save.solved.includes(p.id)) save.solved.push(p.id);
     persist();
   }
   if (allPass && levelIndex === LEVELS.length - 1) setSoundtrack(GRADUATION_TRACK);
@@ -827,14 +816,10 @@ function renderAssignment() {
     `<h2>${p.title}</h2><p>${p.assignment}</p>`;
 }
 
-// A tutorial belongs where something new is introduced, and that is exactly
-// the authored teaching levels: puzzles.mjs is one new part or interaction
-// per level, and the commissions only drill what those taught. So in normal
-// play the deck appears on teaching levels alone, the way a Zach-like goes
-// quiet once you know the parts. Reference mode is a review of the answers,
-// and there every deck stays — its last step holds the spoiler measurements
-// that the reference build is the answer to.
-const deckShown = () => REFERENCE_MODE || PUZZLES.includes(puzzle());
+// Teaching decks explain new parts. Advanced decks expose their observation,
+// optional nudge and reference witness one step at a time. Searched drills stay
+// quiet unless reference mode is explicitly reviewing every answer.
+const deckShown = () => showsWalkthrough(puzzle(), { referenceMode: REFERENCE_MODE });
 
 function renderDeck() {
   const p = puzzle();
@@ -877,9 +862,13 @@ function renderScore() {
     playerPartCount: playerParts.length,
     runs: verifiedRuns,
   });
+  const best = save.bests[puzzle().id];
   $('score-parts').textContent = score.parts;
   $('score-wire').textContent = score.wire;
   $('score-time').textContent = score.time ?? '—';
+  $('best-parts').textContent = best?.parts ?? '—';
+  $('best-wire').textContent = best?.wire ?? '—';
+  $('best-time').textContent = best?.time ?? '—';
 }
 
 function renderPalette() {
@@ -1030,10 +1019,12 @@ function renderInspector() {
       '<p class="prose">Left exactly when the head is this note; otherwise right. Bite removes a matched head as it exits left.</p>';
   }
   if (part.kind === 'coupling') {
+    const routeA = couplingRouteText('A', part.config.noteA, 'L');
+    const routeB = couplingRouteText('B', part.config.noteB, 'L');
     html += `<div class="row coupling-control route-a"><span>B routes A</span>${noteChips(part.config.noteA, 'note-a')}</div>` +
-      `<p class="route-rule route-a">B head ${part.config.noteA} → A·L; any other head → A·R.</p>` +
+      `<p class="route-rule route-a">${routeA} on a match; otherwise B:*→R.</p>` +
       `<div class="row coupling-control route-b"><span>A routes B</span>${noteChips(part.config.noteB, 'note-b')}</div>` +
-      `<p class="route-rule route-b">A head ${part.config.noteB} → B·L; any other head → B·R.</p>` +
+      `<p class="route-rule route-b">${routeB} on a match; otherwise A:*→R.</p>` +
       '<p class="prose">The coupling waits for both strings, reads the other head across the pair, then releases both unchanged at once.</p>';
   }
   if (part.kind === 'valve') html += `<div class="row"><span>hold</span><button data-delay="-1">−</button><strong>${part.config.delay}</strong><button data-delay="1">+</button><span>ticks</span></div>` +

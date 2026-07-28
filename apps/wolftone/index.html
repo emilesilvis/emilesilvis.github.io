@@ -498,7 +498,7 @@
       background: radial-gradient(ellipse at center, rgb(165 110 50 / 10%), transparent 60%);
       content: "";
     }
-    .movements { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--rule); }
+    .movements { display: grid; grid-template-columns: repeat(9, 1fr); border: 1px solid var(--rule); }
     .movement { min-height: 15rem; padding: 1.4rem .9rem; border-left: 1px solid var(--rule); }
     .movement:first-child { border-left: 0; }
     .movement-num { display: block; color: var(--brass); font: 1.5rem/1 var(--serif); }
@@ -544,10 +544,10 @@
       .principle + .principle { border-top: 1px solid var(--rule); border-left: 0; }
       .mechanic-card { display: grid; grid-template-columns: minmax(14rem, .8fr) 1fr; column-gap: 1rem; min-height: 0; }
       .mechanic-visual { grid-row: 1 / 4; }
-      .movements { grid-template-columns: repeat(4, 1fr); }
+      .movements { grid-template-columns: repeat(5, 1fr); }
       .movement { border-top: 1px solid var(--rule); }
-      .movement:nth-child(-n + 4) { border-top: 0; }
-      .movement:nth-child(5) { border-left: 0; }
+      .movement:nth-child(-n + 5) { border-top: 0; }
+      .movement:nth-child(6) { border-left: 0; }
     }
 
     @media (max-width: 640px) {
@@ -606,7 +606,7 @@
           <a class="button" href="./game/">Enter the workshop</a>
           <a class="button button-ghost" href="#workshop">See how it plays</a>
         </div>
-        <p class="hero-meta"><span>Playable in browser</span><span>Seven chapters</span><span>Original score</span></p>
+        <p class="hero-meta"><span>Playable in browser</span><span>Nine chapters</span><span>Original score</span></p>
       </div>
 
       <div class="instrument reveal" aria-label="A musical machine carrying notes through an instrument" role="img">
@@ -719,10 +719,10 @@
     <section class="section score-section">
       <div class="shell">
         <div class="section-heading reveal">
-          <p class="kicker">Seven movements</p>
-          <h2>From first exercises to the improper <em>commission.</em></h2>
+          <p class="kicker">Nine movements</p>
+          <h2>From first exercises to work no master could <em>settle.</em></h2>
         </div>
-        <div class="movements reveal" aria-label="Seven campaign chapters">
+        <div class="movements reveal" aria-label="Nine campaign chapters">
           <div class="movement"><span class="movement-num">I</span><span class="movement-name">Études</span><small>blind transformations</small></div>
           <div class="movement"><span class="movement-num">II</span><span class="movement-name">Duets</span><small>join and divide</small></div>
           <div class="movement"><span class="movement-num">III</span><span class="movement-name">Sight-reading</span><small>the first decision</small></div>
@@ -730,6 +730,8 @@
           <div class="movement"><span class="movement-num">V</span><span class="movement-name">Entanglements</span><small>crossed voices</small></div>
           <div class="movement"><span class="movement-num">VI</span><span class="movement-name">Tempo</span><small>distance becomes delay</small></div>
           <div class="movement"><span class="movement-num">VII</span><span class="movement-name">Concerto</span><small>the full repertoire</small></div>
+          <div class="movement"><span class="movement-num">VIII</span><span class="movement-name">Journeymen</span><small>contract-only work</small></div>
+          <div class="movement"><span class="movement-num">IX</span><span class="movement-name">Masterworks</span><small>optional brutal tier</small></div>
         </div>
         <p class="score-note reveal">The restored score follows the work from quiet bench études to the final commission. Machine sounds and music have independent controls, because sometimes a difficult mechanism needs silence.</p>
       </div>
