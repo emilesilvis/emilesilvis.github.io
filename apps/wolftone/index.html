@@ -3,57 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wolf Tone — A Machine-Puzzle Mystery</title>
-  <meta name="description" content="A vanished master. An impossible workshop. Build musical machines and finish the commissions they left behind in Wolf Tone, playable now in your browser.">
-  <meta name="theme-color" content="#160e08">
+  <title>Wolf Tone — a musical machine-puzzle prototype</title>
+  <meta name="description" content="Wolf Tone is an early puzzle-game prototype about building little machines inside a strange string instrument. Play it in your browser.">
+  <meta name="theme-color" content="#100a06">
   <link rel="canonical" href="https://emilesilvis.com/wolftone/">
-  <meta property="og:title" content="Wolf Tone — The workshop kept playing">
-  <meta property="og:description" content="Build musical machines inside an impossible instrument and uncover what its vanished maker left behind.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ctext y=%2226%22 font-size=%2226%22%3E%F0%9F%8E%BB%3C/text%3E%3C/svg%3E">
+  <meta property="og:title" content="Wolf Tone — playable prototype">
+  <meta property="og:description" content="Build little musical machines inside a strange string instrument.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://emilesilvis.com/wolftone/">
-  <meta property="og:image" content="https://emilesilvis.com/wolftone/og.png">
+  <meta property="og:image" content="https://emilesilvis.com/wolftone/og-prototype.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Wolf Tone — playable prototype, shown inside a wooden string instrument">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Wolf Tone — The workshop kept playing">
-  <meta name="twitter:description" content="Build musical machines inside an impossible instrument.">
-  <meta name="twitter:image" content="https://emilesilvis.com/wolftone/og.png">
+  <meta name="twitter:title" content="Wolf Tone — playable prototype">
+  <meta name="twitter:description" content="Build little musical machines inside a strange string instrument.">
+  <meta name="twitter:image" content="https://emilesilvis.com/wolftone/og-prototype.png">
+  <meta name="twitter:image:alt" content="Wolf Tone — playable prototype, shown inside a wooden string instrument">
   <script defer src="https://cloud.umami.is/script.js" data-website-id="0a1c582e-d13c-49de-ab63-c20273446d6f"></script>
   <style>
     :root {
       color-scheme: dark;
-      --black: #080503;
-      --void: #0e0906;
-      --walnut: #1c110a;
-      --walnut-light: #332115;
-      --panel: #17100a;
+      --void: #0d0805;
+      --walnut: #201208;
+      --walnut-light: #382213;
       --brass: #bd9345;
-      --brass-light: #e1bd70;
+      --brass-light: #e2bf73;
       --brass-dark: #715326;
-      --bone: #e5dac0;
-      --bone-muted: #ad9f81;
+      --bone: #e7ddc6;
+      --bone-muted: #ab9d80;
       --paper: #d2c39d;
-      --paper-ink: #2f2416;
+      --paper-ink: #302315;
       --ember: #ffc46b;
-      --violet: #9a86e6;
       --blue: #68aabe;
+      --violet: #9a86e6;
       --green: #91b774;
       --red: #df7266;
-      --rule: rgb(190 148 72 / 28%);
-      --rule-soft: rgb(190 148 72 / 14%);
+      --rule: rgb(190 148 72 / 22%);
       --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
       --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-      --page: 76rem;
+      --page: 68rem;
     }
 
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+
+    html { min-height: 100%; }
+
     body {
+      min-height: 100svh;
       margin: 0;
       overflow-x: hidden;
       background:
-        radial-gradient(70rem 32rem at 72% -8%, rgb(196 137 65 / 12%), transparent 66%),
-        linear-gradient(180deg, #140d08 0, var(--void) 32rem, #0a0704 100%);
+        radial-gradient(60rem 34rem at 68% 20%, rgb(184 119 54 / 11%), transparent 66%),
+        linear-gradient(180deg, #150d08 0, var(--void) 70%);
       color: var(--bone);
-      font: 17px/1.58 var(--serif);
+      font: 17px/1.55 var(--serif);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
     }
@@ -63,717 +68,388 @@
       inset: 0;
       z-index: -1;
       background-image:
-        repeating-linear-gradient(93deg, transparent 0 13rem, rgb(110 68 34 / 4%) 13.1rem),
-        repeating-linear-gradient(0deg, transparent 0 6px, rgb(173 117 56 / 1.7%) 7px);
+        repeating-linear-gradient(92deg, transparent 0 14rem, rgb(119 73 35 / 4%) 14.1rem),
+        repeating-linear-gradient(0deg, transparent 0 6px, rgb(173 117 56 / 1.5%) 7px);
       content: "";
       pointer-events: none;
     }
 
     a { color: inherit; }
-    button, a { -webkit-tap-highlight-color: transparent; }
     :focus-visible { outline: 2px solid var(--ember); outline-offset: 4px; }
-    .shell { width: min(100% - 2rem, var(--page)); margin-inline: auto; }
+    .shell { width: min(100% - 2.4rem, var(--page)); margin-inline: auto; }
 
-    .site-nav {
-      position: relative;
-      z-index: 10;
+    .site-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
       min-height: 5rem;
-      border-bottom: 1px solid var(--rule-soft);
+      border-bottom: 1px solid var(--rule);
     }
 
     .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: .7rem;
       color: var(--brass-light);
-      font: 700 .82rem/1 var(--serif);
-      letter-spacing: .22em;
-      text-decoration: none;
-    }
-
-    .brand-mark {
-      display: grid;
-      width: 2rem;
-      height: 2rem;
-      border: 1px solid var(--brass-dark);
-      border-radius: 50%;
-      place-items: center;
-      font-size: 1.25rem;
-      box-shadow: inset 0 0 0 3px var(--black);
-    }
-
-    .nav-links { display: flex; align-items: center; gap: 1.4rem; }
-    .nav-link {
-      color: var(--bone-muted);
-      font: .68rem/1 var(--mono);
-      letter-spacing: .12em;
+      font: 700 .76rem/1 var(--serif);
+      letter-spacing: .24em;
       text-decoration: none;
       text-transform: uppercase;
     }
-    .nav-link:hover { color: var(--bone); }
 
-    .button {
+    .status {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      min-height: 3rem;
-      padding: .75rem 1.2rem;
-      border: 1px solid var(--brass);
-      border-radius: 3px;
-      background: linear-gradient(180deg, var(--brass-light), #b2843d);
-      box-shadow: inset 0 1px rgb(255 255 255 / 25%), 0 7px 24px rgb(0 0 0 / 28%);
-      color: #1b1208;
-      font: 700 .74rem/1 var(--mono);
-      letter-spacing: .11em;
-      text-decoration: none;
+      gap: .55rem;
+      color: var(--bone-muted);
+      font: .62rem/1 var(--mono);
+      letter-spacing: .12em;
       text-transform: uppercase;
-      transition: transform 160ms ease, box-shadow 160ms ease;
     }
-    .button:hover { transform: translateY(-2px); box-shadow: inset 0 1px rgb(255 255 255 / 25%), 0 11px 28px rgb(0 0 0 / 38%); }
-    .button-small { min-height: 2.35rem; padding: .58rem .9rem; font-size: .65rem; }
-    .button-ghost { background: transparent; color: var(--brass-light); box-shadow: none; }
-    .button-ghost:hover { background: rgb(189 147 69 / 8%); box-shadow: none; }
+
+    .status::before {
+      width: .42rem;
+      height: .42rem;
+      border-radius: 50%;
+      background: var(--brass-light);
+      box-shadow: 0 0 0 4px rgb(226 191 115 / 9%);
+      content: "";
+    }
+
+    main { display: grid; min-height: calc(100svh - 11rem); place-items: center; }
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, .88fr) minmax(32rem, 1.12fr);
+      grid-template-columns: minmax(18rem, .82fr) minmax(28rem, 1.18fr);
       align-items: center;
-      gap: clamp(2rem, 6vw, 6rem);
-      min-height: calc(100svh - 5rem);
-      padding: clamp(4rem, 9vh, 8rem) 0;
+      gap: clamp(3rem, 8vw, 7.5rem);
+      padding: clamp(3.5rem, 8vh, 6.5rem) 0;
     }
 
     .eyebrow {
       display: flex;
       align-items: center;
-      gap: .8rem;
+      gap: .75rem;
       margin: 0 0 1.1rem;
       color: var(--brass);
-      font: .67rem/1.2 var(--mono);
-      letter-spacing: .2em;
+      font: .64rem/1.2 var(--mono);
+      letter-spacing: .17em;
       text-transform: uppercase;
     }
-    .eyebrow::before { width: 2.3rem; height: 1px; background: var(--brass); content: ""; }
 
-    h1, h2, h3, p { text-wrap: pretty; }
+    .eyebrow::before { width: 2rem; height: 1px; background: var(--brass); content: ""; }
+
     h1 {
-      max-width: 11ch;
       margin: 0;
       color: var(--bone);
-      font: 400 clamp(3.2rem, 6.7vw, 6rem)/.96 var(--serif);
-      letter-spacing: -.045em;
+      font: 400 clamp(4rem, 8vw, 6.6rem)/.82 var(--serif);
+      letter-spacing: -.055em;
     }
-    h1 em { color: var(--brass-light); font-style: italic; }
-    .hero-copy > p:not(.eyebrow) { max-width: 35rem; margin: 1.6rem 0 0; color: var(--bone-muted); font-size: clamp(1.05rem, 1.6vw, 1.25rem); }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2rem; }
-    .hero-meta { display: flex; flex-wrap: wrap; gap: 1.2rem; margin: 1.25rem 0 0; color: #80745e; font: .65rem/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-    .hero-meta span { display: inline-flex; align-items: center; gap: .45rem; }
-    .hero-meta span::before { width: .35rem; height: .35rem; border-radius: 50%; background: var(--brass); content: ""; }
+
+    h1 span { display: block; margin-left: .55em; color: var(--brass-light); font-style: italic; }
+
+    .intro {
+      max-width: 32rem;
+      margin: 1.8rem 0 0;
+      color: var(--bone-muted);
+      font-size: clamp(1.04rem, 1.6vw, 1.18rem);
+    }
+
+    .actions { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 3.15rem;
+      padding: .8rem 1.3rem;
+      border: 1px solid var(--brass);
+      border-radius: 3px;
+      background: linear-gradient(180deg, var(--brass-light), #b3853d);
+      box-shadow: inset 0 1px rgb(255 255 255 / 25%), 0 8px 28px rgb(0 0 0 / 28%);
+      color: #1b1208;
+      font: 700 .72rem/1 var(--mono);
+      letter-spacing: .11em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .button::after { margin-left: .8rem; content: "→"; font-size: 1rem; }
+    .button:hover { transform: translateY(-2px); box-shadow: inset 0 1px rgb(255 255 255 / 25%), 0 12px 32px rgb(0 0 0 / 38%); }
+
+    .smallprint {
+      margin: 1.2rem 0 0;
+      color: #786d59;
+      font: .62rem/1.5 var(--mono);
+      letter-spacing: .06em;
+    }
+
+    .workshop { margin: 0; }
 
     .instrument {
       position: relative;
-      min-height: 35rem;
+      min-height: 29rem;
       overflow: hidden;
-      border: 1px solid #5a4024;
-      border-radius: 50% 5% 46% 4% / 7% 46% 6% 48%;
+      border: 1px solid #5b4023;
+      border-radius: 48% 6% 44% 5% / 7% 45% 7% 42%;
       background:
-        linear-gradient(90deg, transparent 0 24.8%, rgb(10 6 3 / 78%) 25% 25.5%, transparent 25.7% 49.8%, rgb(10 6 3 / 78%) 50% 50.5%, transparent 50.7% 74.8%, rgb(10 6 3 / 78%) 75% 75.5%, transparent 75.7%),
-        linear-gradient(0deg, transparent 0 24.8%, rgb(10 6 3 / 78%) 25% 25.5%, transparent 25.7% 49.8%, rgb(10 6 3 / 78%) 50% 50.5%, transparent 50.7% 74.8%, rgb(10 6 3 / 78%) 75% 75.5%, transparent 75.7%),
-        repeating-linear-gradient(2deg, transparent 0 1.4rem, rgb(138 89 42 / 11%) 1.45rem 1.52rem),
-        radial-gradient(circle at 48% 38%, rgb(164 105 48 / 18%), transparent 42%),
+        linear-gradient(90deg, transparent 0 32.8%, rgb(10 6 3 / 58%) 33% 33.5%, transparent 33.7% 65.8%, rgb(10 6 3 / 58%) 66% 66.5%, transparent 66.7%),
+        linear-gradient(0deg, transparent 0 32.8%, rgb(10 6 3 / 58%) 33% 33.5%, transparent 33.7% 65.8%, rgb(10 6 3 / 58%) 66% 66.5%, transparent 66.7%),
+        repeating-linear-gradient(2deg, transparent 0 1.45rem, rgb(145 91 42 / 11%) 1.5rem 1.56rem),
+        radial-gradient(circle at 48% 44%, rgb(180 112 50 / 18%), transparent 44%),
         #28180f;
-      box-shadow: inset 0 0 5rem #090503, 0 2rem 6rem rgb(0 0 0 / 42%);
+      box-shadow: inset 0 0 4.5rem #090503, 0 2rem 6rem rgb(0 0 0 / 40%);
       isolation: isolate;
     }
+
     .instrument::before {
       position: absolute;
-      inset: .75rem;
+      inset: .72rem;
       border: 3px double var(--brass-dark);
       border-radius: inherit;
       content: "";
-      opacity: .8;
+      opacity: .74;
     }
+
     .instrument::after {
       position: absolute;
       inset: 0;
       z-index: -1;
-      background: radial-gradient(circle at 52% 36%, rgb(255 196 107 / 12%), transparent 52%);
+      background: radial-gradient(circle at 51% 41%, rgb(255 196 107 / 12%), transparent 54%);
       content: "";
-      animation: lamplight 6s ease-in-out infinite alternate;
+      animation: lamplight 7s ease-in-out infinite alternate;
     }
 
     .bench-label {
       position: absolute;
-      top: 1.55rem;
+      top: 1.5rem;
       left: 50%;
       transform: translateX(-50%);
-      color: #8b754d;
-      font: .6rem/1 var(--mono);
-      letter-spacing: .24em;
+      color: #856f4b;
+      font: .56rem/1 var(--mono);
+      letter-spacing: .22em;
       text-transform: uppercase;
       white-space: nowrap;
     }
 
-    .string-line {
+    .string {
       position: absolute;
-      right: 3%;
-      left: 3%;
+      right: -3%;
+      left: -3%;
       height: 7px;
-      border-block: 1px solid #d8cba9;
+      border-block: 1px solid #d7c9a7;
       background: #150d07;
-      box-shadow: 0 2px 0 #050302, 0 0 9px rgb(232 216 177 / 10%);
+      box-shadow: 0 2px 0 #050302, 0 0 9px rgb(232 216 177 / 11%);
     }
-    .string-one { top: 38%; }
-    .string-two { top: 66%; }
+
+    .string-one { top: 39%; }
+    .string-two { top: 67%; }
+
+    .port {
+      position: absolute;
+      z-index: 2;
+      width: 2.8rem;
+      height: 2.8rem;
+      border: 4px solid var(--brass);
+      border-radius: 50%;
+      background: var(--void);
+      box-shadow: 0 0 0 4px #25160c;
+    }
+
+    .port-left { top: calc(39% - 1.25rem); left: -1.35rem; }
+    .port-right { top: calc(39% - 1.25rem); right: -1.35rem; }
 
     .machine {
       position: absolute;
-      z-index: 2;
+      top: 36%;
+      left: 48%;
+      z-index: 3;
       display: grid;
-      width: 7.4rem;
-      height: 5.5rem;
-      border: 1px solid #332414;
-      border-radius: 1.8rem 3rem 1.5rem 2.4rem;
-      background: linear-gradient(145deg, #d2c39d, #a99264);
-      box-shadow: .35rem .5rem 0 rgb(10 6 3 / 65%), inset 0 0 0 3px rgb(69 47 24 / 18%);
+      width: 9.8rem;
+      height: 7.2rem;
+      transform: translate(-50%, -20%);
+      border: 1px solid #362514;
+      border-radius: 2.5rem 3.6rem 2rem 3rem;
+      background: linear-gradient(145deg, #d6c8a2, #a89163);
+      box-shadow: .45rem .55rem 0 rgb(10 6 3 / 64%), inset 0 0 0 3px rgb(69 47 24 / 18%);
       color: var(--paper-ink);
       place-items: center;
     }
-    .machine::before, .machine::after {
+
+    .machine::before,
+    .machine::after {
       position: absolute;
       top: 50%;
-      width: 1.1rem;
-      height: 1.1rem;
+      width: 1.15rem;
+      height: 1.15rem;
       border: 3px solid var(--brass);
       border-radius: 50%;
-      background: var(--black);
+      background: var(--void);
       box-shadow: 0 0 0 2px #25160c;
       content: "";
     }
+
     .machine::before { left: -.65rem; transform: translate(-50%, -50%); }
     .machine::after { right: -.65rem; transform: translate(50%, -50%); }
-    .machine strong { font: 700 .7rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-    .machine small { color: #554126; font: italic .72rem/1 var(--serif); }
 
-    .machine-mould { top: calc(38% - 2.7rem); left: 13%; }
-    .machine-mould .wheel {
-      width: 2.8rem;
-      height: 2.8rem;
-      border: .38rem double #6b5126;
+    .soundhole {
+      display: grid;
+      width: 4.5rem;
+      height: 4.5rem;
+      border: .44rem solid #7a5b2c;
       border-radius: 50%;
-      background: #1a0f07;
-      box-shadow: 0 0 0 .25rem #ad8a4c;
-    }
-    .machine-mould .stamp { position: absolute; right: .55rem; color: #8a4c1c; font: 700 1.1rem/1 var(--mono); }
-
-    .machine-coupling { top: calc(52% - 2.7rem); left: 42%; border-radius: .6rem 2.5rem .6rem 2.5rem; }
-    .machine-coupling .chambers { display: flex; flex-direction: column; gap: .35rem; }
-    .machine-coupling i { display: block; width: 1.4rem; height: 1.4rem; border: 4px double var(--brass-dark); border-radius: 50%; background: var(--black); }
-    .machine-coupling b { position: absolute; right: 1.1rem; color: #5d4a2e; font: 2rem/1 var(--serif); transform: rotate(12deg); }
-
-    .machine-resonator { top: calc(66% - 2.7rem); right: 10%; border-radius: .5rem 3rem 3rem .5rem; }
-    .machine-resonator .bell {
-      width: 3.4rem;
-      height: 3.4rem;
-      border: .42rem double var(--brass);
-      border-radius: 50%;
-      background: radial-gradient(circle, #060302 0 34%, #3b2615 36% 55%, #c5ac78 57% 100%);
-      box-shadow: 0 0 1.1rem rgb(255 196 107 / 28%);
+      background: #160d07;
+      box-shadow: inset 0 0 0 .34rem var(--brass-light), inset 0 0 1.4rem #000;
+      place-items: center;
     }
 
-    .part-tag {
+    .soundhole::after {
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 50%;
+      background: var(--brass-light);
+      box-shadow: 0 0 1.1rem rgb(255 196 107 / 50%);
+      content: "";
+    }
+
+    .part-name {
       position: absolute;
-      bottom: -.9rem;
-      left: 50%;
-      min-width: 5.7rem;
-      padding: .24rem .5rem;
-      transform: translateX(-50%);
+      top: calc(100% + .8rem);
+      padding: .42rem .9rem;
       border: 1px solid var(--brass-dark);
       border-radius: 3px;
-      background: #140c06;
+      background: #120b06;
       color: var(--bone);
-      font: 700 .72rem/1 var(--serif);
-      letter-spacing: .08em;
+      font: 600 .68rem/1 var(--mono);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .note {
+      position: absolute;
+      z-index: 5;
+      top: calc(39% - .9rem);
+      display: grid;
+      width: 1.8rem;
+      height: 1.8rem;
+      border: 2px solid #24170d;
+      border-radius: 50%;
+      background: var(--brass-light);
+      box-shadow: 0 3px 0 #160d07;
+      color: #24170d;
+      font: 800 .78rem/1 var(--mono);
+      place-items: center;
+      animation: travel 7s ease-in-out infinite;
+    }
+
+    .note-a { left: 12%; }
+    .note-b { left: 12%; background: var(--blue); animation-delay: -1.2s; }
+    .note-c { left: 12%; background: var(--violet); animation-delay: -2.4s; }
+
+    figcaption {
+      margin-top: 1rem;
+      color: #766a55;
+      font: italic .82rem/1.45 var(--serif);
       text-align: center;
     }
 
-    .word {
-      position: absolute;
-      z-index: 4;
+    footer {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .28rem;
-      height: 2.55rem;
-      padding: 0 .55rem;
-      border: 1px solid #8f7040;
-      border-radius: .35rem;
-      background:
-        repeating-linear-gradient(0deg, transparent 0 4px, rgb(210 197 163 / 45%) 4px 5px),
-        #100904;
-      box-shadow: 0 .25rem .5rem rgb(0 0 0 / 45%);
-    }
-    .word-note {
-      position: relative;
-      display: grid;
-      width: 1rem;
-      height: 1.7rem;
-      color: var(--bone);
-      font: italic 700 .58rem/1 var(--serif);
-      place-items: end center;
-    }
-    .word-note::before {
-      position: absolute;
-      top: .42rem;
-      left: .08rem;
-      width: .8rem;
-      height: .5rem;
-      border: 1px solid #1c1108;
-      border-radius: 50%;
-      background: currentcolor;
-      content: "";
-      transform: rotate(-18deg);
-    }
-    .word-note::after { position: absolute; top: -.1rem; right: .07rem; width: 1px; height: .85rem; background: var(--bone); content: ""; }
-    .note-a { color: var(--red); }
-    .note-b { color: var(--blue); }
-    .note-c { color: #f0c45d; }
-    .note-d { color: var(--green); }
-    .word-note span { color: var(--bone); }
-
-    .word-in { top: calc(38% - 1.1rem); left: 1.8rem; animation: travel-one 7s ease-in-out infinite; }
-    .word-out { top: calc(66% - 1.1rem); right: 1.8rem; opacity: 0; animation: arrive 7s ease-in-out infinite; }
-
-    .seal {
-      position: absolute;
-      right: 8%;
-      bottom: 8%;
-      display: grid;
-      width: 4rem;
-      height: 4rem;
-      border: 1px solid #8b672d;
-      border-radius: 50%;
-      color: #a48040;
-      font: 1.65rem/1 var(--serif);
-      place-items: center;
-      opacity: .38;
-      transform: rotate(-9deg);
+      justify-content: space-between;
+      gap: 2rem;
+      min-height: 6rem;
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--rule);
+      color: #746953;
+      font: .61rem/1.5 var(--mono);
+      letter-spacing: .06em;
     }
 
-    @keyframes lamplight { to { opacity: .55; transform: scale(1.06); } }
-    @keyframes travel-one {
-      0%, 12% { left: 1.8rem; opacity: 0; }
-      16% { opacity: 1; }
-      36%, 46% { left: 18%; }
-      62%, 70% { left: 47%; }
-      88%, 100% { left: calc(100% - 8rem); opacity: 0; }
-    }
-    @keyframes arrive { 0%, 76% { opacity: 0; } 84%, 94% { opacity: 1; } 100% { opacity: 0; } }
+    footer p { max-width: 34rem; margin: 0; }
+    footer a { color: var(--bone-muted); text-underline-offset: .2em; }
 
-    .folio {
-      position: absolute;
-      top: 4.2rem;
-      right: -1.2rem;
-      z-index: 6;
-      width: 12rem;
-      padding: 1rem 1.1rem 1.2rem;
-      border: 1px solid #8d7c56;
-      background:
-        linear-gradient(100deg, rgb(86 62 29 / 6%), transparent 38%),
-        var(--paper);
-      box-shadow: -.8rem 1rem 2rem rgb(0 0 0 / 36%);
-      color: var(--paper-ink);
-      transform: rotate(3deg);
-    }
-    .folio::before { position: absolute; top: .5rem; bottom: .5rem; left: .55rem; width: 1px; background: rgb(72 48 24 / 22%); content: ""; }
-    .folio small { font: .54rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
-    .folio h3 { margin: .6rem 0 .35rem; font: 700 1.1rem/1.05 var(--serif); }
-    .folio p { margin: 0; color: #59482d; font: italic .72rem/1.35 var(--serif); }
-    .folio-sign { margin-top: .85rem; color: #765729; font: 700 .63rem/1 var(--serif); text-align: right; }
-
-    .section { padding: clamp(5rem, 10vw, 9rem) 0; border-top: 1px solid var(--rule-soft); }
-    .section-heading { display: grid; grid-template-columns: .45fr 1fr; gap: 3rem; margin-bottom: clamp(2.5rem, 6vw, 5rem); }
-    .kicker { margin: .3rem 0 0; color: var(--brass); font: .63rem/1.4 var(--mono); letter-spacing: .19em; text-transform: uppercase; }
-    h2 { max-width: 17ch; margin: 0; font: 400 clamp(2.4rem, 5vw, 4.5rem)/1 var(--serif); letter-spacing: -.035em; }
-    h2 em { color: var(--brass-light); font-style: italic; }
-
-    .story-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(2rem, 8vw, 7rem); align-items: start; }
-    .story-lead { margin: 0; color: var(--bone); font-size: clamp(1.25rem, 2vw, 1.55rem); }
-    .story-copy { margin: 1.4rem 0 0; color: var(--bone-muted); }
-    .requisition {
-      position: relative;
-      padding: clamp(1.7rem, 4vw, 3rem);
-      border: 1px solid #887753;
-      background:
-        repeating-linear-gradient(0deg, transparent 0 1.8rem, rgb(73 51 26 / 8%) 1.85rem 1.9rem),
-        var(--paper);
-      box-shadow: 1rem 1.4rem 0 #060301, 1.4rem 2rem 4rem rgb(0 0 0 / 35%);
-      color: var(--paper-ink);
-      transform: rotate(1deg);
-    }
-    .requisition::after {
-      position: absolute;
-      right: 1.8rem;
-      bottom: 1.4rem;
-      display: grid;
-      width: 4.2rem;
-      height: 4.2rem;
-      border: 4px double #8d5d29;
-      border-radius: 50%;
-      color: #8d5d29;
-      content: "𝄢";
-      font-size: 2rem;
-      opacity: .68;
-      place-items: center;
-      transform: rotate(-13deg);
-    }
-    .requisition small { color: #755e38; font: .58rem/1 var(--mono); letter-spacing: .17em; text-transform: uppercase; }
-    .requisition h3 { max-width: 17ch; margin: 1rem 0; font: 700 1.75rem/1.08 var(--serif); }
-    .requisition p { max-width: 28rem; margin: 0; font: italic 1rem/1.55 var(--serif); }
-    .signature { margin-top: 2rem !important; font-weight: 700 !important; }
-
-    .principles { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--rule); }
-    .principle { position: relative; padding: 2rem clamp(1.2rem, 3vw, 2.4rem) 2.4rem; }
-    .principle + .principle { border-left: 1px solid var(--rule); }
-    .principle-num { color: var(--brass-dark); font: .64rem/1 var(--mono); letter-spacing: .14em; }
-    .principle h3 { margin: 1.4rem 0 .7rem; color: var(--bone); font: 700 1.45rem/1.1 var(--serif); }
-    .principle p { margin: 0; color: var(--bone-muted); font-size: .95rem; }
-
-    .mechanics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    .mechanic-card {
-      min-height: 25rem;
-      padding: 1.2rem;
-      border: 1px solid var(--rule);
-      border-radius: 3px;
-      background: linear-gradient(145deg, rgb(188 144 68 / 4%), transparent 42%), var(--panel);
-      box-shadow: inset 0 0 0 1px #0d0805;
-    }
-    .mechanic-visual {
-      position: relative;
-      display: grid;
-      min-height: 13rem;
-      overflow: hidden;
-      border: 1px solid #4c351e;
-      background:
-        linear-gradient(90deg, transparent 49.5%, #100904 50% 50.8%, transparent 51%),
-        linear-gradient(0deg, transparent 49.5%, #100904 50% 50.8%, transparent 51%),
-        repeating-linear-gradient(3deg, transparent 0 1rem, rgb(142 92 42 / 9%) 1.05rem),
-        #2a1a10;
-      place-items: center;
-    }
-    .mechanic-visual::after { position: absolute; right: 0; left: 0; top: 50%; height: 3px; background: var(--bone-muted); box-shadow: 0 2px #090503; content: ""; }
-    .mini-part {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      width: 6rem;
-      height: 4.4rem;
-      border: 1px solid #4a351e;
-      border-radius: 1.3rem;
-      background: linear-gradient(145deg, #d0c096, #9a7f51);
-      box-shadow: .25rem .35rem #0c0704;
-      color: #372411;
-      font: 700 .85rem/1 var(--mono);
-      place-items: center;
-    }
-    .mini-part::before, .mini-part::after { position: absolute; top: 50%; width: .8rem; height: .8rem; border: 3px solid var(--brass); border-radius: 50%; background: #0c0704; content: ""; transform: translateY(-50%); }
-    .mini-part::before { left: -.6rem; }
-    .mini-part::after { right: -.6rem; }
-    .mechanic-card h3 { margin: 1.4rem .35rem .6rem; font: 700 1.4rem/1.15 var(--serif); }
-    .mechanic-card p { margin: 0 .35rem; color: var(--bone-muted); font-size: .93rem; }
-    .rule { display: inline-block; margin: .85rem .35rem 0; color: var(--ember); font: .72rem/1.2 var(--mono); }
-    .mini-mould { border-radius: 2rem; }
-    .mini-damper span { width: 2.6rem; height: .55rem; border: 3px double #765527; background: #1a0f07; transform: rotate(90deg); }
-    .mini-coupling { border-radius: .4rem 2rem; }
-    .mini-coupling span { color: #6b4a26; font-size: 2rem; transform: rotate(12deg); }
-
-    .score-section { position: relative; overflow: hidden; }
-    .score-section::before {
-      position: absolute;
-      inset: 10% -10%;
-      z-index: -1;
-      background: radial-gradient(ellipse at center, rgb(165 110 50 / 10%), transparent 60%);
-      content: "";
-    }
-    .movements { display: grid; grid-template-columns: repeat(9, 1fr); border: 1px solid var(--rule); }
-    .movement { min-height: 15rem; padding: 1.4rem .9rem; border-left: 1px solid var(--rule); }
-    .movement:first-child { border-left: 0; }
-    .movement-num { display: block; color: var(--brass); font: 1.5rem/1 var(--serif); }
-    .movement-name { display: block; margin-top: 6rem; color: var(--bone); font: 700 .83rem/1.2 var(--serif); writing-mode: vertical-rl; transform: rotate(180deg); }
-    .movement small { display: block; margin-top: .7rem; color: #776a54; font: .54rem/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
-    .score-note { max-width: 45rem; margin: 2.2rem auto 0; color: var(--bone-muted); text-align: center; }
-
-    .finale { display: grid; grid-template-columns: 1fr .85fr; gap: clamp(2rem, 8vw, 7rem); align-items: center; }
-    .finale h2 { max-width: 12ch; }
-    .finale p { max-width: 34rem; margin: 1.4rem 0 0; color: var(--bone-muted); font-size: 1.08rem; }
-    .finale .hero-actions { margin-top: 2rem; }
-
-    .soundhole {
-      position: relative;
-      display: grid;
-      width: min(22rem, 80vw);
-      aspect-ratio: 1;
-      margin-inline: auto;
-      border: 1.5rem double #8d6a34;
-      border-radius: 50%;
-      background: radial-gradient(circle, #030201 0 42%, #100a06 43% 59%, #422b19 60% 100%);
-      box-shadow: inset 0 0 3rem #000, 0 0 0 .4rem #160d07, 0 0 4rem rgb(189 147 69 / 12%);
-      place-items: center;
-    }
-    .soundhole::before, .soundhole::after { position: absolute; width: 70%; height: 1px; background: var(--bone-muted); box-shadow: 0 6px var(--bone-muted), 0 12px var(--bone-muted), 0 -6px var(--bone-muted), 0 -12px var(--bone-muted); content: ""; opacity: .65; }
-    .soundhole::after { width: 1px; height: 70%; box-shadow: 6px 0 var(--bone-muted), 12px 0 var(--bone-muted), -6px 0 var(--bone-muted), -12px 0 var(--bone-muted); opacity: .22; }
-    .soundhole span { z-index: 1; color: var(--brass-light); font: italic 700 3.2rem/1 var(--serif); text-shadow: 0 0 2rem var(--ember); }
-
-    footer { border-top: 1px solid var(--rule-soft); }
-    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 7rem; color: #756a57; font: .63rem/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-    .footer-inner a { color: var(--brass); text-decoration: none; }
-
-    .reveal { opacity: 0; transform: translateY(18px); transition: opacity 650ms ease, transform 650ms ease; }
-    .reveal.visible { opacity: 1; transform: none; }
-
-    @media (max-width: 980px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; }
-      .hero-copy { padding-top: 2rem; }
-      .instrument { width: min(100%, 42rem); min-height: 32rem; margin-inline: auto; }
-      .section-heading { grid-template-columns: 1fr; gap: 1rem; }
-      .story-grid, .finale { grid-template-columns: 1fr; }
-      .principles, .mechanics { grid-template-columns: 1fr; }
-      .principle + .principle { border-top: 1px solid var(--rule); border-left: 0; }
-      .mechanic-card { display: grid; grid-template-columns: minmax(14rem, .8fr) 1fr; column-gap: 1rem; min-height: 0; }
-      .mechanic-visual { grid-row: 1 / 4; }
-      .movements { grid-template-columns: repeat(5, 1fr); }
-      .movement { border-top: 1px solid var(--rule); }
-      .movement:nth-child(-n + 5) { border-top: 0; }
-      .movement:nth-child(6) { border-left: 0; }
+    @keyframes travel {
+      0%, 10% { left: 7%; opacity: 0; }
+      15% { opacity: 1; }
+      39%, 58% { left: calc(48% - .9rem); opacity: 1; }
+      88% { left: 84%; opacity: 1; }
+      94%, 100% { left: 90%; opacity: 0; }
     }
 
-    @media (max-width: 640px) {
-      body { font-size: 16px; }
-      .shell { width: min(100% - 1.25rem, var(--page)); }
-      .site-nav { min-height: 4.4rem; }
-      .nav-links .nav-link { display: none; }
-      .hero { padding-top: 3.2rem; }
-      h1 { font-size: clamp(3rem, 15vw, 4.4rem); }
-      .instrument { min-height: 28rem; border-radius: 42% 5% 40% 4% / 5% 42% 5% 40%; }
-      .folio { top: 2.9rem; right: -2rem; width: 10.5rem; }
-      .machine { width: 5.6rem; height: 4.5rem; }
-      .machine-mould { left: 9%; }
-      .machine-coupling { left: 39%; }
-      .machine-resonator { right: 6%; }
-      .machine .part-tag { min-width: 4.8rem; font-size: .6rem; }
-      .word-in { left: .8rem; }
-      .mechanic-card { display: block; }
-      .mechanic-visual { min-height: 11rem; }
-      .movements { grid-template-columns: repeat(2, 1fr); }
-      .movement { min-height: 11rem; border-top: 1px solid var(--rule); }
-      .movement:nth-child(n) { border-left: 1px solid var(--rule); }
-      .movement:nth-child(odd) { border-left: 0; }
-      .movement:nth-child(-n + 2) { border-top: 0; }
-      .movement-name, .movement small { writing-mode: initial; transform: none; }
-      .movement-name { margin-top: 3.2rem; }
-      .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; }
+    @keyframes lamplight {
+      from { opacity: .7; transform: scale(1); }
+      to { opacity: 1; transform: scale(1.035); }
+    }
+
+    @media (max-width: 860px) {
+      main { min-height: auto; }
+      .hero { grid-template-columns: 1fr; gap: 3.5rem; padding: 4rem 0; }
+      .copy { max-width: 35rem; }
+      h1 { font-size: clamp(4.3rem, 18vw, 6.5rem); }
+      .instrument { min-height: min(29rem, 82vw); }
+    }
+
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 1.5rem, var(--page)); }
+      .site-head { min-height: 4.25rem; }
+      .status { font-size: .56rem; letter-spacing: .08em; }
+      .hero { padding: 3rem 0; }
+      h1 { font-size: clamp(4rem, 23vw, 5.8rem); }
+      .instrument { min-height: 22rem; }
+      .machine { width: 7.7rem; height: 5.8rem; }
+      .soundhole { width: 3.6rem; height: 3.6rem; }
+      .part-name { font-size: .58rem; }
+      footer { flex-direction: column; gap: .65rem; min-height: 7rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-      .reveal { opacity: 1; transform: none; }
-      .word-in { left: 47%; opacity: 1; }
-      .word-out { opacity: 1; }
+      .instrument::after, .note { animation: none; }
+      .note-a { left: 19%; opacity: 1; }
+      .note-b { left: 47%; opacity: 1; }
+      .note-c { left: 78%; opacity: 1; }
+      .button { transition: none; }
     }
   </style>
 </head>
 <body>
-  <nav class="site-nav shell" aria-label="Main navigation">
-    <a class="brand" href="#top" aria-label="Wolf Tone home"><span class="brand-mark" aria-hidden="true">𝄢</span> WOLF TONE</a>
-    <div class="nav-links">
-      <a class="nav-link" href="#commission">The commission</a>
-      <a class="nav-link" href="#workshop">The workshop</a>
-      <a class="button button-small" href="./game/">Play now</a>
-    </div>
-  </nav>
+  <header class="site-head shell">
+    <a class="brand" href="#top" aria-label="Wolf Tone home">Wolf Tone</a>
+    <span class="status">Prototype · in playtesting</span>
+  </header>
 
   <main id="top">
     <section class="hero shell">
-      <div class="hero-copy reveal">
-        <p class="eyebrow">A machine-puzzle mystery</p>
-        <h1>The master vanished. The workshop kept <em>playing.</em></h1>
-        <p>You are the luthier the guild sent to close the books. Complete impossible commissions, rebuild the machines hidden inside their instruments, and discover what your predecessor was making.</p>
-        <div class="hero-actions">
-          <a class="button" href="./game/">Enter the workshop</a>
-          <a class="button button-ghost" href="#workshop">See how it plays</a>
+      <div class="copy">
+        <p class="eyebrow">A musical machine puzzle</p>
+        <h1>Wolf <span>Tone</span></h1>
+        <p class="intro">Build little machines inside a strange string instrument. Make every performance come out right.</p>
+        <div class="actions">
+          <a class="button" href="./game/">Play the prototype</a>
         </div>
-        <p class="hero-meta"><span>Playable in browser</span><span>Nine chapters</span><span>Original score</span></p>
+        <p class="smallprint">Early browser build · free to play · headphones recommended</p>
       </div>
 
-      <div class="instrument reveal" aria-label="A musical machine carrying notes through an instrument" role="img">
-        <span class="bench-label">Commission 07 · sympathetic strings</span>
-        <div class="string-line string-one"></div>
-        <div class="string-line string-two"></div>
-
-        <div class="machine machine-mould" aria-hidden="true">
-          <span class="wheel"></span><span class="stamp">+C</span><span class="part-tag">mould</span>
+      <figure class="workshop">
+        <div class="instrument" role="img" aria-label="A small musical machine carrying notes across strings inside a wooden instrument">
+          <span class="bench-label">Inside the instrument</span>
+          <span class="string string-one"></span>
+          <span class="string string-two"></span>
+          <span class="port port-left"></span>
+          <span class="port port-right"></span>
+          <span class="machine">
+            <span class="soundhole"></span>
+            <span class="part-name">mould</span>
+          </span>
+          <span class="note note-a">A</span>
+          <span class="note note-b">B</span>
+          <span class="note note-c">C</span>
         </div>
-        <div class="machine machine-coupling" aria-hidden="true">
-          <span class="chambers"><i></i><i></i></span><b>×</b><span class="part-tag">coupling</span>
-        </div>
-        <div class="machine machine-resonator" aria-hidden="true">
-          <span class="bell"></span><span class="part-tag">resonator</span>
-        </div>
-
-        <div class="word word-in" aria-hidden="true">
-          <i class="word-note note-d"><span>D</span></i><i class="word-note note-a"><span>A</span></i><i class="word-note note-b"><span>B</span></i>
-        </div>
-        <div class="word word-out" aria-hidden="true">
-          <i class="word-note note-a"><span>A</span></i><i class="word-note note-b"><span>B</span></i><i class="word-note note-c"><span>C</span></i>
-        </div>
-        <div class="folio" aria-hidden="true">
-          <small>Guild requisition</small>
-          <h3>Make the hall ring A · B · C.</h3>
-          <p>One machine must serve every performance.</p>
-          <div class="folio-sign">— Office of Measures</div>
-        </div>
-        <div class="seal" aria-hidden="true">𝄢</div>
-      </div>
-    </section>
-
-    <section class="section" id="commission">
-      <div class="shell">
-        <div class="section-heading reveal">
-          <p class="kicker">Your commission</p>
-          <h2>A craftsperson’s job. A mystery in the <em>work.</em></h2>
-        </div>
-        <div class="story-grid">
-          <div class="reveal">
-            <p class="story-lead">The guild does not need a hero. It needs someone who can read grain, hear a bad interval, and finish what another pair of hands began.</p>
-            <p class="story-copy">The vanished master left no confession—only a locked workshop, a ledger of increasingly improper commissions, and instruments whose interiors are larger than their cases. Each solution restores a little of the record. Each new mechanism makes the questions worse.</p>
-          </div>
-          <article class="requisition reveal">
-            <small>Office of Measures · sealed</small>
-            <h3>To the journeyman appointed in settlement:</h3>
-            <p>Inventory the premises. Complete all contracted work. Preserve anything that can still be made to ring true. Report, in particular, any recurrence of the fault described as a wolf tone.</p>
-            <p class="signature">By order of the Guild.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="workshop">
-      <div class="shell">
-        <div class="section-heading reveal">
-          <p class="kicker">Inside the instrument</p>
-          <h2>Build a program you can watch <em>perform.</em></h2>
-        </div>
-        <div class="principles reveal">
-          <article class="principle">
-            <span class="principle-num">01 · Read the score</span>
-            <h3>Every commission has several performances.</h3>
-            <p>The starting notes change. The target halls change. Your one machine must ring true for every case.</p>
-          </article>
-          <article class="principle">
-            <span class="principle-num">02 · Fit the mechanism</span>
-            <h3>Place parts. Draw strings. Use distance as time.</h3>
-            <p>A mould appends. A damper removes. Forks read, splitters divide, couplings make two voices decide each other’s path.</p>
-          </article>
-          <article class="principle">
-            <span class="principle-num">03 · Hear it run</span>
-            <h3>Notes travel, mechanisms move, the workshop answers.</h3>
-            <p>Watch each word flow through your instrument—or advance one exact tick at a time until the fault reveals itself.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="shell">
-        <div class="section-heading reveal">
-          <p class="kicker">The repertoire</p>
-          <h2>Nine parts. Small rules. Machines with surprising <em>voices.</em></h2>
-        </div>
-        <div class="mechanics">
-          <article class="mechanic-card reveal">
-            <div class="mechanic-visual" aria-hidden="true"><div class="mini-part mini-mould">+ C</div></div>
-            <h3>Write at the tail</h3>
-            <p>The mould sings a chosen note onto every arriving word. Simple alone; dangerous when order begins to matter.</p>
-            <code class="rule">w → w · C</code>
-          </article>
-          <article class="mechanic-card reveal">
-            <div class="mechanic-visual" aria-hidden="true"><div class="mini-part mini-damper"><span></span></div></div>
-            <h3>Take from the head</h3>
-            <p>The damper removes the first note, whatever it is. An empty word has no head and waits in silence.</p>
-            <code class="rule">a · w → w</code>
-          </article>
-          <article class="mechanic-card reveal">
-            <div class="mechanic-visual" aria-hidden="true"><div class="mini-part mini-coupling"><span>×</span></div></div>
-            <h3>Make two voices listen</h3>
-            <p>The coupling holds a pair, reads across them, and routes each word by the other one’s head note.</p>
-            <code class="rule">(w, v) → crossed decisions</code>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section score-section">
-      <div class="shell">
-        <div class="section-heading reveal">
-          <p class="kicker">Nine movements</p>
-          <h2>From first exercises to work no master could <em>settle.</em></h2>
-        </div>
-        <div class="movements reveal" aria-label="Nine campaign chapters">
-          <div class="movement"><span class="movement-num">I</span><span class="movement-name">Études</span><small>blind transformations</small></div>
-          <div class="movement"><span class="movement-num">II</span><span class="movement-name">Duets</span><small>join and divide</small></div>
-          <div class="movement"><span class="movement-num">III</span><span class="movement-name">Sight-reading</span><small>the first decision</small></div>
-          <div class="movement"><span class="movement-num">IV</span><span class="movement-name">Wolf notes</span><small>loops that make progress</small></div>
-          <div class="movement"><span class="movement-num">V</span><span class="movement-name">Entanglements</span><small>crossed voices</small></div>
-          <div class="movement"><span class="movement-num">VI</span><span class="movement-name">Tempo</span><small>distance becomes delay</small></div>
-          <div class="movement"><span class="movement-num">VII</span><span class="movement-name">Concerto</span><small>the full repertoire</small></div>
-          <div class="movement"><span class="movement-num">VIII</span><span class="movement-name">Journeymen</span><small>contract-only work</small></div>
-          <div class="movement"><span class="movement-num">IX</span><span class="movement-name">Masterworks</span><small>optional brutal tier</small></div>
-        </div>
-        <p class="score-note reveal">The restored score follows the work from quiet bench études to the final commission. Machine sounds and music have independent controls, because sometimes a difficult mechanism needs silence.</p>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="shell finale">
-        <div class="reveal">
-          <p class="eyebrow">The shop is open</p>
-          <h2>There is only one honest way to inspect the work.</h2>
-          <p>Take the first commission. Place one string. Listen to what the workshop does with it.</p>
-          <div class="hero-actions">
-            <a class="button" href="./game/">Play Wolf Tone</a>
-          </div>
-        </div>
-        <div class="soundhole reveal" aria-hidden="true"><span>A</span></div>
-      </div>
+        <figcaption>A small work in progress, best approached with curious ears.</figcaption>
+      </figure>
     </section>
   </main>
 
-  <footer>
-    <div class="shell footer-inner">
-      <span>Wolf Tone · an experimental machine-puzzle game</span>
-      <span>Made by <a href="https://emilesilvis.com/">Emile Silvis</a> · <span id="year">2026</span></span>
-    </div>
+  <footer class="shell">
+    <p>Wolf Tone is unfinished. Rules, levels, artwork, and saves may still change while it is in playtesting.</p>
+    <p>Made by <a href="https://emilesilvis.com/">Emile Silvis</a>.</p>
   </footer>
-
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion || !('IntersectionObserver' in window)) {
-      document.querySelectorAll('.reveal').forEach((node) => node.classList.add('visible'));
-    } else {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        });
-      }, { threshold: 0.12 });
-      document.querySelectorAll('.reveal').forEach((node) => observer.observe(node));
-    }
-  </script>
 </body>
 </html>
