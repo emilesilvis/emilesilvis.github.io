@@ -81,7 +81,6 @@
     .site-head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       min-height: 5rem;
       border-bottom: 1px solid var(--rule);
     }
@@ -92,25 +91,6 @@
       letter-spacing: .24em;
       text-decoration: none;
       text-transform: uppercase;
-    }
-
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: .55rem;
-      color: var(--bone-muted);
-      font: .62rem/1 var(--mono);
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-
-    .status::before {
-      width: .42rem;
-      height: .42rem;
-      border-radius: 50%;
-      background: var(--brass-light);
-      box-shadow: 0 0 0 4px rgb(226 191 115 / 9%);
-      content: "";
     }
 
     main { display: grid; min-height: calc(100svh - 11rem); place-items: center; }
@@ -390,7 +370,6 @@
     @media (max-width: 520px) {
       .shell { width: min(100% - 1.5rem, var(--page)); }
       .site-head { min-height: 4.25rem; }
-      .status { font-size: .56rem; letter-spacing: .08em; }
       .hero { padding: 3rem 0; }
       h1 { font-size: clamp(4rem, 23vw, 5.8rem); }
       .instrument { min-height: 22rem; }
@@ -412,7 +391,6 @@
 <body>
   <header class="site-head shell">
     <a class="brand" href="#top" aria-label="Wolf Tone home">Wolf Tone</a>
-    <span class="status">Prototype · in playtesting</span>
   </header>
 
   <main id="top">
