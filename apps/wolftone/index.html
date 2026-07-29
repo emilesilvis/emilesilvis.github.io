@@ -1,433 +1,137 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wolf Tone — a musical machine-puzzle prototype</title>
-  <meta name="description" content="Wolf Tone is an early puzzle-game prototype about building little machines inside a strange string instrument. Play it in your browser.">
-  <meta name="theme-color" content="#100a06">
-  <link rel="canonical" href="https://emilesilvis.com/wolftone/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ctext y=%2226%22 font-size=%2226%22%3E%F0%9F%8E%BB%3C/text%3E%3C/svg%3E">
-  <meta property="og:title" content="Wolf Tone — playable prototype">
-  <meta property="og:description" content="Build little musical machines inside a strange string instrument.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://emilesilvis.com/wolftone/">
-  <meta property="og:image" content="https://emilesilvis.com/wolftone/og-prototype.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Wolf Tone — playable prototype, shown inside a wooden string instrument">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Wolf Tone — playable prototype">
-  <meta name="twitter:description" content="Build little musical machines inside a strange string instrument.">
-  <meta name="twitter:image" content="https://emilesilvis.com/wolftone/og-prototype.png">
-  <meta name="twitter:image:alt" content="Wolf Tone — playable prototype, shown inside a wooden string instrument">
-  <script defer src="https://cloud.umami.is/script.js" data-website-id="0a1c582e-d13c-49de-ab63-c20273446d6f"></script>
-  <style>
-    :root {
-      color-scheme: dark;
-      --void: #0d0805;
-      --walnut: #201208;
-      --walnut-light: #382213;
-      --brass: #bd9345;
-      --brass-light: #e2bf73;
-      --brass-dark: #715326;
-      --bone: #e7ddc6;
-      --bone-muted: #ab9d80;
-      --paper: #d2c39d;
-      --paper-ink: #302315;
-      --ember: #ffc46b;
-      --blue: #68aabe;
-      --violet: #9a86e6;
-      --green: #91b774;
-      --red: #df7266;
-      --rule: rgb(190 148 72 / 22%);
-      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-      --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-      --page: 68rem;
-    }
-
-    * { box-sizing: border-box; }
-
-    html { min-height: 100%; }
-
-    body {
-      min-height: 100svh;
-      margin: 0;
-      overflow-x: hidden;
-      background:
-        radial-gradient(60rem 34rem at 68% 20%, rgb(184 119 54 / 11%), transparent 66%),
-        linear-gradient(180deg, #150d08 0, var(--void) 70%);
-      color: var(--bone);
-      font: 17px/1.55 var(--serif);
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-
-    body::before {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background-image:
-        repeating-linear-gradient(92deg, transparent 0 14rem, rgb(119 73 35 / 4%) 14.1rem),
-        repeating-linear-gradient(0deg, transparent 0 6px, rgb(173 117 56 / 1.5%) 7px);
-      content: "";
-      pointer-events: none;
-    }
-
-    a { color: inherit; }
-    :focus-visible { outline: 2px solid var(--ember); outline-offset: 4px; }
-    .shell { width: min(100% - 2.4rem, var(--page)); margin-inline: auto; }
-
-    .site-head {
-      display: flex;
-      align-items: center;
-      min-height: 5rem;
-      border-bottom: 1px solid var(--rule);
-    }
-
-    .brand {
-      color: var(--brass-light);
-      font: 700 .76rem/1 var(--serif);
-      letter-spacing: .24em;
-      text-decoration: none;
-      text-transform: uppercase;
-    }
-
-    main { display: grid; min-height: calc(100svh - 11rem); place-items: center; }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(18rem, .82fr) minmax(28rem, 1.18fr);
-      align-items: center;
-      gap: clamp(3rem, 8vw, 7.5rem);
-      padding: clamp(3.5rem, 8vh, 6.5rem) 0;
-    }
-
-    .eyebrow {
-      display: flex;
-      align-items: center;
-      gap: .75rem;
-      margin: 0 0 1.1rem;
-      color: var(--brass);
-      font: .64rem/1.2 var(--mono);
-      letter-spacing: .17em;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before { width: 2rem; height: 1px; background: var(--brass); content: ""; }
-
-    h1 {
-      margin: 0;
-      color: var(--bone);
-      font: 400 clamp(4rem, 8vw, 6.6rem)/.82 var(--serif);
-      letter-spacing: -.055em;
-    }
-
-    h1 span { display: block; margin-left: .55em; color: var(--brass-light); font-style: italic; }
-
-    .intro {
-      max-width: 32rem;
-      margin: 1.8rem 0 0;
-      color: var(--bone-muted);
-      font-size: clamp(1.04rem, 1.6vw, 1.18rem);
-    }
-
-    .actions { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 3.15rem;
-      padding: .8rem 1.3rem;
-      border: 1px solid var(--brass);
-      border-radius: 3px;
-      background: linear-gradient(180deg, var(--brass-light), #b3853d);
-      box-shadow: inset 0 1px rgb(255 255 255 / 25%), 0 8px 28px rgb(0 0 0 / 28%);
-      color: #1b1208;
-      font: 700 .72rem/1 var(--mono);
-      letter-spacing: .11em;
-      text-decoration: none;
-      text-transform: uppercase;
-      transition: transform 160ms ease, box-shadow 160ms ease;
-    }
-
-    .button::after { margin-left: .8rem; content: "→"; font-size: 1rem; }
-    .button:hover { transform: translateY(-2px); box-shadow: inset 0 1px rgb(255 255 255 / 25%), 0 12px 32px rgb(0 0 0 / 38%); }
-
-    .smallprint {
-      margin: 1.2rem 0 0;
-      color: #786d59;
-      font: .62rem/1.5 var(--mono);
-      letter-spacing: .06em;
-    }
-
-    .workshop { margin: 0; }
-
-    .instrument {
-      position: relative;
-      min-height: 29rem;
-      overflow: hidden;
-      border: 1px solid #5b4023;
-      border-radius: 48% 6% 44% 5% / 7% 45% 7% 42%;
-      background:
-        linear-gradient(90deg, transparent 0 32.8%, rgb(10 6 3 / 58%) 33% 33.5%, transparent 33.7% 65.8%, rgb(10 6 3 / 58%) 66% 66.5%, transparent 66.7%),
-        linear-gradient(0deg, transparent 0 32.8%, rgb(10 6 3 / 58%) 33% 33.5%, transparent 33.7% 65.8%, rgb(10 6 3 / 58%) 66% 66.5%, transparent 66.7%),
-        repeating-linear-gradient(2deg, transparent 0 1.45rem, rgb(145 91 42 / 11%) 1.5rem 1.56rem),
-        radial-gradient(circle at 48% 44%, rgb(180 112 50 / 18%), transparent 44%),
-        #28180f;
-      box-shadow: inset 0 0 4.5rem #090503, 0 2rem 6rem rgb(0 0 0 / 40%);
-      isolation: isolate;
-    }
-
-    .instrument::before {
-      position: absolute;
-      inset: .72rem;
-      border: 3px double var(--brass-dark);
-      border-radius: inherit;
-      content: "";
-      opacity: .74;
-    }
-
-    .instrument::after {
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      background: radial-gradient(circle at 51% 41%, rgb(255 196 107 / 12%), transparent 54%);
-      content: "";
-      animation: lamplight 7s ease-in-out infinite alternate;
-    }
-
-    .bench-label {
-      position: absolute;
-      top: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #856f4b;
-      font: .56rem/1 var(--mono);
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .string {
-      position: absolute;
-      right: -3%;
-      left: -3%;
-      height: 7px;
-      border-block: 1px solid #d7c9a7;
-      background: #150d07;
-      box-shadow: 0 2px 0 #050302, 0 0 9px rgb(232 216 177 / 11%);
-    }
-
-    .string-one { top: 39%; }
-    .string-two { top: 67%; }
-
-    .port {
-      position: absolute;
-      z-index: 2;
-      width: 2.8rem;
-      height: 2.8rem;
-      border: 4px solid var(--brass);
-      border-radius: 50%;
-      background: var(--void);
-      box-shadow: 0 0 0 4px #25160c;
-    }
-
-    .port-left { top: calc(39% - 1.25rem); left: -1.35rem; }
-    .port-right { top: calc(39% - 1.25rem); right: -1.35rem; }
-
-    .machine {
-      position: absolute;
-      top: 36%;
-      left: 48%;
-      z-index: 3;
-      display: grid;
-      width: 9.8rem;
-      height: 7.2rem;
-      transform: translate(-50%, -20%);
-      border: 1px solid #362514;
-      border-radius: 2.5rem 3.6rem 2rem 3rem;
-      background: linear-gradient(145deg, #d6c8a2, #a89163);
-      box-shadow: .45rem .55rem 0 rgb(10 6 3 / 64%), inset 0 0 0 3px rgb(69 47 24 / 18%);
-      color: var(--paper-ink);
-      place-items: center;
-    }
-
-    .machine::before,
-    .machine::after {
-      position: absolute;
-      top: 50%;
-      width: 1.15rem;
-      height: 1.15rem;
-      border: 3px solid var(--brass);
-      border-radius: 50%;
-      background: var(--void);
-      box-shadow: 0 0 0 2px #25160c;
-      content: "";
-    }
-
-    .machine::before { left: -.65rem; transform: translate(-50%, -50%); }
-    .machine::after { right: -.65rem; transform: translate(50%, -50%); }
-
-    .soundhole {
-      display: grid;
-      width: 4.5rem;
-      height: 4.5rem;
-      border: .44rem solid #7a5b2c;
-      border-radius: 50%;
-      background: #160d07;
-      box-shadow: inset 0 0 0 .34rem var(--brass-light), inset 0 0 1.4rem #000;
-      place-items: center;
-    }
-
-    .soundhole::after {
-      width: 1.1rem;
-      height: 1.1rem;
-      border-radius: 50%;
-      background: var(--brass-light);
-      box-shadow: 0 0 1.1rem rgb(255 196 107 / 50%);
-      content: "";
-    }
-
-    .part-name {
-      position: absolute;
-      top: calc(100% + .8rem);
-      padding: .42rem .9rem;
-      border: 1px solid var(--brass-dark);
-      border-radius: 3px;
-      background: #120b06;
-      color: var(--bone);
-      font: 600 .68rem/1 var(--mono);
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-
-    .note {
-      position: absolute;
-      z-index: 5;
-      top: calc(39% - .9rem);
-      display: grid;
-      width: 1.8rem;
-      height: 1.8rem;
-      border: 2px solid #24170d;
-      border-radius: 50%;
-      background: var(--brass-light);
-      box-shadow: 0 3px 0 #160d07;
-      color: #24170d;
-      font: 800 .78rem/1 var(--mono);
-      place-items: center;
-      animation: travel 7s ease-in-out infinite;
-    }
-
-    .note-a { left: 12%; }
-    .note-b { left: 12%; background: var(--blue); animation-delay: -1.2s; }
-    .note-c { left: 12%; background: var(--violet); animation-delay: -2.4s; }
-
-    figcaption {
-      margin-top: 1rem;
-      color: #766a55;
-      font: italic .82rem/1.45 var(--serif);
-      text-align: center;
-    }
-
-    footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 2rem;
-      min-height: 6rem;
-      padding: 1.5rem 0;
-      border-top: 1px solid var(--rule);
-      color: #746953;
-      font: .61rem/1.5 var(--mono);
-      letter-spacing: .06em;
-    }
-
-    footer p { max-width: 34rem; margin: 0; }
-    footer a { color: var(--bone-muted); text-underline-offset: .2em; }
-
-    @keyframes travel {
-      0%, 10% { left: 7%; opacity: 0; }
-      15% { opacity: 1; }
-      39%, 58% { left: calc(48% - .9rem); opacity: 1; }
-      88% { left: 84%; opacity: 1; }
-      94%, 100% { left: 90%; opacity: 0; }
-    }
-
-    @keyframes lamplight {
-      from { opacity: .7; transform: scale(1); }
-      to { opacity: 1; transform: scale(1.035); }
-    }
-
-    @media (max-width: 860px) {
-      main { min-height: auto; }
-      .hero { grid-template-columns: 1fr; gap: 3.5rem; padding: 4rem 0; }
-      .copy { max-width: 35rem; }
-      h1 { font-size: clamp(4.3rem, 18vw, 6.5rem); }
-      .instrument { min-height: min(29rem, 82vw); }
-    }
-
-    @media (max-width: 520px) {
-      .shell { width: min(100% - 1.5rem, var(--page)); }
-      .site-head { min-height: 4.25rem; }
-      .hero { padding: 3rem 0; }
-      h1 { font-size: clamp(4rem, 23vw, 5.8rem); }
-      .instrument { min-height: 22rem; }
-      .machine { width: 7.7rem; height: 5.8rem; }
-      .soundhole { width: 3.6rem; height: 3.6rem; }
-      .part-name { font-size: .58rem; }
-      footer { flex-direction: column; gap: .65rem; min-height: 7rem; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .instrument::after, .note { animation: none; }
-      .note-a { left: 19%; opacity: 1; }
-      .note-b { left: 47%; opacity: 1; }
-      .note-c { left: 78%; opacity: 1; }
-      .button { transition: none; }
-    }
-  </style>
-</head>
-<body>
-  <header class="site-head shell">
-    <a class="brand" href="#top" aria-label="Wolf Tone home">Wolf Tone</a>
-  </header>
-
-  <main id="top">
-    <section class="hero shell">
-      <div class="copy">
-        <p class="eyebrow">A musical machine puzzle</p>
-        <h1>Wolf <span>Tone</span></h1>
-        <p class="intro">Build little machines inside a strange string instrument. Make every performance come out right.</p>
-        <div class="actions">
-          <a class="button" href="./game/">Play the prototype</a>
-        </div>
-        <p class="smallprint">Early browser build · free to play · headphones recommended</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Wolf Tone: uncover a vanished master’s mystery by rebuilding impossible instruments." />
+    <title>Wolf Tone — Play</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="e0b952c3-2a28-4575-9603-386229d51c15"></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">𝄢</span>
+        <span>
+          <strong>WOLF TONE</strong>
+          <small>v0.8.0 · prototype</small>
+        </span>
       </div>
+      <div class="level-switcher">
+        <button id="prev-level" class="level-arrow" type="button" aria-label="Previous level">‹</button>
+        <nav id="level-nav" class="level-nav" aria-label="Levels"></nav>
+        <button id="next-level" class="level-arrow" type="button" aria-label="Next level">›</button>
+      </div>
+    </header>
 
-      <figure class="workshop">
-        <div class="instrument" role="img" aria-label="A small musical machine carrying notes across strings inside a wooden instrument">
-          <span class="bench-label">Inside the instrument</span>
-          <span class="string string-one"></span>
-          <span class="string string-two"></span>
-          <span class="port port-left"></span>
-          <span class="port port-right"></span>
-          <span class="machine">
-            <span class="soundhole"></span>
-            <span class="part-name">mould</span>
-          </span>
-          <span class="note note-a">A</span>
-          <span class="note note-b">B</span>
-          <span class="note note-c">C</span>
+    <div id="banner" class="banner" hidden role="status" aria-live="polite">
+      <span id="banner-icon" class="banner-icon"></span>
+      <div class="banner-text">
+        <strong id="banner-title"></strong>
+        <p id="banner-detail"></p>
+      </div>
+      <button id="banner-next" type="button" hidden>Next level →</button>
+      <button id="banner-close" type="button" aria-label="Close">×</button>
+    </div>
+
+    <main class="app-shell">
+      <aside class="side-panel">
+        <div id="assignment" class="assignment"></div>
+
+        <section id="walkthrough-panel" class="walkthrough" data-region="walkthrough" aria-label="Walkthrough">
+          <div class="deck-heading">
+            <span>WALKTHROUGH</span>
+            <button id="deck-toggle" type="button">hide</button>
+          </div>
+          <div id="deck-body">
+            <div id="deck-step"></div>
+            <div class="deck-nav">
+              <button id="deck-prev" type="button">‹ back</button>
+              <span id="deck-counter"></span>
+              <button id="deck-next" type="button">next ›</button>
+            </div>
+            <button id="deck-reference" type="button" hidden>Place the reference build</button>
+          </div>
+        </section>
+
+        <section class="commission" data-region="commission" aria-label="The commission">
+          <div class="commission-heading">
+            <span>THE COMMISSION</span>
+            <button id="run-all" type="button">Run all</button>
+          </div>
+          <div id="case-tabs" class="case-tabs"></div>
+          <div class="score-readout" aria-label="Score; lower is better">
+            <span class="score-hint">CURRENT · LOWER IS BETTER</span>
+            <span class="score-measure"><small>PARTS</small><output id="score-parts">0</output></span>
+            <span class="score-measure"><small>WIRE</small><output id="score-wire">0</output></span>
+            <span class="score-measure"><small>TIME</small><output id="score-time">—</output></span>
+          </div>
+          <div class="score-readout personal-best" aria-label="Independent personal best scores">
+            <span class="score-hint">PERSONAL BEST · EACH AXIS</span>
+            <span class="score-measure"><small>PARTS</small><output id="best-parts">—</output></span>
+            <span class="score-measure"><small>WIRE</small><output id="best-wire">—</output></span>
+            <span class="score-measure"><small>TIME</small><output id="best-time">—</output></span>
+          </div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <div class="construction-bar" data-region="palette">
+          <span class="bar-label">PARTS</span>
+          <div id="palette" class="palette"></div>
+          <span id="construction-help" class="construction-help"></span>
         </div>
-        <figcaption>A small work in progress, best approached with curious ears.</figcaption>
-      </figure>
-    </section>
-  </main>
 
-  <footer class="shell">
-    <p>Wolf Tone is unfinished. Rules, levels, artwork, and saves may still change while it is in playtesting.</p>
-    <p>Made by <a href="https://emilesilvis.com/">Emile Silvis</a>.</p>
-  </footer>
-</body>
+        <div class="board-shell" data-region="board">
+          <div class="board-zoom">
+            <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+            <span id="zoom-label">100%</span>
+            <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+            <button id="zoom-fit" type="button">fit</button>
+          </div>
+          <div id="board-scroll" class="board-scroll">
+            <svg id="board" role="img" aria-label="Wolf Tone board"></svg>
+          </div>
+        </div>
+
+        <div class="transport" data-region="transport">
+          <div class="transport-primary">
+            <button id="run-button" class="run-button" type="button">▶ Run</button>
+            <button id="step-button" type="button">Step</button>
+            <button id="reset-run" type="button">Reset run</button>
+          </div>
+          <div class="tick-readout">
+            <small>TICK</small>
+            <output id="tick-output">–</output>
+            <small id="run-status">READY</small>
+          </div>
+          <div class="transport-secondary">
+            <span class="bar-label">SPEED</span>
+            <button data-speed="0" type="button">1</button>
+            <button data-speed="1" type="button" class="active">2</button>
+            <button data-speed="2" type="button">3</button>
+            <span class="transport-divider" aria-hidden="true"></span>
+            <button id="undo-edit" type="button" title="Undo edit (Ctrl/Cmd+Z)" disabled>Undo</button>
+            <button id="redo-edit" type="button" title="Redo edit (Ctrl/Cmd+Shift+Z)" disabled>Redo</button>
+            <button id="mute-button" type="button" aria-label="Toggle machine sounds">♪ on</button>
+            <button id="music-button" type="button" aria-label="Toggle soundtrack">♫ on</button>
+            <button id="clear-machine" class="danger" type="button">Clear machine</button>
+          </div>
+        </div>
+
+        <div class="lower-panels">
+          <section class="inspector-panel" data-region="inspector">
+            <div class="panel-heading"><span>INSPECTOR</span><span id="selection-kind">BOARD</span></div>
+            <div id="inspector"></div>
+            <details class="trace-panel">
+              <summary>RUN TRACE <span id="trace-count">0 events</span></summary>
+              <ul id="event-log" class="event-log"></ul>
+            </details>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./main.mjs"></script>
+  </body>
 </html>
