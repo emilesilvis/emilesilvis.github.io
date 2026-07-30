@@ -5,23 +5,23 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.3-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.3-1';
+} from './engine.mjs?v=0.8.4-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.4-1';
 import {
   canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
   sessionMode,
-} from './progression.mjs?v=0.8.3-1';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.3-1';
-import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.3-1';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.3-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.3-1';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.3-1';
+} from './progression.mjs?v=0.8.4-1';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.4-1';
+import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.4-1';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.4-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.4-1';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.4-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.3-1';
+} from './audio.mjs?v=0.8.4-1';
 
 // Teaching and advanced levels show walkthrough decks; searched introductory
 // commissions stay quiet in normal play. ?reference reveals every deck and
@@ -1133,39 +1133,39 @@ function noteChips(chosen, onAttr) {
 const PART_HELP = {
   quill: {
     rule: 'seed → out',
-    body: 'Sounds this performance’s seed word once, at tick 1. The seed belongs to the commission, not the machine.',
+    body: 'Outputs the current performance’s seed word at tick 1.',
   },
   mould: {
     rule: 'w → w·a',
-    body: 'Appends one configured note to every arriving word.',
+    body: 'Adds the selected note to the end of each word.',
   },
   damper: {
     rule: 'a·w → w',
-    body: 'Takes the head note, whatever it is. An empty word has no head and waits here.',
+    body: 'Removes the first note. An empty word waits.',
   },
   valve: {
     rule: 'w → w after n ticks',
-    body: 'Holds a word for a configured number of ticks, then releases it unchanged.',
+    body: 'Outputs the word unchanged after the selected number of ticks.',
   },
   unison: {
     rule: '(w, v) → w·v',
-    body: 'Waits for both seats, then joins the lead word followed by the tail word.',
+    body: 'Waits for both inputs, then outputs the lead word followed by the tail word.',
   },
   splitter: {
     rule: 'w·v → (w, v), |w| = k',
-    body: 'Cuts after the configured number of notes. Both resulting words need an exit.',
+    body: 'Sends the first k notes to head and the remaining notes to rest. Both outputs must be connected.',
   },
   fork: {
     rule: 'head = a ? left : right',
-    body: 'Reads the head note. Peek preserves it; bite removes a matching head as it exits left.',
+    body: 'Sends a word left when its first note matches. Otherwise it sends the word right. Bite removes a matching first note.',
   },
   coupling: {
     rule: 'each word routes by the other head',
-    body: 'Waits for both sides, reads across the pair, then releases both unchanged at once.',
+    body: 'Waits for both inputs. Each word’s output is selected by the other word’s first note. Both words remain unchanged.',
   },
   resonator: {
-    rule: 'w = target → ring',
-    body: 'Accepts exactly the printed target. A wrong word is sour; an unmarked hall must stay silent.',
+    rule: 'w = target → accept',
+    body: 'Accepts only the printed target word. A different word fails the performance. A resonator marked “stay silent” accepts no word.',
   },
 };
 
@@ -1176,12 +1176,12 @@ function renderToolHelp(kind) {
   const outputs = ports.outs.length ? ports.outs.join(', ') : 'none';
   $('selection-kind').textContent = 'PARTS TRAY';
   const hint = !editable()
-    ? 'Inspecting while the performance runs · placement is frozen'
+    ? 'The performance is running. Placement is disabled.'
     : remaining(kind) <= 0
-      ? 'No copies remain · select one on the board to configure it'
+      ? 'No copies remain. Select one on the board to configure it.'
       : armedTool === kind
-        ? 'Armed for placement · the ghost follows the board · Esc cancels'
-        : 'Click once to arm placement';
+        ? 'Placement is active. Press Esc to cancel.'
+        : 'Select to place this part.';
   $('inspector').innerHTML = `<div class="tool-inspection">` +
     `<svg viewBox="-34 -28 68 56" aria-hidden="true">${partFace({ kind, config: defaultConfig(kind) })}</svg>` +
     `<div><strong>${KIND_NAMES[kind]}</strong><code>${help.rule}</code><p class="prose">${help.body}</p></div></div>` +
@@ -1194,7 +1194,7 @@ function renderInspector() {
   const inspection = hoverInspection ?? selection;
   if (!inspection) {
     $('selection-kind').textContent = 'BOARD';
-    box.innerHTML = '<p class="prose">Select a part or a wire. Build within this level’s board and parts allowance. Wire length sets travel time, so placement can change when strings arrive.</p>';
+    box.innerHTML = '<p class="prose">Select a part or wire to inspect it. Parts must fit within the board and the available quantities. Wire length determines travel time.</p>';
     return;
   }
   if (inspection.kind === 'tool') {
@@ -1210,7 +1210,7 @@ function renderInspector() {
       return;
     }
     $('selection-kind').textContent = 'WIRE';
-    box.innerHTML = `<p class="prose">${w.from.part}.${w.from.port} → ${w.to.part}.${w.to.port} · travel ${wireTicks(machine(), w)} ticks</p>` +
+    box.innerHTML = `<p class="prose">${w.from.part}.${w.from.port} → ${w.to.part}.${w.to.port} · travel time: ${wireTicks(machine(), w)} ticks</p>` +
       '<button class="delete-part danger">Delete wire</button>';
     box.querySelector('.delete-part').onclick = deleteSelection;
     return;
@@ -1227,30 +1227,30 @@ function renderInspector() {
   let html = '';
   const kase = currentCase();
 
-  if (part.kind === 'quill') html += `<p class="prose">Sounds its seed once, at tick 1. This performance: ${prettyWord(kase.seeds[part.id] ?? '')}.</p>`;
-  if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Accepts exactly ${prettyWord(kase.targets[part.id])}. Anything else is a sour note.` : 'No target this performance: it must stay silent.'}</p>`;
-  if (part.kind === 'damper') html += '<p class="prose">Takes the head note, whatever it is: a·w → w. An empty string stalls here.</p>';
-  if (part.kind === 'unison') html += '<p class="prose">Waits for both seats, then joins: lead word first, tail word second.</p>';
-  if (part.kind === 'mould') html += `<div class="row"><span>append</span>${noteChips(part.config.note, 'note')}</div>`;
-  if (part.kind === 'splitter') html += `<div class="row"><span>cut k</span><button data-k="-1">−</button><strong>${part.config.k}</strong><button data-k="1">+</button></div>` +
-    '<p class="prose">Head exit takes the first k notes; rest takes the remainder.</p>';
+  if (part.kind === 'quill') html += `<p class="prose">Outputs ${prettyWord(kase.seeds[part.id] ?? '')} at tick 1.</p>`;
+  if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Target: ${prettyWord(kase.targets[part.id])}. A different word fails the performance.` : 'Target: stay silent. Any word fails the performance.'}</p>`;
+  if (part.kind === 'damper') html += '<p class="prose">Removes the first note: a·w → w. An empty word waits.</p>';
+  if (part.kind === 'unison') html += '<p class="prose">Waits for both inputs. Output: lead word followed by tail word.</p>';
+  if (part.kind === 'mould') html += `<div class="row"><span>output note</span>${noteChips(part.config.note, 'note')}</div>`;
+  if (part.kind === 'splitter') html += `<div class="row"><span>position k</span><button data-k="-1">−</button><strong>${part.config.k}</strong><button data-k="1">+</button></div>` +
+    '<p class="prose">Head output: first k notes. Rest output: remaining notes.</p>';
   if (part.kind === 'fork') {
     html += `<div class="row"><span>note</span>${noteChips(part.config.note, 'note')}</div>` +
       `<div class="row"><span>mode</span><button data-mode="peek" class="${part.config.mode === 'peek' ? 'active' : ''}">peek</button>` +
       `<button data-mode="consume" class="${part.config.mode === 'consume' ? 'active' : ''}">bite</button></div>` +
-      '<p class="prose">Left exactly when the head is this note; otherwise right. Bite removes a matched head as it exits left.</p>';
+      '<p class="prose">Matching first note: left. Other words: right. Bite removes a matching first note.</p>';
   }
   if (part.kind === 'coupling') {
     const routeA = couplingRouteText('A', part.config.noteA, 'L');
     const routeB = couplingRouteText('B', part.config.noteB, 'L');
-    html += `<div class="row coupling-control route-a"><span>B routes A</span>${noteChips(part.config.noteA, 'note-a')}</div>` +
+    html += `<div class="row coupling-control route-a"><span>B selects A</span>${noteChips(part.config.noteA, 'note-a')}</div>` +
       `<p class="route-rule route-a">${routeA} on a match; otherwise B:*→R.</p>` +
-      `<div class="row coupling-control route-b"><span>A routes B</span>${noteChips(part.config.noteB, 'note-b')}</div>` +
+      `<div class="row coupling-control route-b"><span>A selects B</span>${noteChips(part.config.noteB, 'note-b')}</div>` +
       `<p class="route-rule route-b">${routeB} on a match; otherwise A:*→R.</p>` +
-      '<p class="prose">The coupling waits for both strings, reads the other head across the pair, then releases both unchanged at once.</p>';
+      '<p class="prose">Waits for both inputs. Each word’s output depends on the other word’s first note. Both words remain unchanged.</p>';
   }
   if (part.kind === 'valve') html += `<div class="row"><span>hold</span><button data-delay="-1">−</button><strong>${part.config.delay}</strong><button data-delay="1">+</button><span>ticks</span></div>` +
-    '<p class="prose">Holds the word for the selected number of ticks, then passes it through unchanged.</p>';
+    '<p class="prose">Outputs the word unchanged after this many ticks.</p>';
 
   if (!fixed) html += '<button class="delete-part danger">Delete part</button>';
   box.innerHTML = html;

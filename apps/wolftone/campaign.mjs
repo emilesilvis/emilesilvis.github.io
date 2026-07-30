@@ -8,7 +8,7 @@ export const CAMPAIGN = [
     "id": "campaign-etude-1",
     "title": "Étude I",
     "chapter": "I · Études",
-    "assignment": "Remove 1 note from the beginning of each seed, then append C. Do not use a fork.",
+    "assignment": "Each target is its seed without the first note, followed by C.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -143,7 +143,7 @@ export const CAMPAIGN = [
     "id": "campaign-etude-3",
     "title": "Étude II",
     "chapter": "I · Études",
-    "assignment": "Append C·D to each seed. Do not use a fork.",
+    "assignment": "Each target is its seed followed by C·D.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -279,7 +279,7 @@ export const CAMPAIGN = [
     "id": "campaign-etude-2",
     "title": "Étude III",
     "chapter": "I · Études",
-    "assignment": "Remove 2 notes from the beginning of each seed, then append B. Do not use a fork.",
+    "assignment": "Each target is its seed without the first 2 notes, followed by B.",
     "board": {
       "cols": 11,
       "rows": 5
@@ -431,7 +431,7 @@ export const CAMPAIGN = [
     "id": "campaign-etude-4",
     "title": "Étude IV",
     "chapter": "I · Études",
-    "assignment": "Remove 1 note from the beginning of each seed, then append D·C. Do not use a fork.",
+    "assignment": "Each target is its seed without the first note, followed by D·C.",
     "board": {
       "cols": 11,
       "rows": 5
@@ -585,7 +585,7 @@ export const CAMPAIGN = [
     "id": "campaign-duet-merge-stamp",
     "title": "Duet I: merge and stamp",
     "chapter": "II · Duets",
-    "assignment": "Join the two seed words in order, then append C.",
+    "assignment": "Each target is the first seed followed by the second seed and C.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -733,7 +733,7 @@ export const CAMPAIGN = [
     "id": "campaign-duet-swap",
     "title": "Duet II: the swap",
     "chapter": "II · Duets",
-    "assignment": "Split each four-note seed in half, then join the second half before the first.",
+    "assignment": "Each target is the second half of its seed followed by the first half.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -871,7 +871,7 @@ export const CAMPAIGN = [
     "id": "campaign-duet-insert",
     "title": "Duet III: the graft",
     "chapter": "II · Duets",
-    "assignment": "Insert D after the second note of each seed.",
+    "assignment": "Each target is its seed with D between the second and third notes.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -1029,7 +1029,7 @@ export const CAMPAIGN = [
     "id": "campaign-duet-behead",
     "title": "Duet IV: beheaded harmony",
     "chapter": "II · Duets",
-    "assignment": "Remove the first note from the second seed, then join it after the first seed.",
+    "assignment": "Each target is the first seed followed by the second seed without its first note.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -1175,7 +1175,7 @@ export const CAMPAIGN = [
     "id": "campaign-reading-stamps",
     "title": "Sight-reading I: two signatures",
     "chapter": "III · Sight-reading",
-    "assignment": "Route each word by its first note, then append the note required by its target.",
+    "assignment": "Each target contains its seed unchanged, followed by D in the hall of A or C in the hall of B.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -1341,7 +1341,7 @@ export const CAMPAIGN = [
     "id": "campaign-reading-threeway",
     "title": "Sight-reading II: three halls",
     "chapter": "III · Sight-reading",
-    "assignment": "Route words beginning with A, B, and C to their matching resonators.",
+    "assignment": "Each target word matches its seed. The first note names the target hall.",
     "board": {
       "cols": 9,
       "rows": 7
@@ -1514,7 +1514,7 @@ export const CAMPAIGN = [
     "id": "campaign-wolf-strip-stamp",
     "title": "Wolf I: bitten clean, then signed",
     "chapter": "IV · Wolf notes",
-    "assignment": "Remove every leading A, then append C.",
+    "assignment": "Each target is its seed without any leading A notes, followed by C.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -1663,7 +1663,7 @@ export const CAMPAIGN = [
     "id": "campaign-wolf-rotate",
     "title": "Wolf II: the rotation",
     "chapter": "IV · Wolf notes",
-    "assignment": "Move every leading A to the end of the word.",
+    "assignment": "Each target is its seed with all leading A notes moved to the end.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -1812,7 +1812,7 @@ export const CAMPAIGN = [
     "id": "campaign-wolf-two-teeth",
     "title": "Wolf III: two teeth",
     "chapter": "IV · Wolf notes",
-    "assignment": "Remove all leading A notes, then remove all leading B notes.",
+    "assignment": "Each target omits the seed’s leading A notes and the B notes immediately after them.",
     "board": {
       "cols": 9,
       "rows": 5
@@ -1980,7 +1980,7 @@ export const CAMPAIGN = [
     "id": "campaign-tangle-stamped-gate",
     "title": "Entanglement I: the stamped gate",
     "chapter": "V · Entanglements",
-    "assignment": "Use the label to route the payload. Append D only to payloads sent to the hall of A. Send the label to the spent-labels resonator.",
+    "assignment": "The label names the payload’s target hall and also targets the spent-labels bin. Hall A’s payload target ends in D; hall B’s matches the payload.",
     "board": {
       "cols": 9,
       "rows": 7
@@ -2167,7 +2167,7 @@ export const CAMPAIGN = [
     "id": "campaign-tangle-mutual",
     "title": "Entanglement II: mutual regard",
     "chapter": "V · Entanglements",
-    "assignment": "Route each seed according to the first note of the other seed.",
+    "assignment": "Each target word matches its seed. The other seed’s first note selects which target hall receives it.",
     "board": {
       "cols": 9,
       "rows": 9
@@ -2362,7 +2362,7 @@ export const CAMPAIGN = [
     "id": "campaign-tempo-cross",
     "title": "Tempo II: the crossed duet",
     "chapter": "VI · Tempo",
-    "assignment": "Make the two target pairs. Delay one input so the farther words are paired together.",
+    "assignment": "All four one-note seeds belong to the two target words shown for each performance.",
     "board": {
       "cols": 9,
       "rows": 9
@@ -2588,7 +2588,7 @@ export const CAMPAIGN = [
     "id": "campaign-concerto-envelope",
     "title": "Concerto I: the envelope",
     "chapter": "VII · Concerto",
-    "assignment": "Split off the first note. Use it to route the remaining word, then send the first note to the spent-headers resonator.",
+    "assignment": "Each performance has two targets: the seed’s first note in spent headers, and its remaining suffix in the hall named by that first note.",
     "board": {
       "cols": 9,
       "rows": 7
@@ -2776,7 +2776,7 @@ export const CAMPAIGN = [
     "id": "campaign-concerto-signed",
     "title": "Concerto II: the signed envelope",
     "chapter": "VII · Concerto",
-    "assignment": "Split off the first note and use it to route the remaining word. Append A only on the path to the hall of A.",
+    "assignment": "The seed’s first note targets spent headers and names the body’s hall. Hall A’s body target ends in A; hall B’s matches the body.",
     "board": {
       "cols": 11,
       "rows": 7
@@ -2983,7 +2983,7 @@ export const CAMPAIGN = [
     "id": "campaign-concerto-wolf",
     "title": "Concerto III: the wolf’s commission",
     "chapter": "VII · Concerto",
-    "assignment": "Remove all leading A notes. Route the result by its new first note, then append the note required by that target.",
+    "assignment": "Leading A notes do not appear in the targets. The first remaining note names the hall; hall B targets end in C and hall C targets end in B.",
     "board": {
       "cols": 11,
       "rows": 5

@@ -12,7 +12,7 @@ export const PUZZLES = [
     id: 'first-resonance',
     title: 'First Resonance',
     chapter: 'I · Études',
-    assignment: 'Connect the quill to the resonator, then press Run. The seed and target already match, so no parts are needed.',
+    assignment: 'The target word is identical to the seed word.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -38,7 +38,7 @@ export const PUZZLES = [
     id: 'the-mould',
     title: 'The Mould',
     chapter: 'I · Études',
-    assignment: 'The target is one note longer than the seed. A mould appends a fixed note to the tail of whatever passes through it.',
+    assignment: 'Each target is its seed followed by C.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -67,7 +67,7 @@ export const PUZZLES = [
     id: 'the-damper',
     title: 'The Damper',
     chapter: 'I · Études',
-    assignment: 'Both seeds carry one stray note at the head. A damper removes the head note, whatever it is.',
+    assignment: 'Each target is its seed without the first note.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -95,7 +95,7 @@ export const PUZZLES = [
     id: 'unison',
     title: 'Unison',
     chapter: 'II · Duets',
-    assignment: 'Join the two seed words. A unison waits for one word in each input, then puts the lead word before the tail word.',
+    assignment: 'Each target is the top seed followed by the bottom seed.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 1 },
@@ -125,7 +125,7 @@ export const PUZZLES = [
     id: 'the-splitter',
     title: 'The Splitter',
     chapter: 'II · Duets',
-    assignment: 'Split each seed into two words. Set the split position k in the inspector and connect both outputs.',
+    assignment: 'The upper target is the first two notes of the seed. The lower target is the remaining two notes.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -155,7 +155,7 @@ export const PUZZLES = [
     id: 'the-tuning-fork',
     title: 'The Tuning Fork',
     chapter: 'III · Sight-reading',
-    assignment: 'The two performances start on different notes and want different halls. The fork is the first part that reads.',
+    assignment: 'Each target word matches its seed. The upper target applies to seeds beginning with A; the lower target applies to all other seeds.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -187,7 +187,7 @@ export const PUZZLES = [
     id: 'the-wolfs-bite',
     title: "The Wolf's Bite",
     chapter: 'IV · Wolf notes',
-    assignment: 'Remove every leading A using one fork and a loop.',
+    assignment: 'Each target is its seed without any leading A notes.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -219,7 +219,7 @@ export const PUZZLES = [
     id: 'the-coupling',
     title: 'The Coupling',
     chapter: 'V · Entanglements',
-    assignment: 'Route the payload using the label. A coupling waits for both words, then routes each one based on the other word’s first note.',
+    assignment: 'The label names the payload’s target. The payload C·D and the label itself must both arrive unchanged.',
     board: { cols: 10, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 2, y: 2, label: 'the label' },
@@ -256,7 +256,7 @@ export const PUZZLES = [
     id: 'valve-race',
     title: 'The Valve',
     chapter: 'VI · Tempo',
-    assignment: 'Two lead voices, two themes, two required duets. Delay the eager voice so the patient voice takes the first theme and the eager voice takes the second.',
+    assignment: 'Each performance requires two pairs: the patient lead with the first theme, and the eager lead with the second theme.',
     board: { cols: 11, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 4, y: 1, label: 'the eager voice' },
@@ -300,7 +300,7 @@ export const PUZZLES = [
     id: 'the-valve',
     title: 'Tempo I: Crossed Pairs',
     chapter: 'VI · Tempo',
-    assignment: 'Make the pairs A·D and B·C. Delay A so B reaches the lead input first.',
+    assignment: 'The required target words are A·D and B·C.',
     board: { cols: 11, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 4, y: 3, label: 'A: too early' },
@@ -343,7 +343,7 @@ export const PUZZLES = [
     id: 'triage',
     title: 'Triage',
     chapter: 'IV · Wolf notes',
-    assignment: 'Remove the first note, then route the remaining word to the resonator named by that note.',
+    assignment: 'The first note names the target hall. The target word is the remaining suffix.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
