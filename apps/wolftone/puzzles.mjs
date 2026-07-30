@@ -12,7 +12,7 @@ export const PUZZLES = [
     id: 'first-resonance',
     title: 'First Resonance',
     chapter: 'I · Études',
-    assignment: 'Wire the quill to the resonator and press Run. The seed already matches the target — this level is about moving a string, not rewriting it.',
+    assignment: 'Connect the quill to the resonator, then press Run. The seed and target already match, so no parts are needed.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -27,10 +27,10 @@ export const PUZZLES = [
       wires: [{ from: { part: 'q1', port: 'out' }, to: { part: 'r1', port: 'in' } }],
     },
     walkthrough: [
-      { focus: 'board', title: 'A string is a word', body: 'The notes A, B, C, D are the alphabet. A string carries a word of them — here A·B — and travels the wires as one object. Parts rewrite the word; the board only moves it.' },
-      { focus: 'board', title: 'The quill sounds once', body: 'At tick 1 the quill sounds its seed word onto its out wire. The seed belongs to the performance, not to your machine — later commissions change it under you.' },
-      { focus: 'board', title: 'The resonator is the goal', body: 'It accepts exactly the target word printed beside it. The right word rings true. Any other word is a sour note, and the performance fails on the spot.' },
-      { focus: 'transport', title: 'Wire it and run', body: 'Drag from the quill’s right-edge port to the resonator’s left-edge port, then press Run. The chip on the wire is its travel time in ticks — distance is time here.' },
+      { focus: 'board', title: 'Strings carry words', body: 'A string carries a word made from the notes A, B, C, and D. Here the word is A·B. Wires move the entire word between parts.' },
+      { focus: 'board', title: 'The quill sends the seed', body: 'At tick 1, the quill sends the seed word shown above it. Seeds can change between performances, but your machine stays the same.' },
+      { focus: 'board', title: 'Match the target', body: 'The resonator accepts only the target word shown above it. If it receives a different word, the performance fails.' },
+      { focus: 'transport', title: 'Connect and run', body: 'Drag from the quill’s output on the right to the resonator’s input on the left. Then press Run. The number on the wire is its travel time in ticks.' },
     ],
   },
 
@@ -57,9 +57,9 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'The mould appends', body: 'Take the mould from the palette and place it on the board: it adds one fixed note to the TAIL — w becomes w·a. Click it and pick which note in the inspector.' },
-      { focus: 'commission', title: 'One machine, every performance', body: 'This commission has two performances with different seeds. Your one machine must ring true on both. Run begins with the selected performance, then plays the full commission as a repeating recital.' },
-      { focus: 'inspector', title: 'Configure, then run', body: 'The mould starts set to A. The target ends in C, whatever the seed — so set the mould to C. If you forget, the sour note will tell you exactly what arrived.' },
+      { focus: 'palette', title: 'Append one note', body: 'Place a mould on the board. It appends one selected note to each word: w becomes w·a. Select the mould to choose the note in the inspector.' },
+      { focus: 'commission', title: 'Solve every performance', body: 'This commission has two performances with different seeds. The same machine must produce the target word in both.' },
+      { focus: 'inspector', title: 'Set the note to C', body: 'A mould starts set to A. Set this one to C because both targets end in C. If the result is wrong, the report shows the word that arrived.' },
     ],
   },
 
@@ -86,8 +86,8 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'The damper takes the head', body: 'a·w becomes w. The damper is the mould’s opposite end: moulds write at the tail, dampers take from the head. A string is a queue, and that asymmetry is the whole game.' },
-      { focus: 'board', title: 'It needs a head to take', body: 'An empty string stalls a damper — there is nothing to remove, so the word waits there forever. When a run goes silent, the report names the part that is waiting and why.' },
+      { focus: 'palette', title: 'Remove the first note', body: 'A damper removes the first note from a word: a·w becomes w. Moulds append at the end; dampers remove from the beginning.' },
+      { focus: 'board', title: 'Empty words wait', body: 'A damper cannot process an empty word, so the word waits there. If the machine stops, the report identifies the waiting part and the reason.' },
     ],
   },
 
@@ -95,7 +95,7 @@ export const PUZZLES = [
     id: 'unison',
     title: 'Unison',
     chapter: 'II · Duets',
-    assignment: 'Two quills, one target. A unison holds two strings until both arrive, then joins them — the lead seat’s word comes first.',
+    assignment: 'Join the two seed words. A unison waits for one word in each input, then puts the lead word before the tail word.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 1 },
@@ -116,8 +116,8 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'Two in, one out', body: 'The unison waits until a string sits in each seat, then releases one merged string: the lead seat’s word, then the tail seat’s. (w, v) becomes w·v.' },
-      { focus: 'board', title: 'Seats are not symmetric', body: 'Wire the top quill into the lead seat and the bottom into the tail. Swap them and the word comes out backwards — try it once; the sour note names exactly what it got.' },
+      { focus: 'palette', title: 'Join two words', body: 'A unison waits for one word in each input, then outputs the lead word followed by the tail word: (w, v) becomes w·v.' },
+      { focus: 'board', title: 'Input order matters', body: 'Connect the top quill to the lead input and the bottom quill to the tail input. Swapping the inputs reverses the order of the two words.' },
     ],
   },
 
@@ -125,7 +125,7 @@ export const PUZZLES = [
     id: 'the-splitter',
     title: 'The Splitter',
     chapter: 'II · Duets',
-    assignment: 'One string in, two products out. A splitter cuts at a fixed count k — set k in the inspector, and land both halves.',
+    assignment: 'Split each seed into two words. Set the split position k in the inspector and connect both outputs.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -146,8 +146,8 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'The cut is at a count, not a note', body: 'w·v becomes (w, v) where w is the first k notes. The head exit carries those k; the rest exit carries the remainder. A string shorter than k stalls — there is no such cut.' },
-      { focus: 'inspector', title: 'Set k, land both halves', body: 'Both targets are two notes long, so cut at k = 2. Both exits must be wired: a splitter will not fire while either half has nowhere to go.' },
+      { focus: 'palette', title: 'Split by position', body: 'A splitter sends the first k notes to the head output and the remaining notes to the rest output. A word shorter than k waits at the splitter.' },
+      { focus: 'inspector', title: 'Set k to 2', body: 'Both targets are two notes long, so set k to 2. Connect both outputs; the splitter waits if either output is unconnected.' },
     ],
   },
 
@@ -176,10 +176,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'The first part that READS', body: 'Every part so far rewrites blindly. The fork looks at the head: left exactly when the head is the fork’s note; everything else — wrong head, empty string — exits right.' },
-      { focus: 'commission', title: 'No straight pipe serves this', body: 'The seed differs per performance and so does the hall that must ring. A machine with no read cannot do it. This is where solutions start being logic.' },
-      { focus: 'board', title: 'A hall with no target stays SILENT', body: 'New rule, and it cuts: in each performance, a hall with no printed target must receive nothing at all. One stray string into a silent hall is a sour note — from here on, where the wrong strings go matters as much as where the right ones do.' },
-      { focus: 'inspector', title: 'Peek leaves the word alone', body: 'The fork is set to peek: it reads the head and passes the whole word through untouched. Set its note to A, aim left at the upper hall, right at the lower.' },
+      { focus: 'palette', title: 'Route by the first note', body: 'A fork checks the first note. A matching word exits left; every other word, including an empty word, exits right.' },
+      { focus: 'commission', title: 'Use one machine for both routes', body: 'Each performance has a different seed and target resonator. The machine must inspect the first note to choose the correct route.' },
+      { focus: 'board', title: 'Unused resonators stay empty', body: 'A resonator without a target in the current performance must receive no word. Sending a word to it fails the performance.' },
+      { focus: 'inspector', title: 'Peek keeps the word unchanged', body: 'In peek mode, the fork checks the first note without removing it. Set the fork to A. Connect the left output to the upper resonator and the right output to the lower one.' },
     ],
   },
 
@@ -187,7 +187,7 @@ export const PUZZLES = [
     id: 'the-wolfs-bite',
     title: "The Wolf's Bite",
     chapter: 'IV · Wolf notes',
-    assignment: 'Strip every leading A, however many there are. One fork, one loop — and a decision the spec left open.',
+    assignment: 'Remove every leading A using one fork and a loop.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -208,10 +208,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'board', title: 'Build the loop with peek first', body: 'Place a fork on A. Wire its left exit back into its own in port, its right exit to the resonator. Run the Aria. Watch the event log: the same A is read forever, and the run never ends.' },
-      { focus: 'inspector', title: 'The open decision', body: 'Should a fork CONSUME the note it reads? The spec left this open. In consume mode a matched head is bitten off as it exits left: a_f·w becomes w. Flip the fork’s mode in the inspector.' },
-      { focus: 'board', title: 'Now the loop makes progress', body: 'Each pass around the loop bites one A off the head. The first performance takes two bites, the second one, the third none. One machine, three different run lengths — the read is doing the counting.' },
-      { focus: 'inspector', title: 'Note your verdict', body: 'Destructive read means fewer parts — this level needs no damper. Peek is easier to teach but cannot loop. Which felt right in the hand? That answer goes in FINDINGS.md; it is what this level is for.' },
+      { focus: 'board', title: 'Build the loop in peek mode', body: 'Place a fork set to A. Connect its left output back to its input and its right output to the resonator. Run Aria. Because peek does not remove the A, the loop repeats without finishing.' },
+      { focus: 'inspector', title: 'Switch to bite mode', body: 'In bite mode, the fork removes a matching first note before sending the word left: A·w becomes w. Select the fork and change its mode from peek to bite.' },
+      { focus: 'board', title: 'Run the loop again', body: 'Each pass removes one leading A. Aria needs two passes, Encore needs one, and Coda goes directly to the right output.' },
+      { focus: 'inspector', title: 'Compare peek and bite', body: 'Bite changes the word, so the loop eventually finishes. Peek leaves the word unchanged, so this loop cannot finish.' },
     ],
   },
 
@@ -219,7 +219,7 @@ export const PUZZLES = [
     id: 'the-coupling',
     title: 'The Coupling',
     chapter: 'V · Entanglements',
-    assignment: 'A label and a payload. The coupling holds both strings until both arrive, then routes each by reading the OTHER one’s head.',
+    assignment: 'Route the payload using the label. A coupling waits for both words, then routes each one based on the other word’s first note.',
     board: { cols: 10, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 2, y: 2, label: 'the label' },
@@ -245,10 +245,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'commission', title: 'Read both performances first', body: 'The top quill sounds a one-note LABEL — A in the first performance, B in the second. The bottom quill sounds the payload C·D. The payload must reach the hall the label names, and the spent label goes to its own bin. One machine, both routes.' },
-      { focus: 'board', title: 'Sync: one string per side', body: 'Wire the label into in-port A and the payload into in-port B. The coupling holds whichever string arrives first until the other is there, then releases both in the same tick.' },
-      { focus: 'inspector', title: 'The crossed read', body: 'Each string exits by reading the OTHER side’s head. Select the coupling and set “B tests” to A. Then wire exit BL to the hall of A and exit BR to the hall of B: the payload turns left exactly when the label reads A.' },
-      { focus: 'board', title: 'Spend the label, then Run', body: 'Wire BOTH exits AL and AR into the spent-labels bin — two wires into one port is allowed, so side A’s own test note never matters. Run: the recital must ring the hall of A in the Aria and the hall of B in the Encore.' },
+      { focus: 'commission', title: 'Check both performances', body: 'The top quill sends the label: A in Aria and B in Encore. The bottom quill sends C·D. Route the payload to the resonator named by the label and route the label to the spent-labels resonator.' },
+      { focus: 'board', title: 'Connect one word to each side', body: 'Connect the label to input A and the payload to input B. The coupling waits until both words arrive, then releases both in the same tick.' },
+      { focus: 'inspector', title: 'Route using the other word', body: 'Each side checks the first note of the word on the other side. Set “B tests” to A. Connect BL to the hall of A and BR to the hall of B.' },
+      { focus: 'board', title: 'Connect the label outputs', body: 'Connect both label outputs, AL and AR, to the spent-labels resonator. Multiple wires can connect to one input. Then press Run.' },
     ],
   },
 
@@ -287,10 +287,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'board', title: 'A race for one seat', body: 'The unison and sorting fork are already on the board. Both lead voices and both themes must perform. Wired directly, the nearby eager voice reaches the lead queue first, so both duets get the wrong partner.' },
-      { focus: 'palette', title: 'Time folded into one cell', body: 'A valve passes a word through unchanged after holding it for a chosen number of ticks. Route only the eager voice through the valve.' },
-      { focus: 'inspector', title: 'Find the smallest winning hold', body: 'Start at one tick and Run. Then raise the hold until the patient voice reaches the lead queue first. The recital exposes both arrivals across the commission.' },
-      { focus: 'board', title: 'Delay, do not dispose', body: 'The patient voice takes the first theme; the delayed eager voice must still take the second. Both halls are required, so every emitted word leaves the machine. Distance is also delay, making the valve a compact convenience rather than unique logic.' },
+      { focus: 'board', title: 'Arrival order sets the pairs', body: 'The unison and fork are already on the board. With direct connections, the nearby lead word reaches the unison first and both pairs are wrong.' },
+      { focus: 'palette', title: 'Add a delay', body: 'A valve holds a word for a selected number of ticks, then passes it through unchanged. Route only the nearby lead word through the valve.' },
+      { focus: 'inspector', title: 'Set the delay', body: 'Start with a one-tick delay and press Run. Increase the delay until the farther lead word reaches the unison first.' },
+      { focus: 'board', title: 'Deliver both pairs', body: 'The farther lead word must pair with the first theme. The delayed lead word must then pair with the second theme. Wire length also adds delay, so a longer route can replace the valve.' },
     ],
   },
 
@@ -298,15 +298,15 @@ export const PUZZLES = [
   // still load after its title and campaign position change.
   {
     id: 'the-valve',
-    title: 'Tempo I — Crossed Pairs',
+    title: 'Tempo I: Crossed Pairs',
     chapter: 'VI · Tempo',
-    assignment: 'Four notes, two seats, two products. The early A pairs with the wrong partner — hold it back and cross the pairs.',
+    assignment: 'Make the pairs A·D and B·C. Delay A so B reaches the lead input first.',
     board: { cols: 11, rows: 7 },
     fixed: [
-      { id: 'q1', kind: 'quill', x: 4, y: 3, label: 'A — too early' },
-      { id: 'q2', kind: 'quill', x: 1, y: 1, label: 'B — far away' },
-      { id: 'q3', kind: 'quill', x: 4, y: 5, label: 'C — near tail' },
-      { id: 'q4', kind: 'quill', x: 1, y: 5, label: 'D — far tail' },
+      { id: 'q1', kind: 'quill', x: 4, y: 3, label: 'A: too early' },
+      { id: 'q2', kind: 'quill', x: 1, y: 1, label: 'B: far away' },
+      { id: 'q3', kind: 'quill', x: 4, y: 5, label: 'C: near tail' },
+      { id: 'q4', kind: 'quill', x: 1, y: 5, label: 'D: far tail' },
       { id: 'r1', kind: 'resonator', x: 10, y: 3, label: 'hall of A·D' },
       { id: 'r2', kind: 'resonator', x: 10, y: 5, label: 'hall of B·C' },
     ],
@@ -332,10 +332,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'board', title: 'Two seats, four notes', body: 'Wire A and B into the lead seat, C and D into the tail. The unison pairs whoever is first in each queue, so the chips — travel time — decide the pairs. Both products leave by the same out wire.' },
-      { focus: 'commission', title: 'Left alone, the pairs are wrong', body: 'A is near and C is near: A·C forms first and rings sour in the hall of A·D. The commission wants the CROSS — A·D and B·C — and both halls must ring, so leaving A unwired just starves its hall.' },
-      { focus: 'palette', title: 'The valve crosses the pairs', body: 'A valve holds a string for a set number of ticks, then passes it on unchanged. Route A through one and raise the hold until B takes the first seat, leaving D as A’s partner. The event log shows the arrival order — read it, then adjust.' },
-      { focus: 'board', title: 'Sort the two products', body: 'One wire carries both products in turn, so end with a read: a peeking fork on A sends A·D to its hall, everything else to the other. And know what the valve is: travel time folded into one cell. Every race it wins, clever placement could also win — this level included. It is a convenience, never a necessity, and the Tempo commissions say so out loud.' },
+      { focus: 'board', title: 'Connect both inputs', body: 'Connect A and B to the lead input, and C and D to the tail input. The unison joins the first word in each input queue. Wire travel time determines their arrival order.' },
+      { focus: 'commission', title: 'The direct pairs are wrong', body: 'With direct connections, A and C arrive first and form A·C. The targets are A·D and B·C, so A must arrive later.' },
+      { focus: 'palette', title: 'Delay A', body: 'Route A through a valve. Increase its delay until B pairs with C first and A pairs with D second. Use the event log to check the arrival order.' },
+      { focus: 'board', title: 'Route the two results', body: 'Send the unison output through a fork set to peek A. Connect the left output to the A·D resonator and the right output to the B·C resonator. A longer wire can replace the valve because wire length also adds delay.' },
     ],
   },
 
@@ -343,7 +343,7 @@ export const PUZZLES = [
     id: 'triage',
     title: 'Triage',
     chapter: 'IV · Wolf notes',
-    assignment: 'The commission: strip the header note and deliver the body to that header’s hall. Two different builds solve this — pick your logic.',
+    assignment: 'Remove the first note, then route the remaining word to the resonator named by that note.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -369,9 +369,9 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'commission', title: 'Read the whole commission first', body: 'Three performances. The header note — A or B — names the hall; the body follows it. Every performance must both lose its header and reach the right hall.' },
-      { focus: 'palette', title: 'Two builds, same commission', body: 'A peeking fork with a damper on each exit reads then strips. A biting fork strips the A itself and needs one damper, on the right branch only, for the B case. Same commission, different logic.' },
-      { focus: 'board', title: 'This is the thesis', body: 'In Opus Magnum two solutions differ in choreography. Here they differ in logic — which parts read, and what the reading spends. Build whichever you see first; the reference shows the biting build.' },
+      { focus: 'commission', title: 'Check all three performances', body: 'The first note is A or B and selects the target resonator. Remove that note and send the remaining word to the selected target.' },
+      { focus: 'palette', title: 'Choose peek or bite', body: 'With peek, place a damper after each fork output. With bite, the A is removed on the left output, so only the right output needs a damper for B.' },
+      { focus: 'board', title: 'Build either solution', body: 'Both approaches solve the commission. The reference build uses bite mode and one damper.' },
     ],
   },
 ];

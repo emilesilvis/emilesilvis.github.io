@@ -1,7 +1,7 @@
-// Wolf Tone — the words, audible. The note alphabet is literal: A, B, C, D
+// Wolf Tone: the words, audible. The note alphabet is literal: A, B, C, D
 // are the pitches A4, B4, C5, D5, and a word plays as a strum of its letters
 // in order. Like report.mjs and the rest of the shell, this file renders and
-// decides nothing — engine.mjs never imports it, so the search harness and
+// decides nothing: engine.mjs never imports it, so the search harness and
 // the ladder test stay silent.
 //
 // The empty word plays what it is.
@@ -132,7 +132,7 @@ export function playThud() {
   osc.stop(t + 0.35);
 }
 
-// The commission filled: an open chord on the alphabet's own outer letters —
+// The commission filled: an open chord on the alphabet's own outer letters -
 // A4, D5, A5, a fourth and then a fifth, left to ring.
 export function playResolve() {
   if (muted || !ensure()) return;

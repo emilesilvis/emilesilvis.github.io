@@ -33,8 +33,8 @@ const walkthrough = (observation, nudge, referenceParts) => [
   },
   {
     focus: 'board',
-    title: 'Reference build — spoilers',
-    body: `The shipped witness uses ${referenceParts} parts. It proves the commission is solvable, not that this is the only or best construction.`,
+    title: 'Reference build: spoilers',
+    body: `Reference build: ${referenceParts} parts. This build is verified, but its size has not been optimized.`,
   },
 ];
 
@@ -52,9 +52,9 @@ export const ADVANCED_LEVELS = [
   advancedLevel({
     tier: 'journeyman',
     id: 'journeyman-fourfold-seal',
-    title: 'Journeyman I — Fourfold Seal',
+    title: 'Journeyman I: Fourfold Seal',
     assignment: 'Five performances name four different halls and four different accepted endings. Build one machine for the printed contract.',
-    observation: 'Compare which opening note changes, which hall is required, and which final note appears. The brief deliberately names no devices.',
+    observation: 'Compare the opening note, required resonator, and final note in each performance.',
     nudge: 'Separate the decision about the destination from the work unique to that destination.',
     board: { cols: 15, rows: 9 },
     fixed: [
@@ -101,7 +101,7 @@ export const ADVANCED_LEVELS = [
   advancedLevel({
     tier: 'journeyman',
     id: 'journeyman-crossed-ledger',
-    title: 'Journeyman II — Crossed Ledger',
+    title: 'Journeyman II: Crossed Ledger',
     assignment: 'Across the four opening pairs, each voice has two possible halls and each hall accepts a different ending. One machine must satisfy all four.',
     observation: 'Read the four performances as a truth table. Changing only one voice sometimes moves only the other voice.',
     nudge: 'The two decisions are related. Look for a device that can observe the opposite input while preserving both words.',
@@ -147,7 +147,7 @@ export const ADVANCED_LEVELS = [
   advancedLevel({
     tier: 'optional-masterwork',
     id: 'masterwork-sealed-quartet',
-    title: 'Masterwork I — Sealed Quartet',
+    title: 'Masterwork I: Sealed Quartet',
     assignment: 'Each sealed word must leave its first note in the archive and deliver the remaining word, with the spelling shown, to the only other hall named for that performance.',
     observation: 'The archive and the sounding hall are both required. A solution that merely removes the first note has thrown away required work.',
     nudge: 'Keep the one-note label beside its body long enough for both to follow the same decision tree.',
@@ -206,7 +206,7 @@ export const ADVANCED_LEVELS = [
   advancedLevel({
     tier: 'journeyman',
     id: 'journeyman-six-note-law',
-    title: 'Journeyman III — Six-note Law',
+    title: 'Journeyman III: Six-note Law',
     assignment: 'The four six-note seeds obey one shared law. Infer it from the accepted words; the same machine must serve every performance.',
     observation: 'Read each seed as three adjacent two-note phrases, then compare where every output phrase came from and what changed.',
     nudge: 'Solve the rearrangement on paper before placing anything. One phrase is shortened; the lost note returns elsewhere as a constant.',
@@ -248,7 +248,7 @@ export const ADVANCED_LEVELS = [
   advancedLevel({
     tier: 'optional-masterwork',
     id: 'masterwork-long-cadence',
-    title: 'Masterwork II — Long Cadence',
+    title: 'Masterwork II: Long Cadence',
     assignment: 'Six performances, three halls. Several different seeds converge on the same accepted word; the reprise does not. Build one machine for the printed contract.',
     observation: 'Compare the three performances that converge, then use the reprise to distinguish “remove a prefix” from “remove everything before a particular note.”',
     nudge: 'There are two normalization stages before the surviving head can choose among three endings.',

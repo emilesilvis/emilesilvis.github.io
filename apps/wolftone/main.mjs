@@ -1,27 +1,27 @@
-// Wolf Tone — the player shell. Renders the board, lets the player place and
+// Wolf Tone: the player shell. Renders the board, lets the player place and
 // wire parts, and drives engine.mjs one tick at a time. All physics lives in
 // engine.mjs; this file decides nothing about what a part does.
 
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.2-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.2-1';
+} from './engine.mjs?v=0.8.3-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.3-1';
 import {
   canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
   sessionMode,
-} from './progression.mjs?v=0.8.2-1';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.2-1';
-import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.2-1';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.2-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.2-1';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.2-1';
+} from './progression.mjs?v=0.8.3-1';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.3-1';
+import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.3-1';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.3-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.3-1';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.3-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.2-1';
+} from './audio.mjs?v=0.8.3-1';
 
 // Teaching and advanced levels show walkthrough decks; searched introductory
 // commissions stay quiet in normal play. ?reference reveals every deck and
@@ -56,7 +56,7 @@ const BOARD_LAYOUT_VERSION = 2;
 const REDUCED_MOTION = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
 // ?reference loads every level with its hidden reference build already
-// placed — a review mode for walking the campaign's answers. It is strictly
+// placed: a review mode for walking the campaign's answers. It is strictly
 // read-only about progress: persist() is a no-op under it, so browsing the
 // answers can neither overwrite a player's saved machines nor mark levels
 // solved. Anything run or edited in this mode evaporates on reload.
@@ -327,7 +327,7 @@ function startTimer() {
 }
 
 // The words are audible. Everything is read off the run state after the
-// step — engine.mjs stays DOM-free and silent for the tests and the search.
+// step: engine.mjs stays DOM-free and silent for the tests and the search.
 // A part that sends a word strums it quietly; the quill's seed and a true
 // ring get the word at full voice. The empty word plays its own silence.
 function soundTick(rungBefore) {
@@ -454,7 +454,7 @@ function onResetRun() {
 function showBanner(kind, title, detail, nextAction = null, result = null) {
   // Every verdict passes through here, so this is where a verdict sounds:
   // resonant resolves, silent gets one damped thump. Sour says nothing for
-  // now — the wolf-tone growl came out until it earns its place.
+  // now: the wolf-tone growl came out until it earns its place.
   if (kind === 'resonant') playResolve();
   else if (kind === 'silent') playThud();
   const b = $('banner');
@@ -1070,10 +1070,10 @@ function renderScore() {
   const best = save.bests[puzzle().id];
   $('score-parts').textContent = score.parts;
   $('score-wire').textContent = score.wire;
-  $('score-time').textContent = score.time ?? '—';
-  $('best-parts').textContent = best?.parts ?? '—';
-  $('best-wire').textContent = best?.wire ?? '—';
-  $('best-time').textContent = best?.time ?? '—';
+  $('score-time').textContent = score.time ?? 'n/a';
+  $('best-parts').textContent = best?.parts ?? 'n/a';
+  $('best-wire').textContent = best?.wire ?? 'n/a';
+  $('best-time').textContent = best?.time ?? 'n/a';
 }
 
 function renderPalette() {
@@ -1088,7 +1088,7 @@ function renderPalette() {
           `${partFace({ kind, config: defaultConfig(kind) })}</svg>` +
           `<span class="palette-name">${KIND_NAMES[kind]}</span><span class="count">×${left}</span></button>`;
       }).join('')
-    : '<span class="count">no parts this level — just wires</span>';
+    : '<span class="count">no parts this level: just wires</span>';
   $('construction-help').textContent = run
     ? recital
       ? 'recital playing · Pause or Reset to edit'
@@ -1137,7 +1137,7 @@ const PART_HELP = {
   },
   mould: {
     rule: 'w → w·a',
-    body: 'Sings one configured note onto the tail of every arriving word.',
+    body: 'Appends one configured note to every arriving word.',
   },
   damper: {
     rule: 'a·w → w',
@@ -1228,7 +1228,7 @@ function renderInspector() {
   const kase = currentCase();
 
   if (part.kind === 'quill') html += `<p class="prose">Sounds its seed once, at tick 1. This performance: ${prettyWord(kase.seeds[part.id] ?? '')}.</p>`;
-  if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Accepts exactly ${prettyWord(kase.targets[part.id])}. Anything else is a sour note.` : 'No target this performance — it must stay silent.'}</p>`;
+  if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Accepts exactly ${prettyWord(kase.targets[part.id])}. Anything else is a sour note.` : 'No target this performance: it must stay silent.'}</p>`;
   if (part.kind === 'damper') html += '<p class="prose">Takes the head note, whatever it is: a·w → w. An empty string stalls here.</p>';
   if (part.kind === 'unison') html += '<p class="prose">Waits for both seats, then joins: lead word first, tail word second.</p>';
   if (part.kind === 'mould') html += `<div class="row"><span>append</span>${noteChips(part.config.note, 'note')}</div>`;
@@ -1250,7 +1250,7 @@ function renderInspector() {
       '<p class="prose">The coupling waits for both strings, reads the other head across the pair, then releases both unchanged at once.</p>';
   }
   if (part.kind === 'valve') html += `<div class="row"><span>hold</span><button data-delay="-1">−</button><strong>${part.config.delay}</strong><button data-delay="1">+</button><span>ticks</span></div>` +
-    '<p class="prose">Identity, gated by time: holds the string, then passes it unchanged.</p>';
+    '<p class="prose">Holds the word for the selected number of ticks, then passes it through unchanged.</p>';
 
   if (!fixed) html += '<button class="delete-part danger">Delete part</button>';
   box.innerHTML = html;
@@ -1279,7 +1279,7 @@ function renderNav() {
     `<span class="nav-chapter">${g.chapter}</span><div class="nav-levels">` +
     g.items.map(({ p, i }) => {
       const unlocked = levelIsUnlocked(i);
-      const title = unlocked ? p.title : `Locked — fill level ${i} first`;
+      const title = unlocked ? p.title : `Locked: fill level ${i} first`;
       const solved = save.solved.includes(p.id);
       return `<button class="level-choice${i === levelIndex ? ' current' : ''}${solved ? ' solved' : ''}${unlocked ? '' : ' locked'}" ` +
         `data-level="${i}" title="${title}" aria-label="Level ${i + 1}: ${title}" aria-disabled="${!unlocked}">` +
@@ -1388,7 +1388,7 @@ svg.addEventListener('pointerleave', () => {
   }
 });
 
-// Dropping a wire anywhere on a part snaps to that part's nearest in port —
+// Dropping a wire anywhere on a part snaps to that part's nearest in port -
 // the port circles are too small to demand a direct hit, and a drop that
 // silently creates nothing looks identical to a wire that exists.
 function snapInPort(partId, pt) {
@@ -1443,7 +1443,7 @@ svg.addEventListener('pointercancel', (e) => {
 svg.addEventListener('click', (e) => {
   if (justPanned) return;
   if (justWired) { justWired = false; return; }
-  // A goal pill plays its word — hear the seed or the target before building.
+  // A goal pill plays its word: hear the seed or the target before building.
   // The click falls through to selection, so the part underneath still opens.
   const pill = e.target.closest('[data-word]');
   if (pill) playWord(pill.dataset.word, { spacing: 110, gain: 0.3 });

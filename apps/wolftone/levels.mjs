@@ -1,9 +1,9 @@
 // Assemble every level source into the player-visible chapter order. Keeping
 // this DOM-free makes the exact catalogue testable without importing the UI.
-import { PUZZLES } from './puzzles.mjs?v=0.8.2-1';
-import { CAMPAIGN } from './campaign.mjs?v=0.8.2-1';
-import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.8.2-1';
-import { CHAPTER_ORDER } from './chapters.mjs?v=0.8.2-1';
+import { PUZZLES } from './puzzles.mjs?v=0.8.3-1';
+import { CAMPAIGN } from './campaign.mjs?v=0.8.3-1';
+import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.8.3-1';
+import { CHAPTER_ORDER } from './chapters.mjs?v=0.8.3-1';
 
 const SOURCE_LEVELS = [...PUZZLES, ...CAMPAIGN, ...ADVANCED_LEVELS];
 const PUZZLE_IDS = new Set(PUZZLES.map((level) => level.id));
@@ -57,7 +57,7 @@ export function showsWalkthrough(level, { referenceMode = false } = {}) {
 
 for (const level of ALL_LEVELS) {
   if (!LEVELS.includes(level)) {
-    console.warn(`level ${level.id} names unknown chapter ${level.chapter} — appended out of order`);
+    console.warn(`level ${level.id} names unknown chapter ${level.chapter}: appended out of order`);
     LEVELS.push(level);
   }
 }

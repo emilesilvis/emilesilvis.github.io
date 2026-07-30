@@ -1,9 +1,9 @@
-// Wolf Tone — the whole physics in one DOM-free file, so the ladder test can
+// Wolf Tone: the whole physics in one DOM-free file, so the ladder test can
 // run every reference build headlessly. A string is a word over the note
 // alphabet; every part is a partial function on words; where the function is
 // undefined the word waits, and the run says which part is waiting and why.
 //
-// PROTOTYPE — throwaway. It answers "does strings-are-tapes play?", not
+// PROTOTYPE: throwaway. It answers "does strings-are-tapes play?", not
 // "how should this be built".
 
 export const NOTES = ['A', 'B', 'C', 'D'];
@@ -88,11 +88,11 @@ export function makeRun() {
   return {
     tick: 0,
     transit: [],      // { wireIndex, word, depart, arrive }
-    holds: [],        // { part, word, release }  — valves
+    holds: [],        // { part, word, release } : valves
     queues: {},       // partId -> port -> [word, ...] FIFO
     emitted: {},      // quillId -> true
     satisfied: {},    // resonatorId -> word it accepted
-    stalls: [],       // { part, reason } — recomputed every tick
+    stalls: [],       // { part, reason }: recomputed every tick
     usedWires: new Set(), // wire indexes that delivered at least one word
     events: [],
     verdict: null,    // 'resonant' | 'sour' | 'silent'
@@ -141,7 +141,7 @@ function firePart(machine, kase, state, part, t, ev) {
   const { id, kind, config = {} } = part;
   const stall = (reason) => { state.stalls.push({ part: id, reason }); return false; };
   const wired = (port) => outWireIndex(machine, id, port) >= 0;
-  // state.mute skips narration only — the search harness runs this engine
+  // state.mute skips narration only: the search harness runs this engine
   // hundreds of thousands of times, and formatting event strings nobody reads
   // would dominate the cost. Verdicts, details and stalls are never muted.
   const say = (line) => { if (!state.mute) ev.push(line); };
@@ -150,7 +150,7 @@ function firePart(machine, kase, state, part, t, ev) {
     if (state.emitted[id]) return false;
     const seed = kase.seeds[id];
     if (seed === undefined) { state.emitted[id] = true; return false; }
-    if (!wired('out')) return stall('its out port is unwired — the seed cannot sound');
+    if (!wired('out')) return stall('its out port is unwired: the seed cannot sound');
     state.emitted[id] = true;
     send(machine, state, id, 'out', seed, t);
     say(`${label(machine, id)} sounded ${prettyWord(seed)}`);
@@ -162,7 +162,7 @@ function firePart(machine, kase, state, part, t, ev) {
     if (!q.length) return false;
     const w = q.shift();
     const want = kase.targets[id];
-    if (want === undefined) { sour(state, id, `${label(machine, id)} rang when it should have stayed silent this performance — it got ${prettyWord(w)}`); return true; }
+    if (want === undefined) { sour(state, id, `${label(machine, id)} rang when it should have stayed silent this performance: it got ${prettyWord(w)}`); return true; }
     if (state.satisfied[id] !== undefined) { sour(state, id, `${label(machine, id)} had already rung true, then a second string arrived: ${prettyWord(w)}`); return true; }
     if (w === want) {
       state.satisfied[id] = w;
@@ -187,7 +187,7 @@ function firePart(machine, kase, state, part, t, ev) {
     const q = queueOf(state, id, 'in');
     if (!q.length) return false;
     if (!wired('out')) return stall('its out port is unwired');
-    if (q[0] === '') return stall('its string is empty — there is no head note to damp');
+    if (q[0] === '') return stall('its string is empty: there is no head note to damp');
     const w = q.shift();
     send(machine, state, id, 'out', w.slice(1), t);
     say(`${label(machine, id)} damped the head ${w[0]}: ${prettyWord(w)} → ${prettyWord(w.slice(1))}`);
@@ -243,7 +243,7 @@ function firePart(machine, kase, state, part, t, ev) {
       say(`${label(machine, id)} read ${config.note} and BIT it off: ${prettyWord(w)} → ${prettyWord(w.slice(1))}, exits left`);
       w = w.slice(1);
     } else {
-      say(`${label(machine, id)} read the head of ${prettyWord(w)}: ${match ? config.note + ' — exits left' : 'not ' + config.note + ' — exits right'}`);
+      say(`${label(machine, id)} read the head of ${prettyWord(w)}: ${match ? config.note + ': exits left' : 'not ' + config.note + ': exits right'}`);
     }
     send(machine, state, id, dir, w, t);
     return true;
@@ -253,8 +253,8 @@ function firePart(machine, kase, state, part, t, ev) {
     const qa = queueOf(state, id, 'inA');
     const qb = queueOf(state, id, 'inB');
     if (!qa.length && !qb.length) return false;
-    if (!qa.length) return stall('side B has a string but side A has not arrived — a coupling waits for both');
-    if (!qb.length) return stall('side A has a string but side B has not arrived — a coupling waits for both');
+    if (!qa.length) return stall('side B has a string but side A has not arrived: a coupling waits for both');
+    if (!qb.length) return stall('side A has a string but side B has not arrived: a coupling waits for both');
     const wa = qa[0], wb = qb[0];
     const dirA = wb.length > 0 && wb[0] === config.noteA ? 'outAL' : 'outAR';
     const dirB = wa.length > 0 && wa[0] === config.noteB ? 'outBL' : 'outBR';
@@ -325,7 +325,7 @@ export function stepRun(machine, kase, state, maxTicks = 200) {
         state.detail = 'nothing will ever move again';
       } else if (t >= maxTicks) {
         state.verdict = 'silent';
-        state.detail = `still running at tick ${t} — patience ran out`;
+        state.detail = `still running at tick ${t}: patience ran out`;
       }
     }
   }
