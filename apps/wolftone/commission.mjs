@@ -13,7 +13,9 @@ function fallbackLabel(part, parts) {
   const index = sorted.findIndex((candidate) => candidate.id === part.id);
   const noun = part.kind === 'quill' ? 'seed' : 'target';
 
-  if (parts.length === 1) return noun;
+  // IN and OUT already name a lone endpoint's role on the Commission slip.
+  // Keep only explicit labels or fallback labels that distinguish siblings.
+  if (parts.length === 1) return null;
   if (parts.length === 2 && sorted[0].y !== sorted[1].y) {
     return part.kind === 'quill'
       ? ['top seed', 'bottom seed'][index]

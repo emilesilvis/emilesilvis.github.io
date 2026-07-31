@@ -5,24 +5,29 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.5-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.5-1';
+} from './engine.mjs?v=0.8.5-7';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.5-7';
 import {
   canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
   sessionMode,
-} from './progression.mjs?v=0.8.5-1';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.5-1';
-import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.5-1';
-import { commissionCaseSpec } from './commission.mjs?v=0.8.5-1';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.5-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.5-1';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.5-1';
+} from './progression.mjs?v=0.8.5-7';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.5-7';
+import {
+  movementValidity,
+  placementValidity,
+  retargetWire as retargetWireEdit,
+  spliceWire,
+} from './board-layout.mjs?v=0.8.5-7';
+import { commissionCaseSpec } from './commission.mjs?v=0.8.5-7';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.5-7';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.5-7';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.5-7';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.5-1';
+} from './audio.mjs?v=0.8.5-7';
 
 // Teaching and advanced levels show walkthrough decks; searched introductory
 // commissions stay quiet in normal play. ?reference reveals every deck and
@@ -70,6 +75,7 @@ const UNLOCK_ALL_LEVELS = REFERENCE_MODE || PLAYTEST_MODE;
 const $ = (id) => document.getElementById(id);
 const svg = $('board');
 const boardScroll = $('board-scroll');
+const boardShell = document.querySelector('.board-shell');
 let zoom = 1;
 let transitAnimationFrame = null;
 let discreteFrames = false;  // Step shows exact tick snapshots; Run restores tweening
@@ -84,6 +90,7 @@ function sizeBoard() {
   svg.style.height = `${H * fit * zoom}px`;
   $('zoom-label').textContent = `${Math.round(zoom * 100)}%`;
   boardScroll.classList.toggle('can-pan', zoom > 1);
+  requestAnimationFrame(positionContextEditor);
 }
 
 function setZoom(next) {
@@ -170,8 +177,10 @@ let selection = null;       // { kind: 'part'|'wire', id }
 let hoverInspection = null; // temporary Inspector preview; click selection persists
 let armedTool = null;       // part kind from palette
 let placementHover = null;  // grid cell under an armed part ghost
-let drag = null;            // { from: {part, port}, x, y }
+let drag = null;            // new wire or endpoint retarget gesture
 let justWired = false;
+let partDrag = null;        // movable part gesture with an uncommitted grid preview
+let suppressPartClick = false;
 let boardPan = null;        // pointer + scroll origins while grabbing empty board
 let justPanned = false;
 let walkIndex = 0;
@@ -194,15 +203,18 @@ function saveMachine() {
 }
 
 function editSnapshot() {
-  return structuredClone({ parts: playerParts, wires: playerWires });
+  return structuredClone({ parts: playerParts, wires: playerWires, selection });
 }
 
 function restoreSnapshot(snapshot) {
-  ({ parts: playerParts, wires: playerWires } = structuredClone(snapshot));
-  selection = null;
+  const restored = structuredClone(snapshot);
+  playerParts = restored.parts;
+  playerWires = restored.wires;
+  selection = restored.selection ?? null;
   armedTool = null;
   placementHover = null;
   drag = null;
+  partDrag = null;
 }
 
 function finishEdit() {
@@ -494,11 +506,36 @@ function nextId(kind) {
 function placedCount(kind) { return playerParts.filter((p) => p.kind === kind).length; }
 function remaining(kind) { return (puzzle().palette[kind] ?? 0) - placedCount(kind); }
 
-function placePart(kind, x, y) {
+function nextWireId() {
+  let n = 1;
+  const taken = new Set(playerWires.map((wire) => wire.id));
+  while (taken.has(`w${n}`)) n += 1;
+  return `w${n}`;
+}
+
+function placePart(kind, x, y, spliceWireId = null) {
   applyEdit(() => {
-    playerParts.push({ id: nextId(kind), kind, x, y, config: defaultConfig(kind) });
+    const id = nextId(kind);
+    playerParts.push({ id, kind, x, y, config: defaultConfig(kind) });
+    if (spliceWireId) {
+      const ports = PORTS[kind];
+      const spliced = spliceWire(
+        playerWires, spliceWireId, id, ports.ins[0], ports.outs[0], nextWireId(),
+      );
+      if (spliced) playerWires = spliced;
+    }
     if (remaining(kind) <= 0) armedTool = null;
-    selection = { kind: 'part', id: playerParts.at(-1).id };
+    selection = { kind: 'part', id };
+  });
+}
+
+function movePart(id, x, y) {
+  const part = playerParts.find((candidate) => candidate.id === id);
+  if (!part || (part.x === x && part.y === y)) return false;
+  return applyEdit(() => {
+    part.x = x;
+    part.y = y;
+    selection = { kind: 'part', id };
   });
 }
 
@@ -524,10 +561,21 @@ function deleteSelection() {
 
 function addWire(from, to) {
   const outTaken = playerWires.some((w) => w.from.part === from.part && w.from.port === from.port);
-  if (outTaken) return;
-  applyEdit(() => {
-    playerWires.push({ id: `w${Date.now()}${playerWires.length}`, from, to });
+  if (outTaken) return false;
+  return applyEdit(() => {
+    playerWires.push({ id: nextWireId(), from, to });
     selection = { kind: 'wire', id: playerWires.at(-1).id };
+  });
+}
+
+function retargetWire(wireId, end, nextRef) {
+  const next = retargetWireEdit(playerWires, wireId, end, nextRef);
+  if (!next) return false;
+  const current = playerWires.find((wire) => wire.id === wireId)?.[end];
+  if (current?.part === nextRef.part && current?.port === nextRef.port) return false;
+  return applyEdit(() => {
+    playerWires = next;
+    selection = { kind: 'wire', id: wireId };
   });
 }
 
@@ -576,6 +624,33 @@ function wirePoints(m, w) {
   const dropY = Math.max(a.y, b.y) + 46 + lane;
   return [a, { x: a.x + 16, y: a.y }, { x: a.x + 16, y: dropY },
     { x: b.x - 16, y: dropY }, { x: b.x - 16, y: b.y }, b];
+}
+
+function pointToSegmentDistance(point, start, end) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (!lengthSquared) return Math.hypot(point.x - start.x, point.y - start.y);
+  const t = Math.max(0, Math.min(1,
+    ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared));
+  return Math.hypot(point.x - (start.x + t * dx), point.y - (start.y + t * dy));
+}
+
+// Only a one-input/one-output mechanism has an unambiguous automatic splice.
+// When two strings cross the same cell, neither wins: select and retarget the
+// intended wire explicitly instead of letting placement guess.
+function spliceCandidateAtCell(m, kind, x, y) {
+  const ports = PORTS[kind];
+  if (ports.ins.length !== 1 || ports.outs.length !== 1) return null;
+  const point = { x: x * CELL + CELL / 2, y: y * CELL + CELL / 2 };
+  const candidates = m.wires.map((wire) => {
+    const points = wirePoints(m, wire);
+    const distance = Math.min(...points.slice(1).map((end, index) =>
+      pointToSegmentDistance(point, points[index], end)));
+    return { wire, distance };
+  }).filter(({ distance }) => distance <= 14).sort((a, b) => a.distance - b.distance);
+  if (!candidates.length || (candidates[1] && candidates[1].distance - candidates[0].distance < 4)) return null;
+  return candidates[0].wire;
 }
 
 // An outgoing word first appears over the working area of the part that made
@@ -673,6 +748,7 @@ const PORT_LABELS = {
   unison: { lead: 'w', tail: 'v' },
   splitter: { head: 'w', rest: 'v' },
   fork: { left: 'L', right: 'R' },
+  coupling: { inA: 'A', inB: 'B', outAL: 'AL', outAR: 'AR', outBL: 'BL', outBR: 'BR' },
 };
 
 // The engine keeps no UI-only trace of a coupling decision. Its queues and
@@ -847,7 +923,27 @@ function animateTransitWords(motions) {
 
 function renderBoard() {
   const p = puzzle();
-  const m = machine();
+  const baseMachine = machine();
+  const movePreview = partDrag?.moved
+    ? {
+        x: partDrag.x,
+        y: partDrag.y,
+        validity: movementValidity(
+          baseMachine.parts, p.board, partDrag.id, partDrag.x, partDrag.y,
+        ),
+      }
+    : null;
+  const m = movePreview?.validity.valid
+    ? {
+        parts: baseMachine.parts.map((part) => part.id === partDrag.id
+          ? { ...part, x: movePreview.x, y: movePreview.y }
+          : part),
+        wires: baseMachine.wires,
+      }
+    : baseMachine;
+  const splicePreview = armedTool && placementHover && editable()
+    ? spliceCandidateAtCell(m, armedTool, placementHover.x, placementHover.y)
+    : null;
   const kase = currentCase();
   const W = p.board.cols * CELL, H = p.board.rows * CELL;
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
@@ -883,10 +979,13 @@ function renderBoard() {
   }
   s += `<rect class="board-binding" x="4" y="4" width="${W - 8}" height="${H - 8}" rx="2"></rect>`;
 
+  let wireHandles = '';
   m.wires.forEach((w, wireIndex) => {
     const pts = wirePoints(m, w);
     const d = toPath(pts);
-    const sel = selection?.kind === 'wire' && selection.id === w.id ? ' selected' : '';
+    const selected = selection?.kind === 'wire' && selection.id === w.id;
+    const sel = selected ? ' selected' : '';
+    const spliceTarget = splicePreview?.id === w.id ? ' splice-target' : '';
     s += `<path class="wire-bed" d="${d}"></path>`;
     s += `<path class="wire-hit" data-wire="${w.id}" d="${d}"></path>`;
     const route = run && byId(m, w.from.part)?.kind === 'coupling'
@@ -894,17 +993,27 @@ function renderBoard() {
       : '';
     const liveItem = run?.transit.find((item) => item.wireIndex === wireIndex);
     const live = liveItem ? ' live-route' : '';
-    s += `<path class="wire${sel}${route}${live}" data-wire="${w.id}" d="${d}"></path>`;
+    s += `<path class="wire${sel}${route}${live}${spliceTarget}" data-wire="${w.id}" d="${d}"></path>`;
     if (liveItem) s += drawWireVibration(pts, liveItem.word, w.id);
     const mid = pointAlongPath(pts, 0.5);
     const ticks = wireTicks(m, w);
     s += `<rect class="wire-chip-box" x="${mid.x - 8}" y="${mid.y - 6}" width="16" height="12" rx="3"></rect>`;
     s += `<text class="wire-chip" x="${mid.x}" y="${mid.y + 3}">${ticks}</text>`;
+    if (selected && editable()) {
+      const from = portPos(m, w.from);
+      const to = portPos(m, w.to);
+      wireHandles += `<circle class="wire-handle-hit" data-wire-handle="from" data-wire="${w.id}" cx="${from.x}" cy="${from.y}" r="16"></circle>`;
+      wireHandles += `<circle class="wire-handle from" data-wire-handle="from" data-wire="${w.id}" cx="${from.x}" cy="${from.y}" r="7"></circle>`;
+      wireHandles += `<circle class="wire-handle-hit" data-wire-handle="to" data-wire="${w.id}" cx="${to.x}" cy="${to.y}" r="16"></circle>`;
+      wireHandles += `<circle class="wire-handle to" data-wire-handle="to" data-wire="${w.id}" cx="${to.x}" cy="${to.y}" r="7"></circle>`;
+    }
   });
 
   if (drag) {
-    const a = portPos(m, drag.from);
-    s += `<path class="temp-wire" d="M ${a.x} ${a.y} L ${drag.x} ${drag.y}"></path>`;
+    const anchor = portPos(m, drag.anchor);
+    const start = drag.end === 'from' ? { x: drag.x, y: drag.y } : anchor;
+    const end = drag.end === 'from' ? anchor : { x: drag.x, y: drag.y };
+    s += `<path class="temp-wire" d="M ${start.x} ${start.y} L ${end.x} ${end.y}"></path>`;
   }
 
   for (const part of m.parts) {
@@ -912,9 +1021,14 @@ function renderBoard() {
     const cy = part.y * CELL + CELL / 2;
     const fixed = p.fixed.some((f) => f.id === part.id);
     const sel = selection?.kind === 'part' && selection.id === part.id ? ' selected' : '';
+    const moving = partDrag?.moved && partDrag.id === part.id ? ' moving' : '';
     const coupling = part.kind === 'coupling' ? couplingFeedback(part, m) : null;
-    s += `<g data-part="${part.id}">`;
-    s += `<rect class="part-box${fixed ? ' fixed' : ''}${sel}${coupling ? ' coupling-active' : ''}" x="${cx - 29}" y="${cy - 25}" width="58" height="50" rx="9"></rect>`;
+    s += `<g data-part="${part.id}" class="${fixed ? 'fixed-part' : 'movable-part'}">`;
+    if (fixed) {
+      s += `<rect class="fixture-gutter" x="${cx - 35}" y="${cy - 32}" width="70" height="77" rx="12"></rect>`;
+      s += `<rect class="fixture-gutter-inner" x="${cx - 31}" y="${cy - 28}" width="62" height="69" rx="9"></rect>`;
+    }
+    s += `<rect class="part-box${fixed ? ' fixed' : ''}${sel}${moving}${coupling ? ' coupling-active' : ''}" x="${cx - 29}" y="${cy - 25}" width="58" height="50" rx="9"></rect>`;
     s += partFace(part, cx, cy, partVisualState(part, m));
     s += `<rect class="part-nameplate" x="${cx - 24}" y="${cy + 27}" width="48" height="11" rx="2"></rect>`;
     s += `<text class="part-name" x="${cx}" y="${cy + 35}">${part.label ?? KIND_NAMES[part.kind].toLowerCase()}</text>`;
@@ -953,14 +1067,26 @@ function renderBoard() {
     s += '</g>';
   }
 
+  s += wireHandles;
+
+  if (movePreview && !movePreview.validity.valid) {
+    const part = baseMachine.parts.find((candidate) => candidate.id === partDrag.id);
+    const cx = movePreview.x * CELL + CELL / 2;
+    const cy = movePreview.y * CELL + CELL / 2;
+    s += `<g class="movement-ghost blocked" aria-label="${movePreview.validity.reason}">`;
+    s += `<rect class="part-box" x="${cx - 29}" y="${cy - 25}" width="58" height="50" rx="9"></rect>`;
+    s += partFace(part, cx, cy);
+    s += '</g>';
+  }
+
   if (armedTool && placementHover && editable()) {
     const { x, y } = placementHover;
     const validity = placementValidity(m.parts, p.board, x, y);
     const cx = x * CELL + CELL / 2;
     const cy = y * CELL + CELL / 2;
     const preview = { id: '__placement__', kind: armedTool, x, y, config: defaultConfig(armedTool) };
-    s += `<g class="placement-ghost ${validity.valid ? 'valid' : 'blocked'}" ` +
-      `data-placement-valid="${validity.valid}" aria-label="${validity.reason ?? 'Valid placement'}">`;
+    s += `<g class="placement-ghost ${validity.valid ? 'valid' : 'blocked'}${splicePreview ? ' splice' : ''}" ` +
+      `data-placement-valid="${validity.valid}" aria-label="${validity.reason ?? (splicePreview ? 'Insert into wire' : 'Valid placement')}">`;
     s += `<rect class="part-box" x="${cx - 29}" y="${cy - 25}" width="58" height="50" rx="9"></rect>`;
     s += partFace(preview, cx, cy);
     s += `<rect class="part-nameplate" x="${cx - 24}" y="${cy + 27}" width="48" height="11" rx="2"></rect>`;
@@ -1012,6 +1138,8 @@ function renderBoard() {
 
   svg.innerHTML = s;
   animateTransitWords(transitMotions);
+  renderInteractionStatus();
+  requestAnimationFrame(positionContextEditor);
 }
 
 // ── side panels ──────────────────────────────────────────
@@ -1055,15 +1183,12 @@ function renderCases() {
     const cls = status === 'pass' ? 'pass' : status === 'fail' ? 'fail' : '';
     const spec = commissionCaseSpec(p, kase);
     const entries = (items) => items.map(({ label, word }) =>
-      `<span><b>${label}:</b> ${prettyWord(word)}</span>`).join('<span class="case-separator"> · </span>');
+      `<span>${label ? `<b>${label}:</b> ` : ''}${prettyWord(word)}</span>`).join('<span class="case-separator"> · </span>');
     return `<button class="case-tab${i === caseIndex ? ' current' : ''}" data-case="${i}">` +
       `<span class="status ${cls}">${mark}</span><span class="case-spec">` +
       `<strong class="case-name">${kase.name}</strong>` +
       `<span class="case-spec-row"><small>IN</small><span>${entries(spec.inputs)}</span></span>` +
       `<span class="case-spec-row"><small>OUT</small><span>${entries(spec.targets)}</span></span>` +
-      (spec.silent.length
-        ? `<span class="case-spec-row case-silent"><small>SILENT</small><span>${spec.silent.join(', ')}</span></span>`
-        : '') +
       `</span></button>`;
   }).join('');
 }
@@ -1100,8 +1225,8 @@ function renderPalette() {
       ? 'recital playing · Pause or Reset to edit'
       : 'the machine is frozen while a run is live'
     : armedTool
-      ? 'ghost follows the board · click places · Esc cancels'
-      : 'click a tray part to place · drag port → port to wire · Del removes';
+      ? 'ghost follows the board · click places · click again, right-click, or Esc cancels'
+      : 'drag parts to move · drag port → port to wire · Del removes';
 }
 
 function renderTransport() {
@@ -1195,7 +1320,120 @@ function renderToolHelp(kind) {
     `<p class="tool-hint">${hint}</p>`;
 }
 
+function partControlMarkup(part, fixed) {
+  if (fixed) return '';
+  let html = '';
+  if (part.kind === 'mould') {
+    html += `<div class="row"><span>output note</span>${noteChips(part.config.note, 'note')}</div>`;
+  }
+  if (part.kind === 'splitter') {
+    html += `<div class="row"><span>position k</span><button data-k="-1" aria-label="Decrease split position">−</button>` +
+      `<strong>${part.config.k}</strong><button data-k="1" aria-label="Increase split position">+</button></div>`;
+  }
+  if (part.kind === 'fork') {
+    html += `<div class="row"><span>note</span>${noteChips(part.config.note, 'note')}</div>` +
+      `<div class="row"><span>mode</span><button data-mode="peek" class="${part.config.mode === 'peek' ? 'active' : ''}">peek</button>` +
+      `<button data-mode="consume" class="${part.config.mode === 'consume' ? 'active' : ''}">bite</button></div>`;
+  }
+  if (part.kind === 'coupling') {
+    html += `<div class="coupling-choice route-a"><strong>B decides A</strong>` +
+      `<span>head</span><div class="coupling-notes">${noteChips(part.config.noteA, 'note-a')}</div>` +
+      `<span>A → <b>L</b> · else <b>R</b></span></div>` +
+      `<div class="coupling-choice route-b"><strong>A decides B</strong>` +
+      `<span>head</span><div class="coupling-notes">${noteChips(part.config.noteB, 'note-b')}</div>` +
+      `<span>B → <b>L</b> · else <b>R</b></span></div>`;
+  }
+  if (part.kind === 'valve') {
+    html += `<div class="row"><span>hold</span><button data-delay="-1" aria-label="Decrease hold">−</button>` +
+      `<strong>${part.config.delay}</strong><button data-delay="1" aria-label="Increase hold">+</button><span>ticks</span></div>`;
+  }
+  return html;
+}
+
+function bindPartControls(box, part) {
+  const setConfig = (key, value) => {
+    if (!editable() || part.config[key] === value) return;
+    applyEdit(() => {
+      const current = playerParts.find((candidate) => candidate.id === part.id);
+      if (current) current.config[key] = value;
+      selection = { kind: 'part', id: part.id };
+    });
+  };
+  box.querySelectorAll('[data-note]').forEach((button) => {
+    button.onclick = () => setConfig('note', button.dataset.note);
+  });
+  box.querySelectorAll('[data-note-a]').forEach((button) => {
+    button.onclick = () => setConfig('noteA', button.dataset.noteA);
+  });
+  box.querySelectorAll('[data-note-b]').forEach((button) => {
+    button.onclick = () => setConfig('noteB', button.dataset.noteB);
+  });
+  box.querySelectorAll('[data-k]').forEach((button) => {
+    button.onclick = () => setConfig('k', Math.max(1, Math.min(6, part.config.k + Number(button.dataset.k))));
+  });
+  box.querySelectorAll('[data-delay]').forEach((button) => {
+    button.onclick = () => setConfig('delay', Math.max(1, Math.min(12, part.config.delay + Number(button.dataset.delay))));
+  });
+  box.querySelectorAll('[data-mode]').forEach((button) => {
+    button.onclick = () => setConfig('mode', button.dataset.mode);
+  });
+}
+
+function positionContextEditor() {
+  const box = $('context-editor');
+  if (box.hidden || selection?.kind !== 'part') return;
+  const node = svg.querySelector(`[data-part="${selection.id}"]`);
+  if (!node || !boardShell) return;
+  const partRect = node.getBoundingClientRect();
+  const shellRect = boardShell.getBoundingClientRect();
+  const scrollRect = boardScroll.getBoundingClientRect();
+  const gap = 10;
+  const minTop = scrollRect.top - shellRect.top + 6;
+  const maxTop = scrollRect.bottom - shellRect.top - box.offsetHeight - 6;
+  let top = partRect.top - shellRect.top - box.offsetHeight - gap;
+  let placement = 'above';
+  if (top < minTop) {
+    top = partRect.bottom - shellRect.top + gap;
+    placement = 'below';
+  }
+  top = Math.max(minTop, Math.min(top, maxTop));
+  let left = partRect.left - shellRect.left + partRect.width / 2 - box.offsetWidth / 2;
+  left = Math.max(8, Math.min(left, boardShell.clientWidth - box.offsetWidth - 8));
+  const anchorX = partRect.left - shellRect.left + partRect.width / 2 - left;
+  box.style.left = `${left}px`;
+  box.style.top = `${top}px`;
+  box.style.setProperty('--anchor-x', `${Math.max(14, Math.min(anchorX, box.offsetWidth - 14))}px`);
+  box.dataset.placement = placement;
+}
+
+function renderContextEditor() {
+  const box = $('context-editor');
+  if (!editable() || selection?.kind !== 'part') {
+    box.hidden = true;
+    box.innerHTML = '';
+    return;
+  }
+  const part = byId(machine(), selection.id);
+  if (!part) {
+    box.hidden = true;
+    return;
+  }
+  const fixed = puzzle().fixed.some((candidate) => candidate.id === part.id);
+  const controls = partControlMarkup(part, fixed);
+  if (!controls) {
+    box.hidden = true;
+    box.innerHTML = '';
+    return;
+  }
+  box.hidden = false;
+  box.innerHTML = `<strong class="context-title">${KIND_NAMES[part.kind]}</strong>` +
+    `<div class="part-editor">${controls}</div>`;
+  bindPartControls(box, part);
+  requestAnimationFrame(positionContextEditor);
+}
+
 function renderInspector() {
+  renderContextEditor();
   const box = $('inspector');
   const inspection = hoverInspection ?? selection;
   if (!inspection) {
@@ -1216,9 +1454,7 @@ function renderInspector() {
       return;
     }
     $('selection-kind').textContent = 'WIRE';
-    box.innerHTML = `<p class="prose">${w.from.part}.${w.from.port} → ${w.to.part}.${w.to.port} · travel time: ${wireTicks(machine(), w)} ticks</p>` +
-      '<button class="delete-part danger">Delete wire</button>';
-    box.querySelector('.delete-part').onclick = deleteSelection;
+    box.innerHTML = `<p class="prose">${w.from.part}.${w.from.port} → ${w.to.part}.${w.to.port} · travel time: ${wireTicks(machine(), w)} ticks</p>`;
     return;
   }
   const part = byId(machine(), inspection.id);
@@ -1237,41 +1473,25 @@ function renderInspector() {
   if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Target: ${prettyWord(kase.targets[part.id])}. A different word fails the performance.` : 'Target: stay silent. Any word fails the performance.'}</p>`;
   if (part.kind === 'damper') html += '<p class="prose">Removes the first note: a·w → w. An empty word waits.</p>';
   if (part.kind === 'unison') html += '<p class="prose">Waits for both inputs. Output: lead word followed by tail word.</p>';
-  if (part.kind === 'mould') html += `<div class="row"><span>output note</span>${noteChips(part.config.note, 'note')}</div>`;
-  if (part.kind === 'splitter') html += `<div class="row"><span>position k</span><button data-k="-1">−</button><strong>${part.config.k}</strong><button data-k="1">+</button></div>` +
-    '<p class="prose">Head output: first k notes. Rest output: remaining notes.</p>';
+  if (part.kind === 'mould') html += `<p class="prose">Adds the selected ${part.config.note} note to the end of each word.</p>`;
+  if (part.kind === 'splitter') html += `<p class="prose">Position ${part.config.k}: head receives the first ${part.config.k} notes; rest receives the remainder.</p>`;
   if (part.kind === 'fork') {
-    html += `<div class="row"><span>note</span>${noteChips(part.config.note, 'note')}</div>` +
-      `<div class="row"><span>mode</span><button data-mode="peek" class="${part.config.mode === 'peek' ? 'active' : ''}">peek</button>` +
-      `<button data-mode="consume" class="${part.config.mode === 'consume' ? 'active' : ''}">bite</button></div>` +
-      '<p class="prose">Matching first note: left. Other words: right. Bite removes a matching first note.</p>';
+    html += `<p class="prose">A first-note ${part.config.note} match goes left; other words go right. ` +
+      `${part.config.mode === 'consume' ? 'Bite removes the matching note.' : 'Peek leaves the word unchanged.'}</p>`;
   }
   if (part.kind === 'coupling') {
-    const routeA = couplingRouteText('A', part.config.noteA, 'L');
-    const routeB = couplingRouteText('B', part.config.noteB, 'L');
-    html += `<div class="row coupling-control route-a"><span>B selects A</span>${noteChips(part.config.noteA, 'note-a')}</div>` +
-      `<p class="route-rule route-a">${routeA} on a match; otherwise B:*→R.</p>` +
-      `<div class="row coupling-control route-b"><span>A selects B</span>${noteChips(part.config.noteB, 'note-b')}</div>` +
-      `<p class="route-rule route-b">${routeB} on a match; otherwise A:*→R.</p>` +
-      '<p class="prose">Waits for both inputs. Each word’s output depends on the other word’s first note. Both words remain unchanged.</p>';
+    const feedback = couplingFeedback(part, machine());
+    html += `<div class="coupling-summary route-a"><strong>B decides A</strong><span>B:${part.config.noteA} → A:left · otherwise A:right</span></div>` +
+      `<div class="coupling-summary route-b"><strong>A decides B</strong><span>A:${part.config.noteB} → B:left · otherwise B:right</span></div>` +
+      '<p class="prose">The Coupling waits for both words. Each word keeps its notes; the other word chooses its exit.</p>';
+    if (feedback?.wordA !== undefined || feedback?.wordB !== undefined) {
+      const side = (output) => output?.endsWith('L') ? 'left' : output?.endsWith('R') ? 'right' : 'waiting';
+      html += `<p class="coupling-live">Live: B sends A ${side(feedback.outA)} · A sends B ${side(feedback.outB)}</p>`;
+    }
   }
-  if (part.kind === 'valve') html += `<div class="row"><span>hold</span><button data-delay="-1">−</button><strong>${part.config.delay}</strong><button data-delay="1">+</button><span>ticks</span></div>` +
-    '<p class="prose">Outputs the word unchanged after this many ticks.</p>';
-
-  if (!fixed) html += '<button class="delete-part danger">Delete part</button>';
+  if (part.kind === 'valve') html += `<p class="prose">Holds each word for ${part.config.delay} ticks, then outputs it unchanged.</p>`;
+  if (fixed) html += '<p class="tool-hint">This commission part is fixed to the bench.</p>';
   box.innerHTML = html;
-
-  const setConfig = (key, value) => {
-    if (!editable() || part.config[key] === value) return;
-    applyEdit(() => { part.config[key] = value; });
-  };
-  box.querySelectorAll('[data-note]').forEach((b) => { b.onclick = () => setConfig('note', b.dataset.note); });
-  box.querySelectorAll('[data-note-a]').forEach((b) => { b.onclick = () => setConfig('noteA', b.dataset.noteA); });
-  box.querySelectorAll('[data-note-b]').forEach((b) => { b.onclick = () => setConfig('noteB', b.dataset.noteB); });
-  box.querySelectorAll('[data-k]').forEach((b) => { b.onclick = () => setConfig('k', Math.max(1, Math.min(6, part.config.k + Number(b.dataset.k)))); });
-  box.querySelectorAll('[data-delay]').forEach((b) => { b.onclick = () => setConfig('delay', Math.max(1, Math.min(12, part.config.delay + Number(b.dataset.delay)))); });
-  box.querySelectorAll('[data-mode]').forEach((b) => { b.onclick = () => setConfig('mode', b.dataset.mode); });
-  box.querySelector('.delete-part')?.addEventListener('click', deleteSelection);
 }
 
 function renderNav() {
@@ -1312,6 +1532,37 @@ function renderAll() {
 
 // ── events ───────────────────────────────────────────────
 
+function renderInteractionStatus() {
+  const status = $('interaction-status');
+  let text = '';
+  if (partDrag?.moved) text = 'Moving part · release to place · right-click or Esc cancels';
+  else if (drag?.kind === 'retarget') text = `Retargeting ${drag.end === 'from' ? 'source' : 'destination'} · right-click or Esc cancels`;
+  else if (drag) text = 'Connecting wire · right-click or Esc cancels';
+  else if (armedTool) text = `Placing ${KIND_NAMES[armedTool]} · right-click or Esc cancels`;
+  status.hidden = !text;
+  status.textContent = text;
+}
+
+function cancelBoardInteraction({ clearSelection = true } = {}) {
+  const capturedPointerIds = [partDrag?.pointerId, drag?.pointerId, boardPan?.pointerId]
+    .filter((pointerId) => pointerId !== undefined);
+  for (const pointerId of capturedPointerIds) {
+    if (svg.hasPointerCapture(pointerId)) svg.releasePointerCapture(pointerId);
+  }
+  setLevelMenu(false);
+  armedTool = null;
+  placementHover = null;
+  hoverInspection = null;
+  drag = null;
+  partDrag = null;
+  boardPan = null;
+  boardScroll.classList.remove('panning');
+  if (clearSelection) selection = null;
+  renderPalette();
+  renderBoard();
+  renderInspector();
+}
+
 function sameInspection(a, b) {
   return a?.kind === b?.kind && a?.id === b?.id && a?.partKind === b?.partKind;
 }
@@ -1331,17 +1582,49 @@ function inspectionAt(target) {
 }
 
 svg.addEventListener('pointerdown', (e) => {
-  const port = e.target.closest('[data-port-part]');
-  if (port && port.dataset.portDir === 'out' && editable()) {
-    const from = { part: port.dataset.portPart, port: port.dataset.portName };
-    const taken = playerWires.some((w) => w.from.part === from.part && w.from.port === from.port);
-    if (!taken) {
+  if (e.button === 0) svg.focus({ preventScroll: true });
+  const handle = e.target.closest('[data-wire-handle]');
+  if (handle && editable() && e.button === 0) {
+    const wire = playerWires.find((candidate) => candidate.id === handle.dataset.wire);
+    if (wire) {
+      const end = handle.dataset.wireHandle;
+      const anchor = end === 'from' ? wire.to : wire.from;
       const { x, y } = svgXY(e);
-      drag = { from, x, y };
+      drag = { kind: 'retarget', wireId: wire.id, end, anchor, x, y, pointerId: e.pointerId };
       svg.setPointerCapture(e.pointerId);
       e.preventDefault();
       return;
     }
+  }
+  const port = e.target.closest('[data-port-part]');
+  if (port && port.dataset.portDir === 'out' && editable() && e.button === 0) {
+    const from = { part: port.dataset.portPart, port: port.dataset.portName };
+    const taken = playerWires.some((w) => w.from.part === from.part && w.from.port === from.port);
+    if (!taken) {
+      const { x, y } = svgXY(e);
+      drag = { kind: 'new', end: 'to', anchor: from, x, y, pointerId: e.pointerId };
+      svg.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
+    }
+  }
+  const part = e.target.closest('[data-part]');
+  const movable = part && playerParts.some((candidate) => candidate.id === part.dataset.part);
+  if (movable && editable() && !armedTool && e.button === 0) {
+    const placed = playerParts.find((candidate) => candidate.id === part.dataset.part);
+    const { x, y } = svgXY(e);
+    partDrag = {
+      pointerId: e.pointerId,
+      id: placed.id,
+      startX: x,
+      startY: y,
+      x: placed.x,
+      y: placed.y,
+      moved: false,
+    };
+    svg.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
   }
   const interactive = e.target.closest('[data-part], [data-wire], [data-word]');
   const canGrab = zoom > 1 && (e.button === 1 || (!interactive && !armedTool && e.button === 0));
@@ -1361,7 +1644,22 @@ svg.addEventListener('pointerdown', (e) => {
 });
 
 svg.addEventListener('pointermove', (e) => {
-  if (!boardPan && !drag) setHoverInspection(inspectionAt(e.target));
+  if (!boardPan && !drag && !partDrag) setHoverInspection(inspectionAt(e.target));
+  if (partDrag?.pointerId === e.pointerId) {
+    const point = svgXY(e);
+    if (Math.hypot(point.x - partDrag.startX, point.y - partDrag.startY) > 4) partDrag.moved = true;
+    if (partDrag.moved) {
+      const x = Math.floor(point.x / CELL);
+      const y = Math.floor(point.y / CELL);
+      if (partDrag.x !== x || partDrag.y !== y) {
+        partDrag.x = x;
+        partDrag.y = y;
+        renderBoard();
+      }
+    }
+    e.preventDefault();
+    return;
+  }
   if (boardPan?.pointerId === e.pointerId) {
     const dx = e.clientX - boardPan.x;
     const dy = e.clientY - boardPan.y;
@@ -1380,7 +1678,7 @@ svg.addEventListener('pointermove', (e) => {
     }
     return;
   }
-  if (!drag) return;
+  if (!drag || drag.pointerId !== e.pointerId) return;
   const { x, y } = svgXY(e);
   drag.x = x; drag.y = y;
   renderBoard();
@@ -1397,13 +1695,13 @@ svg.addEventListener('pointerleave', () => {
 // Dropping a wire anywhere on a part snaps to that part's nearest in port -
 // the port circles are too small to demand a direct hit, and a drop that
 // silently creates nothing looks identical to a wire that exists.
-function snapInPort(partId, pt) {
+function snapPort(partId, pt, dir) {
   const m = machine();
   const part = byId(m, partId);
-  const ins = PORTS[part.kind].ins;
-  if (!ins.length) return null;
+  const ports = dir === 'in' ? PORTS[part.kind].ins : PORTS[part.kind].outs;
+  if (!ports.length) return null;
   let best = null, bestD = Infinity;
-  for (const port of ins) {
+  for (const port of ports) {
     const pos = portPos(m, { part: partId, port });
     const d = Math.hypot(pos.x - pt.x, pos.y - pt.y);
     if (d < bestD) { bestD = d; best = port; }
@@ -1411,7 +1709,29 @@ function snapInPort(partId, pt) {
   return { part: partId, port: best };
 }
 
+const snapInPort = (partId, pt) => snapPort(partId, pt, 'in');
+const snapOutPort = (partId, pt) => snapPort(partId, pt, 'out');
+
 svg.addEventListener('pointerup', (e) => {
+  if (partDrag?.pointerId === e.pointerId) {
+    const gesture = partDrag;
+    partDrag = null;
+    selection = { kind: 'part', id: gesture.id };
+    // Pointer capture retargets the generated click to the SVG root. Suppress
+    // that click so a stationary press selects instead of immediately clearing.
+    suppressPartClick = true;
+    setTimeout(() => { suppressPartClick = false; }, 0);
+    if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+    const validity = movementValidity(machine().parts, puzzle().board, gesture.id, gesture.x, gesture.y);
+    if (gesture.moved && validity.valid) {
+      const changed = movePart(gesture.id, gesture.x, gesture.y);
+      if (!changed) { renderBoard(); renderInspector(); }
+    } else {
+      renderBoard(); renderInspector();
+    }
+    e.preventDefault();
+    return;
+  }
   if (boardPan?.pointerId === e.pointerId) {
     justPanned = boardPan.moved;
     boardPan = null;
@@ -1421,33 +1741,57 @@ svg.addEventListener('pointerup', (e) => {
     e.preventDefault();
     return;
   }
-  if (!drag) return;
+  if (!drag || drag.pointerId !== e.pointerId) return;
+  const gesture = drag;
   const el = document.elementFromPoint(e.clientX, e.clientY);
   const port = el?.closest?.('[data-port-part]');
   const pt = svgXY(e);
-  let to = null;
-  if (port && port.dataset.portDir === 'in') {
-    to = { part: port.dataset.portPart, port: port.dataset.portName };
+  const wantedDir = gesture.end === 'from' ? 'out' : 'in';
+  let target = null;
+  if (port && port.dataset.portDir === wantedDir) {
+    target = { part: port.dataset.portPart, port: port.dataset.portName };
   } else {
     const partEl = el?.closest?.('[data-part]');
     const cellPart = machine().parts.find((q) =>
       q.x === Math.floor(pt.x / CELL) && q.y === Math.floor(pt.y / CELL));
     const targetId = partEl?.dataset.part ?? cellPart?.id;
-    if (targetId) to = snapInPort(targetId, pt);
+    if (targetId) target = wantedDir === 'in' ? snapInPort(targetId, pt) : snapOutPort(targetId, pt);
   }
-  if (to) { addWire(drag.from, to); justWired = true; }
   drag = null;
-  renderBoard();
+  if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+  let changed = false;
+  if (target) {
+    changed = gesture.kind === 'new'
+      ? addWire(gesture.anchor, target)
+      : retargetWire(gesture.wireId, gesture.end, target);
+  }
+  justWired = true;
+  if (!changed) renderBoard();
+  e.preventDefault();
 });
 
 svg.addEventListener('pointercancel', (e) => {
+  if (partDrag?.pointerId === e.pointerId) {
+    partDrag = null;
+    renderBoard();
+  }
+  if (drag?.pointerId === e.pointerId) {
+    drag = null;
+    renderBoard();
+  }
   if (boardPan?.pointerId !== e.pointerId) return;
   boardPan = null;
   boardScroll.classList.remove('panning');
 });
 
+boardShell.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  cancelBoardInteraction();
+});
+
 svg.addEventListener('click', (e) => {
   if (justPanned) return;
+  if (suppressPartClick) { suppressPartClick = false; return; }
   if (justWired) { justWired = false; return; }
   // A goal pill plays its word: hear the seed or the target before building.
   // The click falls through to selection, so the part underneath still opens.
@@ -1466,7 +1810,8 @@ svg.addEventListener('click', (e) => {
     const validity = placementValidity(machine().parts, p.board, gx, gy);
     if (validity.valid && remaining(armedTool) > 0) {
       placementHover = null;
-      placePart(armedTool, gx, gy);
+      const splice = spliceCandidateAtCell(machine(), armedTool, gx, gy);
+      placePart(armedTool, gx, gy, splice?.id ?? null);
       return;
     }
   } else {
@@ -1480,9 +1825,9 @@ $('palette').addEventListener('click', (e) => {
   if (!b) return;
   const kind = b.dataset.tool;
   const canPlace = editable() && remaining(kind) > 0;
-  armedTool = canPlace ? kind : null;
+  armedTool = canPlace && armedTool !== kind ? kind : null;
   placementHover = null;
-  selection = { kind: 'tool', partKind: kind };
+  selection = armedTool ? { kind: 'tool', partKind: kind } : null;
   renderPalette(); renderBoard(); renderInspector();
 });
 
@@ -1505,12 +1850,21 @@ document.addEventListener('keydown', (e) => {
     redoEdit();
     return;
   }
-  if (e.key === 'Escape') {
-    setLevelMenu(false);
-    armedTool = null; placementHover = null; selection = null; hoverInspection = null; drag = null;
-    renderPalette(); renderBoard(); renderInspector();
+  const boardFocused = document.activeElement === svg || document.activeElement === document.body;
+  if (!typing && !command && boardFocused && e.key.toLowerCase() === 'z') {
+    e.preventDefault();
+    if (e.shiftKey) redoEdit(); else undoEdit();
+    return;
   }
-  if ((e.key === 'Delete' || e.key === 'Backspace') && selection && document.activeElement === document.body) {
+  if (!typing && !command && boardFocused && e.key.toLowerCase() === 'y') {
+    e.preventDefault();
+    redoEdit();
+    return;
+  }
+  if (e.key === 'Escape') {
+    cancelBoardInteraction();
+  }
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selection && boardFocused) {
     e.preventDefault();
     deleteSelection();
   }
@@ -1577,6 +1931,7 @@ $('zoom-in').addEventListener('click', () => setZoom(zoom * 1.25));
 $('zoom-out').addEventListener('click', () => setZoom(zoom / 1.25));
 $('zoom-fit').addEventListener('click', () => setZoom(1));
 window.addEventListener('resize', sizeBoard);
+boardScroll.addEventListener('scroll', positionContextEditor, { passive: true });
 
 $('prev-level').addEventListener('click', () => loadLevel(levelIndex - 1));
 $('next-level').addEventListener('click', () => loadLevel(levelIndex + 1));

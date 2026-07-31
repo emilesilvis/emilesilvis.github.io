@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Wolf Tone is a machine-building puzzle game about routing and transforming strings of notes." />
     <title>Wolf Tone: Play</title>
-    <link rel="stylesheet" href="./style.css?v=0.8.5-1" />
+    <link rel="stylesheet" href="./style.css?v=0.8.5-7" />
     <script defer src="https://cloud.umami.is/script.js" data-website-id="e0b952c3-2a28-4575-9603-386229d51c15"></script>
   </head>
   <body>
@@ -88,15 +88,23 @@
 
       <section class="workspace">
         <div class="board-shell" data-region="board">
-          <div class="board-zoom" aria-label="Board zoom controls">
-            <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
-            <span id="zoom-label" aria-live="polite">100%</span>
-            <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
-            <button id="zoom-fit" type="button" aria-label="Fit board">fit</button>
+          <div class="board-toolbar">
+            <div class="board-history" aria-label="Edit history">
+              <button id="undo-edit" type="button" title="Undo edit (Z or Ctrl/Cmd+Z)" aria-label="Undo edit">↶ <span>Undo</span></button>
+              <button id="redo-edit" type="button" title="Redo edit (Shift+Z, Y, or Ctrl/Cmd+Shift+Z)" aria-label="Redo edit">↷ <span>Redo</span></button>
+            </div>
+            <div class="board-zoom" aria-label="Board zoom controls">
+              <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
+              <span id="zoom-label" aria-live="polite">100%</span>
+              <button id="zoom-in" type="button" aria-label="Zoom in">+</button>
+              <button id="zoom-fit" type="button" aria-label="Fit board">fit</button>
+            </div>
           </div>
           <div id="board-scroll" class="board-scroll">
-            <svg id="board" role="img" aria-label="Wolf Tone board"></svg>
+            <svg id="board" role="img" tabindex="0" aria-label="Wolf Tone board"></svg>
           </div>
+          <div id="interaction-status" class="interaction-status" role="status" aria-live="polite" hidden></div>
+          <section id="context-editor" class="context-editor" aria-label="Selected part settings" hidden></section>
         </div>
 
         <div class="transport" data-region="transport">
@@ -116,8 +124,6 @@
             <button data-speed="1" type="button">2</button>
             <button data-speed="2" type="button">3</button>
             <span class="transport-divider" aria-hidden="true"></span>
-            <button id="undo-edit" type="button" title="Undo edit (Ctrl/Cmd+Z)" disabled>Undo</button>
-            <button id="redo-edit" type="button" title="Redo edit (Ctrl/Cmd+Shift+Z)" disabled>Redo</button>
             <button id="clear-machine" class="danger" type="button" aria-label="Clear machine">Clear</button>
           </div>
         </div>
@@ -141,6 +147,6 @@
       </aside>
     </main>
 
-    <script type="module" src="./main.mjs?v=0.8.5-1"></script>
+    <script type="module" src="./main.mjs?v=0.8.5-7"></script>
   </body>
 </html>
