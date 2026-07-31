@@ -161,7 +161,6 @@ export const DEPTH_LEVELS = [
   depthLevel({
     id: 'depth-loop-or-line',
     title: 'Study I: Loop or Line',
-    assignment: 'Each target is its seed without any leading A notes.',
     observation: 'Compare a loop that reuses one fork with a line that uses three forks. Check the Parts, Wire, and Time scores.',
     nudge: 'Connect the matching output to another fork or back to the same fork.',
     board: { cols: 13, rows: 9 },
@@ -181,7 +180,6 @@ export const DEPTH_LEVELS = [
   depthLevel({
     id: 'depth-shared-or-parallel',
     title: 'Study II: Shared or Parallel',
-    assignment: 'Each of the three simultaneous seeds targets its own hall with C·D added at the end.',
     observation: 'Compare one shared pair of moulds with three separate pairs. Check the Parts, Wire, and Time scores.',
     nudge: 'The heads already name the halls. The repeated work is the C·D signature.',
     board: { cols: 13, rows: 9 },
@@ -205,7 +203,6 @@ export const DEPTH_LEVELS = [
   depthLevel({
     id: 'depth-peek-only',
     title: 'Study III: Preserve with Peek',
-    assignment: 'The first note names the target hall. The target word is identical to the seed.',
     observation: 'Use peek mode to route the word without changing it.',
     nudge: 'Read A; its matching branch names the first hall.',
     board: { cols: 13, rows: 9 },
@@ -223,7 +220,6 @@ export const DEPTH_LEVELS = [
   depthLevel({
     id: 'depth-bite-only',
     title: 'Study IV: Preserve with Bite',
-    assignment: 'The first note names the target hall. The target word is identical to the seed.',
     observation: 'Use bite mode to route the word, then restore the note it removed.',
     nudge: 'After the bite, manufacture the lost A from an empty word and place it before the surviving body.',
     board: { cols: 13, rows: 9 },

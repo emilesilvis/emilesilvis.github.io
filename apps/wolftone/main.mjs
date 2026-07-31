@@ -5,23 +5,24 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.4-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.4-1';
+} from './engine.mjs?v=0.8.5-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.5-1';
 import {
   canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
   sessionMode,
-} from './progression.mjs?v=0.8.4-1';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.4-1';
-import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.4-1';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.4-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.4-1';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.4-1';
+} from './progression.mjs?v=0.8.5-1';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.5-1';
+import { couplingRouteText, placementValidity } from './board-layout.mjs?v=0.8.5-1';
+import { commissionCaseSpec } from './commission.mjs?v=0.8.5-1';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.5-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.5-1';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.5-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.4-1';
+} from './audio.mjs?v=0.8.5-1';
 
 // Teaching and advanced levels show walkthrough decks; searched introductory
 // commissions stay quiet in normal play. ?reference reveals every deck and
@@ -1015,10 +1016,8 @@ function renderBoard() {
 
 // ── side panels ──────────────────────────────────────────
 
-function renderAssignment() {
-  const p = puzzle();
-  $('assignment').innerHTML =
-    `<h2>${p.title}</h2><p>${p.assignment}</p>`;
+function renderCommissionTitle() {
+  $('commission-title').innerHTML = `<h2>${puzzle().title}</h2>`;
 }
 
 // Teaching decks explain new parts. Advanced decks expose their observation,
@@ -1054,11 +1053,18 @@ function renderCases() {
     const status = caseStatuses[i];
     const mark = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '·';
     const cls = status === 'pass' ? 'pass' : status === 'fail' ? 'fail' : '';
-    const seeds = Object.values(kase.seeds).map(prettyWord).join('  ');
-    const targets = Object.values(kase.targets).map(prettyWord).join('  ');
+    const spec = commissionCaseSpec(p, kase);
+    const entries = (items) => items.map(({ label, word }) =>
+      `<span><b>${label}:</b> ${prettyWord(word)}</span>`).join('<span class="case-separator"> · </span>');
     return `<button class="case-tab${i === caseIndex ? ' current' : ''}" data-case="${i}">` +
-      `<span class="status ${cls}">${mark}</span><span>${kase.name}</span>` +
-      `<span class="case-words">${seeds} → ${targets}</span></button>`;
+      `<span class="status ${cls}">${mark}</span><span class="case-spec">` +
+      `<strong class="case-name">${kase.name}</strong>` +
+      `<span class="case-spec-row"><small>IN</small><span>${entries(spec.inputs)}</span></span>` +
+      `<span class="case-spec-row"><small>OUT</small><span>${entries(spec.targets)}</span></span>` +
+      (spec.silent.length
+        ? `<span class="case-spec-row case-silent"><small>SILENT</small><span>${spec.silent.join(', ')}</span></span>`
+        : '') +
+      `</span></button>`;
   }).join('');
 }
 
@@ -1299,7 +1305,7 @@ function setLevelMenu(open) {
 }
 
 function renderAll() {
-  renderNav(); renderAssignment(); renderDeck(); renderCases(); renderScore();
+  renderNav(); renderCommissionTitle(); renderDeck(); renderCases(); renderScore();
   renderPalette(); renderBoard(); renderTransport(); renderInspector(); renderLog();
   sizeBoard();
 }

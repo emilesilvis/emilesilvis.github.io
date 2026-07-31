@@ -240,8 +240,7 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 .tools-panel { overflow: hidden; }
 .workspace { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 9px; }
 
-/* The assignment is the commission slip: printed ink on the one bright
-   material in the workshop. */
+/* The commission slip is the one bright material in the workshop. */
 .commission {
   position: relative;
   color: var(--paper-ink);
@@ -263,15 +262,13 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
   pointer-events: none;
   border: 1px solid rgb(74 53 26 / 18%);
 }
-.assignment {
+.commission-title {
   position: relative;
   margin-bottom: 11px;
   padding: 0 0 13px;
   border-bottom: 1px solid rgb(74 53 26 / 30%);
 }
-.assignment small { color: #735e35; font-size: 9px; letter-spacing: 1.6px; }
-.assignment h2 { margin: 4px 0 7px; font: 700 21px/1.12 var(--serif); }
-.assignment p { color: var(--paper-ink-dim); font: 14px/1.42 var(--serif); }
+.commission-title h2 { margin: 4px 0 7px; font: 700 21px/1.12 var(--serif); }
 
 /* ── walkthrough deck ────────────────────────────────── */
 
@@ -316,12 +313,18 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 .commission button { color: var(--paper-ink); background: rgb(74 53 26 / 6%); border-color: #a3926b; box-shadow: none; }
 .commission button:hover { border-color: #66522d; }
 .case-tabs { position: relative; display: flex; flex-direction: column; gap: 5px; }
-.case-tab { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 8px; text-align: left; }
+.case-tab { display: flex; align-items: flex-start; gap: 7px; min-width: 0; padding: 7px 8px; text-align: left; }
 .case-tab.current { background: rgb(93 67 29 / 8%); border-color: #786338; }
-.case-tab .status { width: 14px; flex: 0 0 auto; text-align: center; }
+.case-tab .status { width: 14px; flex: 0 0 auto; padding-top: 1px; text-align: center; }
 .case-tab .status.pass { color: #806817; }
 .case-tab .status.fail { color: #9f382b; }
-.case-tab .case-words { margin-left: auto; overflow: hidden; color: var(--paper-ink-dim); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.case-spec { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
+.case-name { margin-bottom: 1px; font: 700 11px/1.1 var(--serif); }
+.case-spec-row { display: grid; grid-template-columns: 37px minmax(0, 1fr); color: var(--paper-ink-dim); font: 10px/1.25 var(--mono); }
+.case-spec-row small { color: #735e35; font: 700 8px/1.5 var(--sans); letter-spacing: 0.8px; }
+.case-spec-row b { color: var(--paper-ink); font-weight: 600; }
+.case-separator { color: #8b7952; }
+.case-silent { opacity: 0.82; }
 .score-readout { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 10px; padding-top: 9px; border-top: 1px solid rgb(74 53 26 / 30%); }
 .score-hint { grid-column: 1 / -1; margin-bottom: 4px; color: var(--paper-ink-dim); font-size: 8px; letter-spacing: 1.5px; }
 .score-measure { display: flex; align-items: baseline; gap: 6px; }
@@ -686,8 +689,7 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
   .palette button { grid-template-columns: 42px minmax(0, 1fr) auto; }
   .palette-icon { width: 40px; }
   .commission { padding: 11px 12px 12px; }
-  .assignment h2 { font-size: 18px; }
-  .assignment p { font-size: 13px; }
+  .commission-title h2 { font-size: 18px; }
 }
 
 @media (max-width: 1080px) {

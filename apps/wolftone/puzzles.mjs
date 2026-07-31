@@ -12,7 +12,6 @@ export const PUZZLES = [
     id: 'first-resonance',
     title: 'First Resonance',
     chapter: 'I · Études',
-    assignment: 'The target word is identical to the seed word.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -38,7 +37,6 @@ export const PUZZLES = [
     id: 'the-mould',
     title: 'The Mould',
     chapter: 'I · Études',
-    assignment: 'Each target is its seed followed by C.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -67,7 +65,6 @@ export const PUZZLES = [
     id: 'the-damper',
     title: 'The Damper',
     chapter: 'I · Études',
-    assignment: 'Each target is its seed without the first note.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -95,7 +92,6 @@ export const PUZZLES = [
     id: 'unison',
     title: 'Unison',
     chapter: 'II · Duets',
-    assignment: 'Each target is the top seed followed by the bottom seed.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 1 },
@@ -125,7 +121,6 @@ export const PUZZLES = [
     id: 'the-splitter',
     title: 'The Splitter',
     chapter: 'II · Duets',
-    assignment: 'The upper target is the first two notes of the seed. The lower target is the remaining two notes.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -155,7 +150,6 @@ export const PUZZLES = [
     id: 'the-tuning-fork',
     title: 'The Tuning Fork',
     chapter: 'III · Sight-reading',
-    assignment: 'Each target word matches its seed. The upper target applies to seeds beginning with A; the lower target applies to all other seeds.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -187,7 +181,6 @@ export const PUZZLES = [
     id: 'the-wolfs-bite',
     title: "The Wolf's Bite",
     chapter: 'IV · Wolf notes',
-    assignment: 'Each target is its seed without any leading A notes.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
@@ -219,7 +212,6 @@ export const PUZZLES = [
     id: 'the-coupling',
     title: 'The Coupling',
     chapter: 'V · Entanglements',
-    assignment: 'The label names the payload’s target. The payload C·D and the label itself must both arrive unchanged.',
     board: { cols: 10, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 2, y: 2, label: 'the label' },
@@ -256,7 +248,6 @@ export const PUZZLES = [
     id: 'valve-race',
     title: 'The Valve',
     chapter: 'VI · Tempo',
-    assignment: 'Each performance requires two pairs: the patient lead with the first theme, and the eager lead with the second theme.',
     board: { cols: 11, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 4, y: 1, label: 'the eager voice' },
@@ -300,7 +291,6 @@ export const PUZZLES = [
     id: 'the-valve',
     title: 'Tempo I: Crossed Pairs',
     chapter: 'VI · Tempo',
-    assignment: 'The required target words are A·D and B·C.',
     board: { cols: 11, rows: 7 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 4, y: 3, label: 'A: too early' },
@@ -343,7 +333,6 @@ export const PUZZLES = [
     id: 'triage',
     title: 'Triage',
     chapter: 'IV · Wolf notes',
-    assignment: 'The first note names the target hall. The target word is the remaining suffix.',
     board: { cols: 9, rows: 5 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 2 },
