@@ -5,29 +5,29 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.5-7';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.5-7';
+} from './engine.mjs?v=0.8.6-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.6-1';
 import {
   canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
   sessionMode,
-} from './progression.mjs?v=0.8.5-7';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.5-7';
+} from './progression.mjs?v=0.8.6-1';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.6-1';
 import {
   movementValidity,
   placementValidity,
   retargetWire as retargetWireEdit,
   spliceWire,
-} from './board-layout.mjs?v=0.8.5-7';
-import { commissionCaseSpec } from './commission.mjs?v=0.8.5-7';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.5-7';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.5-7';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.5-7';
+} from './board-layout.mjs?v=0.8.6-1';
+import { commissionCaseSpec } from './commission.mjs?v=0.8.6-1';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.6-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.6-1';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.6-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.5-7';
+} from './audio.mjs?v=0.8.6-1';
 
 // Teaching and advanced levels show walkthrough decks; searched introductory
 // commissions stay quiet in normal play. ?reference reveals every deck and
