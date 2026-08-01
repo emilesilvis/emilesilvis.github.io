@@ -3,13 +3,8 @@
 
 export function sessionMode(query) {
   if (query.has('reference')) return 'reference';
-  if (query.has('depthlab')) return 'depthlab';
   if (query.has('playtest')) return 'playtest';
   return 'normal';
-}
-
-export function canPlaceReference(mode) {
-  return mode !== 'playtest';
 }
 
 export function prerequisiteId(levels, index) {

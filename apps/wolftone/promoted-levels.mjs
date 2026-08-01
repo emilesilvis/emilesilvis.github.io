@@ -16,7 +16,7 @@ const fixedBench = () => [
   { id: 'r1', kind: 'resonator', x: 9, y: 3 },
 ];
 
-const optionalDeck = (observation, nudge, referenceParts, architectureCount = 1) => [
+const optionalDeck = (observation, nudge) => [
   {
     focus: 'commission',
     title: 'Read the whole contract',
@@ -26,15 +26,6 @@ const optionalDeck = (observation, nudge, referenceParts, architectureCount = 1)
     focus: 'board',
     title: 'Optional nudge',
     body: nudge,
-  },
-  {
-    focus: 'board',
-    title: 'Reference build: spoilers',
-    body: `The verified reference uses ${referenceParts} parts. ` +
-      `${architectureCount > 1
-        ? `The offline audit retains ${architectureCount} structurally different witnesses. `
-        : ''}` +
-      'Different layouts can also represent the same underlying approach.',
   },
 ];
 
@@ -63,7 +54,7 @@ function masteryLevel({
       teachingBridge: architectures.length === 1,
       sourceCandidate,
     },
-    walkthrough: optionalDeck(observation, nudge, reference.parts.length, architectures.length),
+    walkthrough: optionalDeck(observation, nudge),
   };
 }
 

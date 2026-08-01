@@ -1,8 +1,7 @@
 // The walkthrough ladder: eleven authored levels placed at their chapter
 // seams, each introducing or consolidating one idea. Triage states the design
-// thesis. Every level carries a hidden reference build;
-// the ladder test proves each one resonates on every performance, which is
-// what makes the walkthrough's "place the reference build" button honest.
+// thesis. Every level carries a hidden reference build used by tests and the
+// separate reference-review mode.
 //
 // A case is a PERFORMANCE: per-quill seed words, per-resonator target words.
 // A resonator with no target in a performance must stay silent.
@@ -360,7 +359,7 @@ export const PUZZLES = [
     walkthrough: [
       { focus: 'commission', title: 'Check all three performances', body: 'The first note is A or B and selects the target resonator. Remove that note and send the remaining word to the selected target.' },
       { focus: 'palette', title: 'Choose peek or bite', body: 'With peek, place a damper after each fork output. With bite, the A is removed on the left output, so only the right output needs a damper for B.' },
-      { focus: 'board', title: 'Build either solution', body: 'Both approaches solve the commission. The reference build uses bite mode and one damper.' },
+      { focus: 'board', title: 'Build either solution', body: 'Both approaches solve the commission. Bite mode needs one damper; peek mode needs one on each route.' },
     ],
   },
 ];

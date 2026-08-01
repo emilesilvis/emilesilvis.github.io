@@ -5,35 +5,33 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.7-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.7-1';
-import { DEPTH_LEVELS } from './depth-levels.mjs?v=0.8.7-1';
+} from './engine.mjs?v=0.8.8-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.8-1';
 import {
-  canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.8.7-1';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.7-1';
+} from './progression.mjs?v=0.8.8-1';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.8-1';
 import {
   movementValidity,
   placementValidity,
   retargetWire as retargetWireEdit,
   spliceWire,
-} from './board-layout.mjs?v=0.8.7-1';
-import { commissionCaseSpec } from './commission.mjs?v=0.8.7-1';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.7-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.7-1';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.7-1';
+} from './board-layout.mjs?v=0.8.8-1';
+import { commissionCaseSpec } from './commission.mjs?v=0.8.8-1';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.8-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.8-1';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.8-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.7-1';
+} from './audio.mjs?v=0.8.8-1';
 
-// Teaching and advanced levels show walkthrough decks; searched introductory
-// commissions stay quiet in normal play. ?reference reveals every deck and
-// places any shipped witness on request (see deckShown).
+// Teaching and advanced levels show player-facing walkthrough decks; searched
+// introductory commissions stay quiet. Reference review loads answers without
+// showing walkthroughs.
 
 // The Godot score was written as a progression from workshop craft to the
 // forbidden commission. The web campaign has more levels, so cues belong to
@@ -72,14 +70,20 @@ const QUERY = new URLSearchParams(location.search);
 const SESSION_MODE = sessionMode(QUERY);
 const REFERENCE_MODE = SESSION_MODE === 'reference';
 const PLAYTEST_MODE = SESSION_MODE === 'playtest';
-const DEPTH_LAB_MODE = QUERY.has('depthlab');
-const ACTIVE_LEVELS = DEPTH_LAB_MODE ? DEPTH_LEVELS : LEVELS;
-const UNLOCK_ALL_LEVELS = REFERENCE_MODE || PLAYTEST_MODE || DEPTH_LAB_MODE;
+const UNLOCK_ALL_LEVELS = REFERENCE_MODE || PLAYTEST_MODE;
 
 const $ = (id) => document.getElementById(id);
 const svg = $('board');
 const boardScroll = $('board-scroll');
 const boardShell = document.querySelector('.board-shell');
+const sessionModeLabel = $('session-mode-label');
+if (REFERENCE_MODE) {
+  sessionModeLabel.hidden = false;
+  sessionModeLabel.textContent = 'REFERENCE REVIEW · ANSWERS LOADED';
+} else if (PLAYTEST_MODE) {
+  sessionModeLabel.hidden = false;
+  sessionModeLabel.textContent = 'PLAYTEST NAVIGATION · ANSWERS HIDDEN';
+}
 let zoom = 1;
 let transitAnimationFrame = null;
 let discreteFrames = false;  // Step shows exact tick snapshots; Run restores tweening
@@ -120,13 +124,10 @@ function loadSave() {
 // ignored and those players resume at their first unsolved level instead.
 const save = {
   solved: [], machines: {}, bests: {},
-  ...(DEPTH_LAB_MODE ? {} : loadSave()),
+  ...loadSave(),
 };
-const sessionSolved = new Set();
-const sessionMachines = {};
-const sessionBests = {};
 function persist() {
-  if (REFERENCE_MODE || DEPTH_LAB_MODE) return;
+  if (REFERENCE_MODE) return;
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch {}
 }
 
@@ -160,16 +161,16 @@ function migrateSavedBoardLayout() {
 
 migrateSavedBoardLayout();
 
-const levelIsUnlocked = (index) => isLevelUnlocked(ACTIVE_LEVELS, index, {
+const levelIsUnlocked = (index) => isLevelUnlocked(LEVELS, index, {
   solved: save.solved,
   unlockAll: UNLOCK_ALL_LEVELS,
 });
 
 function soundtrackForLevel(index) {
-  const level = ACTIVE_LEVELS[index];
-  if (!DEPTH_LAB_MODE && index === ACTIVE_LEVELS.length - 1 && save.solved.includes(level.id)) return GRADUATION_TRACK;
+  const level = LEVELS[index];
+  if (index === LEVELS.length - 1 && save.solved.includes(level.id)) return GRADUATION_TRACK;
   const tracks = CHAPTER_MUSIC[level.chapter] ?? ['12-the-workshop-at-rest.mp3'];
-  const chapterIndex = ACTIVE_LEVELS.slice(0, index).filter((p) => p.chapter === level.chapter).length;
+  const chapterIndex = LEVELS.slice(0, index).filter((p) => p.chapter === level.chapter).length;
   return tracks[chapterIndex % tracks.length];
 }
 
@@ -201,15 +202,14 @@ let bannerAction = null;    // { kind: 'case'|'level', index }
 let undoStack = [];
 let redoStack = [];
 
-const puzzle = () => ACTIVE_LEVELS[levelIndex];
+const puzzle = () => LEVELS[levelIndex];
 const machine = () => ({ parts: [...puzzle().fixed, ...playerParts], wires: playerWires });
 const currentCase = () => puzzle().cases[caseIndex];
 const editable = () => !run;
 
 function saveMachine() {
-  const machines = DEPTH_LAB_MODE ? sessionMachines : save.machines;
-  machines[puzzle().id] = { parts: playerParts, wires: playerWires };
-  if (!DEPTH_LAB_MODE) save.levelId = puzzle().id;
+  save.machines[puzzle().id] = { parts: playerParts, wires: playerWires };
+  save.levelId = puzzle().id;
   persist();
 }
 
@@ -263,7 +263,7 @@ function redoEdit() {
 }
 
 function loadLevel(i) {
-  const requested = Math.max(0, Math.min(i, ACTIVE_LEVELS.length - 1));
+  const requested = Math.max(0, Math.min(i, LEVELS.length - 1));
   if (!levelIsUnlocked(requested)) return false;
   setLevelMenu(false);
   stopTimer();
@@ -273,7 +273,7 @@ function loadLevel(i) {
     playerParts = structuredClone(ref.parts).map((p) => ({ config: defaultConfig(p.kind), ...p }));
     playerWires = structuredClone(ref.wires).map((w, i2) => ({ id: `ref${i2}`, ...w }));
   } else {
-    const stored = (DEPTH_LAB_MODE ? sessionMachines : save.machines)[puzzle().id];
+    const stored = save.machines[puzzle().id];
     playerParts = structuredClone(stored?.parts ?? []);
     playerWires = structuredClone(stored?.wires ?? []);
   }
@@ -290,7 +290,7 @@ function loadLevel(i) {
   verifiedRuns = null;
   undoStack = [];
   redoStack = [];
-  if (!DEPTH_LAB_MODE) save.levelId = puzzle().id;
+  save.levelId = puzzle().id;
   persist();
   hideBanner();
   setSoundtrack(soundtrackForLevel(levelIndex));
@@ -315,21 +315,20 @@ function verifyAll({ quiet = false } = {}) {
     : null;
   let newBestAxes = [];
   if (allPass && !REFERENCE_MODE) {
-    const bests = DEPTH_LAB_MODE ? sessionBests : save.bests;
+    const bests = save.bests;
     const previousBest = bests[p.id] ?? null;
     newBestAxes = ['parts', 'wire', 'time'].filter((axis) =>
       previousBest?.[axis] == null || completedScore[axis] < previousBest[axis]);
     bests[p.id] = mergeBestScore(previousBest, completedScore);
-    if (DEPTH_LAB_MODE) sessionSolved.add(p.id);
-    else if (!save.solved.includes(p.id)) save.solved.push(p.id);
+    if (!save.solved.includes(p.id)) save.solved.push(p.id);
     persist();
   }
   const result = allPass ? { score: completedScore, newBestAxes } : null;
-  if (allPass && !DEPTH_LAB_MODE && levelIndex === ACTIVE_LEVELS.length - 1) setSoundtrack(GRADUATION_TRACK);
+  if (allPass && levelIndex === LEVELS.length - 1) setSoundtrack(GRADUATION_TRACK);
   if (!quiet) {
     if (allPass) {
       showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-        levelIndex < ACTIVE_LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
+        levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
         result);
     } else {
       const i = caseStatuses.findIndex((s) => s === 'fail');
@@ -340,7 +339,6 @@ function verifyAll({ quiet = false } = {}) {
   renderCases();
   renderScore();
   renderNav();
-  if (DEPTH_LAB_MODE) renderDeck();
   return result;
 }
 
@@ -385,7 +383,7 @@ function doTick() {
         if (filledNow) {
           const result = verifyAll({ quiet: true });
           showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-            levelIndex < ACTIVE_LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
+            levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
             result);
         } else {
           playResolve();
@@ -402,7 +400,7 @@ function doTick() {
       if (filled) {
         const result = verifyAll({ quiet: true });
         showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-          levelIndex < ACTIVE_LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
+          levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
           result);
       } else {
         let nextCase = null;
@@ -596,20 +594,6 @@ function retargetWire(wireId, end, nextRef) {
   return applyEdit(() => {
     playerWires = next;
     selection = { kind: 'wire', id: wireId };
-  });
-}
-
-function placeReference() {
-  if (!canPlaceReference(SESSION_MODE)) return;
-  const architectureId = puzzle().walkthrough[walkIndex]?.architectureId;
-  const architecture = puzzle().architectures?.find((candidate) => candidate.id === architectureId);
-  const ref = architecture?.build ?? puzzle().reference;
-  applyEdit(() => {
-    playerParts = structuredClone(ref.parts).map((p) => ({ config: defaultConfig(p.kind), ...p }));
-    playerWires = structuredClone(ref.wires).map((w, i) => ({ id: `ref${i}`, ...w }));
-    selection = null;
-    armedTool = null;
-    placementHover = null;
   });
 }
 
@@ -1170,32 +1154,14 @@ function renderCommissionTitle() {
   $('commission-title').innerHTML = `<h2>${puzzle().title}</h2>`;
 }
 
-function renderArchitectureComparison(p) {
-  const rows = p.architectures.map((architecture) => {
-    const witness = {
-      parts: [...p.fixed, ...architecture.build.parts],
-      wires: architecture.build.wires.map((edge, index) => ({ id: `architecture-${index}`, ...edge })),
-    };
-    const runs = p.cases.map((kase) => runCase(witness, kase, 500));
-    const measured = measureScore(witness, {
-      playerPartCount: architecture.build.parts.length,
-      runs,
-    });
-    return `<li><strong>${architecture.title}</strong> · Parts ${measured.parts} · Wire ${measured.wire} · Time ${measured.time ?? 'n/a'}</li>`;
-  }).join('');
-  return `<div class="depth-comparison"><strong>MEASURED BUILDS</strong><ul>${rows}</ul></div>`;
-}
-
-// Teaching decks explain new parts. Advanced decks expose their observation,
-// optional nudge and reference witness one step at a time. Searched drills stay
-// quiet unless reference mode is explicitly reviewing every answer.
+// Walkthroughs are player-facing teaching and hint material. Reference review
+// suppresses them because it already shows the answer directly.
 const deckShown = () => showsWalkthrough(puzzle(), { referenceMode: REFERENCE_MODE });
 
 function renderDeck() {
   const p = puzzle();
   const panel = $('walkthrough-panel');
-  const depthUnlocked = !DEPTH_LAB_MODE || REFERENCE_MODE || sessionSolved.has(p.id);
-  panel.hidden = !deckShown() || !depthUnlocked;
+  panel.hidden = !deckShown();
   if (panel.hidden) {
     document.querySelectorAll('[data-region]').forEach((el) => el.classList.remove('spotlight'));
     return;
@@ -1204,15 +1170,10 @@ function renderDeck() {
   const step = p.walkthrough[walkIndex];
   $('deck-body').hidden = deckHidden;
   $('deck-toggle').textContent = deckHidden ? 'show' : 'hide';
-  const comparison = DEPTH_LAB_MODE && walkIndex === 0
-    ? renderArchitectureComparison(p)
-    : '';
-  $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>${comparison}`;
+  $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>`;
   $('deck-counter').textContent = `${walkIndex + 1} / ${p.walkthrough.length}`;
   $('deck-prev').disabled = walkIndex === 0;
   $('deck-next').disabled = walkIndex === p.walkthrough.length - 1;
-  const referenceStep = DEPTH_LAB_MODE ? Boolean(step.architectureId) : walkIndex === p.walkthrough.length - 1;
-  $('deck-reference').hidden = !canPlaceReference(SESSION_MODE) || deckHidden || !referenceStep;
   document.querySelectorAll('[data-region]').forEach((el) => {
     el.classList.toggle('spotlight', !deckHidden && el.dataset.region === step.focus);
   });
@@ -1241,7 +1202,7 @@ function renderScore() {
     playerPartCount: playerParts.length,
     runs: verifiedRuns,
   });
-  const best = (DEPTH_LAB_MODE ? sessionBests : save.bests)[puzzle().id];
+  const best = save.bests[puzzle().id];
   $('score-parts').textContent = score.parts;
   $('score-wire').textContent = score.wire;
   $('score-time').textContent = score.time ?? 'n/a';
@@ -1543,7 +1504,7 @@ function renderInspector() {
 
 function renderNav() {
   const groups = [];
-  ACTIVE_LEVELS.forEach((p, i) => {
+  LEVELS.forEach((p, i) => {
     if (!groups.length || groups.at(-1).chapter !== p.chapter) groups.push({ chapter: p.chapter, items: [] });
     groups.at(-1).items.push({ p, i });
   });
@@ -1552,10 +1513,10 @@ function renderNav() {
     `<span class="nav-chapter">${g.chapter}</span><div class="nav-levels">` +
     g.items.map(({ p, i }) => {
       const unlocked = levelIsUnlocked(i);
-      const prerequisite = ACTIVE_LEVELS.find((candidate) =>
-        candidate.id === prerequisiteId(ACTIVE_LEVELS, i));
+      const prerequisite = LEVELS.find((candidate) =>
+        candidate.id === prerequisiteId(LEVELS, i));
       const title = unlocked ? p.title : `Locked: fill ${prerequisite?.title ?? 'the prerequisite commission'} first`;
-      const solved = DEPTH_LAB_MODE ? sessionSolved.has(p.id) : save.solved.includes(p.id);
+      const solved = save.solved.includes(p.id);
       return `<button class="level-choice${i === levelIndex ? ' current' : ''}${solved ? ' solved' : ''}${unlocked ? '' : ' locked'}" ` +
         `data-level="${i}" title="${title}" aria-label="Level ${i + 1}: ${title}" aria-disabled="${!unlocked}">` +
         `${i + 1}. ${p.title}${solved ? ' ✓' : ''}</button>`;
@@ -1948,8 +1909,6 @@ $('case-tabs').addEventListener('click', (e) => {
 $('deck-prev').addEventListener('click', () => { walkIndex -= 1; renderDeck(); });
 $('deck-next').addEventListener('click', () => { walkIndex += 1; renderDeck(); });
 $('deck-toggle').addEventListener('click', () => { deckHidden = !deckHidden; renderDeck(); });
-$('deck-reference').addEventListener('click', () => { onResetRun(); placeReference(); });
-
 setMuted(save.muted ?? false);
 setMusicOn(save.music ?? !(save.muted ?? false));
 function renderMute() {
@@ -2015,9 +1974,9 @@ document.addEventListener('click', (e) => {
 {
   const requestedNumber = Number(QUERY.get('level'));
   const requestedId = UNLOCK_ALL_LEVELS && Number.isInteger(requestedNumber) && requestedNumber > 0
-    ? ACTIVE_LEVELS[requestedNumber - 1]?.id
+    ? LEVELS[requestedNumber - 1]?.id
     : save.levelId;
-  loadLevel(initialLevelIndex(ACTIVE_LEVELS, {
+  loadLevel(initialLevelIndex(LEVELS, {
     solved: save.solved,
     requestedId,
     unlockAll: UNLOCK_ALL_LEVELS,

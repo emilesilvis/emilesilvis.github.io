@@ -1,10 +1,10 @@
 // Assemble every level source into the player-visible chapter order. Keeping
 // this DOM-free makes the exact catalogue testable without importing the UI.
-import { PUZZLES } from './puzzles.mjs?v=0.8.7-1';
-import { CAMPAIGN } from './campaign.mjs?v=0.8.7-1';
-import { PROMOTED_LEVELS } from './promoted-levels.mjs?v=0.8.7-1';
-import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.8.7-1';
-import { CHAPTER_ORDER } from './chapters.mjs?v=0.8.7-1';
+import { PUZZLES } from './puzzles.mjs?v=0.8.8-1';
+import { CAMPAIGN } from './campaign.mjs?v=0.8.8-1';
+import { PROMOTED_LEVELS } from './promoted-levels.mjs?v=0.8.8-1';
+import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.8.8-1';
+import { CHAPTER_ORDER } from './chapters.mjs?v=0.8.8-1';
 
 // Promoted contracts follow the generated levels in their chapter. This keeps
 // their prerequisite Wolf sequence intact while leaving the authored teaching
@@ -56,7 +56,8 @@ export const LEVELS = CHAPTER_ORDER.flatMap((chapter) =>
   ALL_LEVELS.filter((level) => level.chapter === chapter));
 
 export function showsWalkthrough(level, { referenceMode = false } = {}) {
-  return referenceMode || PUZZLE_IDS.has(level.id) || Boolean(level.meta?.tier);
+  if (referenceMode) return false;
+  return PUZZLE_IDS.has(level.id) || Boolean(level.meta?.tier);
 }
 
 for (const level of ALL_LEVELS) {

@@ -20,7 +20,7 @@ const advancedLevelPolicy = (tier, referenceParts) => ({
   shallowAudit: { proofMaxParts: 2, screenMaxParts: 4, maxRuns: 500_000 },
 });
 
-const walkthrough = (observation, nudge, referenceParts) => [
+const walkthrough = (observation, nudge) => [
   {
     focus: 'commission',
     title: 'Read the whole contract',
@@ -31,11 +31,6 @@ const walkthrough = (observation, nudge, referenceParts) => [
     title: 'Optional nudge',
     body: nudge,
   },
-  {
-    focus: 'board',
-    title: 'Reference build: spoilers',
-    body: `Reference build: ${referenceParts} parts. This build is verified, but its size has not been optimized.`,
-  },
 ];
 
 function advancedLevel({ tier, observation, nudge, ...level }) {
@@ -44,7 +39,7 @@ function advancedLevel({ tier, observation, nudge, ...level }) {
     ...level,
     chapter: CHAPTERS[tier],
     meta: advancedLevelPolicy(tier, referenceParts),
-    walkthrough: walkthrough(observation, nudge, referenceParts),
+    walkthrough: walkthrough(observation, nudge),
   };
 }
 

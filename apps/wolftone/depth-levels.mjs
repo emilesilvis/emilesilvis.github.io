@@ -1,6 +1,5 @@
-// Experimental commissions for comparing architectures in the real game.
-// They are reachable only through ?depthlab, never join normal progression,
-// and never write to the campaign save.
+// Archived research commissions for comparing architectures. They remain
+// available to analysis scripts and tests but are not part of the game shell.
 
 const RICHNESS_CHAPTER = 'Architecture studies';
 const PROBE_CHAPTER = 'Mechanic probes';
@@ -8,13 +7,6 @@ const MINED_CHAPTER = 'Mined contracts';
 const wire = (fromPart, fromPort, toPart, toPort) => ({
   from: { part: fromPart, port: fromPort },
   to: { part: toPart, port: toPort },
-});
-
-const architectureStep = (architecture) => ({
-  focus: 'board',
-  title: `${architecture.title}: reference build`,
-  body: `${architecture.summary} Place this reference build to inspect it.`,
-  architectureId: architecture.id,
 });
 
 function depthLevel({ studyKind, postSolve, architectures, ...level }) {
@@ -37,14 +29,7 @@ function depthLevel({ studyKind, postSolve, architectures, ...level }) {
     },
     architectures,
     reference: architectures[0].build,
-    walkthrough: [
-      {
-        focus: 'commission',
-        title: mechanicProbe ? 'Mechanic comparison' : 'Architecture results',
-        body: postSolve,
-      },
-      ...architectures.map(architectureStep),
-    ],
+    researchSummary: postSolve,
   };
 }
 
