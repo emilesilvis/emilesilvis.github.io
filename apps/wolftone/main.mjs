@@ -5,29 +5,31 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.8.6-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.6-1';
+} from './engine.mjs?v=0.8.7-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.8.7-1';
+import { DEPTH_LEVELS } from './depth-levels.mjs?v=0.8.7-1';
 import {
   canPlaceReference,
   initialLevelIndex,
   isLevelUnlocked,
+  prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.8.6-1';
-import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.6-1';
+} from './progression.mjs?v=0.8.7-1';
+import { discreteTransitPosition, pointAlongPath, transitPosition } from './motion.mjs?v=0.8.7-1';
 import {
   movementValidity,
   placementValidity,
   retargetWire as retargetWireEdit,
   spliceWire,
-} from './board-layout.mjs?v=0.8.6-1';
-import { commissionCaseSpec } from './commission.mjs?v=0.8.6-1';
-import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.6-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.6-1';
-import { wireLaneOffset } from './wire-routing.mjs?v=0.8.6-1';
+} from './board-layout.mjs?v=0.8.7-1';
+import { commissionCaseSpec } from './commission.mjs?v=0.8.7-1';
+import { drawStrungWord, drawWordCard } from './notation.mjs?v=0.8.7-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.8.7-1';
+import { wireLaneOffset } from './wire-routing.mjs?v=0.8.7-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.8.6-1';
+} from './audio.mjs?v=0.8.7-1';
 
 // Teaching and advanced levels show walkthrough decks; searched introductory
 // commissions stay quiet in normal play. ?reference reveals every deck and
@@ -70,7 +72,9 @@ const QUERY = new URLSearchParams(location.search);
 const SESSION_MODE = sessionMode(QUERY);
 const REFERENCE_MODE = SESSION_MODE === 'reference';
 const PLAYTEST_MODE = SESSION_MODE === 'playtest';
-const UNLOCK_ALL_LEVELS = REFERENCE_MODE || PLAYTEST_MODE;
+const DEPTH_LAB_MODE = QUERY.has('depthlab');
+const ACTIVE_LEVELS = DEPTH_LAB_MODE ? DEPTH_LEVELS : LEVELS;
+const UNLOCK_ALL_LEVELS = REFERENCE_MODE || PLAYTEST_MODE || DEPTH_LAB_MODE;
 
 const $ = (id) => document.getElementById(id);
 const svg = $('board');
@@ -114,9 +118,15 @@ function loadSave() {
 // level sources, so an index means a different level every time the campaign
 // regenerates or reorders. Old saves carried a numeric `level`; it is
 // ignored and those players resume at their first unsolved level instead.
-const save = { solved: [], machines: {}, bests: {}, ...loadSave() };
+const save = {
+  solved: [], machines: {}, bests: {},
+  ...(DEPTH_LAB_MODE ? {} : loadSave()),
+};
+const sessionSolved = new Set();
+const sessionMachines = {};
+const sessionBests = {};
 function persist() {
-  if (REFERENCE_MODE) return;
+  if (REFERENCE_MODE || DEPTH_LAB_MODE) return;
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch {}
 }
 
@@ -150,16 +160,16 @@ function migrateSavedBoardLayout() {
 
 migrateSavedBoardLayout();
 
-const levelIsUnlocked = (index) => isLevelUnlocked(LEVELS, index, {
+const levelIsUnlocked = (index) => isLevelUnlocked(ACTIVE_LEVELS, index, {
   solved: save.solved,
   unlockAll: UNLOCK_ALL_LEVELS,
 });
 
 function soundtrackForLevel(index) {
-  const level = LEVELS[index];
-  if (index === LEVELS.length - 1 && save.solved.includes(level.id)) return GRADUATION_TRACK;
+  const level = ACTIVE_LEVELS[index];
+  if (!DEPTH_LAB_MODE && index === ACTIVE_LEVELS.length - 1 && save.solved.includes(level.id)) return GRADUATION_TRACK;
   const tracks = CHAPTER_MUSIC[level.chapter] ?? ['12-the-workshop-at-rest.mp3'];
-  const chapterIndex = LEVELS.slice(0, index).filter((p) => p.chapter === level.chapter).length;
+  const chapterIndex = ACTIVE_LEVELS.slice(0, index).filter((p) => p.chapter === level.chapter).length;
   return tracks[chapterIndex % tracks.length];
 }
 
@@ -191,14 +201,15 @@ let bannerAction = null;    // { kind: 'case'|'level', index }
 let undoStack = [];
 let redoStack = [];
 
-const puzzle = () => LEVELS[levelIndex];
+const puzzle = () => ACTIVE_LEVELS[levelIndex];
 const machine = () => ({ parts: [...puzzle().fixed, ...playerParts], wires: playerWires });
 const currentCase = () => puzzle().cases[caseIndex];
 const editable = () => !run;
 
 function saveMachine() {
-  save.machines[puzzle().id] = { parts: playerParts, wires: playerWires };
-  save.levelId = puzzle().id;
+  const machines = DEPTH_LAB_MODE ? sessionMachines : save.machines;
+  machines[puzzle().id] = { parts: playerParts, wires: playerWires };
+  if (!DEPTH_LAB_MODE) save.levelId = puzzle().id;
   persist();
 }
 
@@ -252,7 +263,7 @@ function redoEdit() {
 }
 
 function loadLevel(i) {
-  const requested = Math.max(0, Math.min(i, LEVELS.length - 1));
+  const requested = Math.max(0, Math.min(i, ACTIVE_LEVELS.length - 1));
   if (!levelIsUnlocked(requested)) return false;
   setLevelMenu(false);
   stopTimer();
@@ -262,7 +273,7 @@ function loadLevel(i) {
     playerParts = structuredClone(ref.parts).map((p) => ({ config: defaultConfig(p.kind), ...p }));
     playerWires = structuredClone(ref.wires).map((w, i2) => ({ id: `ref${i2}`, ...w }));
   } else {
-    const stored = save.machines[puzzle().id];
+    const stored = (DEPTH_LAB_MODE ? sessionMachines : save.machines)[puzzle().id];
     playerParts = structuredClone(stored?.parts ?? []);
     playerWires = structuredClone(stored?.wires ?? []);
   }
@@ -279,7 +290,7 @@ function loadLevel(i) {
   verifiedRuns = null;
   undoStack = [];
   redoStack = [];
-  save.levelId = puzzle().id;
+  if (!DEPTH_LAB_MODE) save.levelId = puzzle().id;
   persist();
   hideBanner();
   setSoundtrack(soundtrackForLevel(levelIndex));
@@ -304,19 +315,21 @@ function verifyAll({ quiet = false } = {}) {
     : null;
   let newBestAxes = [];
   if (allPass && !REFERENCE_MODE) {
-    const previousBest = save.bests[p.id] ?? null;
+    const bests = DEPTH_LAB_MODE ? sessionBests : save.bests;
+    const previousBest = bests[p.id] ?? null;
     newBestAxes = ['parts', 'wire', 'time'].filter((axis) =>
       previousBest?.[axis] == null || completedScore[axis] < previousBest[axis]);
-    save.bests[p.id] = mergeBestScore(previousBest, completedScore);
-    if (!save.solved.includes(p.id)) save.solved.push(p.id);
+    bests[p.id] = mergeBestScore(previousBest, completedScore);
+    if (DEPTH_LAB_MODE) sessionSolved.add(p.id);
+    else if (!save.solved.includes(p.id)) save.solved.push(p.id);
     persist();
   }
   const result = allPass ? { score: completedScore, newBestAxes } : null;
-  if (allPass && levelIndex === LEVELS.length - 1) setSoundtrack(GRADUATION_TRACK);
+  if (allPass && !DEPTH_LAB_MODE && levelIndex === ACTIVE_LEVELS.length - 1) setSoundtrack(GRADUATION_TRACK);
   if (!quiet) {
     if (allPass) {
       showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-        levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
+        levelIndex < ACTIVE_LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
         result);
     } else {
       const i = caseStatuses.findIndex((s) => s === 'fail');
@@ -327,6 +340,7 @@ function verifyAll({ quiet = false } = {}) {
   renderCases();
   renderScore();
   renderNav();
+  if (DEPTH_LAB_MODE) renderDeck();
   return result;
 }
 
@@ -371,7 +385,7 @@ function doTick() {
         if (filledNow) {
           const result = verifyAll({ quiet: true });
           showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-            levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
+            levelIndex < ACTIVE_LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
             result);
         } else {
           playResolve();
@@ -388,7 +402,7 @@ function doTick() {
       if (filled) {
         const result = verifyAll({ quiet: true });
         showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-          levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
+          levelIndex < ACTIVE_LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
           result);
       } else {
         let nextCase = null;
@@ -505,6 +519,12 @@ function nextId(kind) {
 
 function placedCount(kind) { return playerParts.filter((p) => p.kind === kind).length; }
 function remaining(kind) { return (puzzle().palette[kind] ?? 0) - placedCount(kind); }
+function allowedForkModes() { return puzzle().configConstraints?.forkModes ?? ['peek', 'consume']; }
+function levelDefaultConfig(kind) {
+  const config = defaultConfig(kind);
+  if (kind === 'fork') config.mode = allowedForkModes()[0];
+  return config;
+}
 
 function nextWireId() {
   let n = 1;
@@ -516,7 +536,7 @@ function nextWireId() {
 function placePart(kind, x, y, spliceWireId = null) {
   applyEdit(() => {
     const id = nextId(kind);
-    playerParts.push({ id, kind, x, y, config: defaultConfig(kind) });
+    playerParts.push({ id, kind, x, y, config: levelDefaultConfig(kind) });
     if (spliceWireId) {
       const ports = PORTS[kind];
       const spliced = spliceWire(
@@ -581,7 +601,9 @@ function retargetWire(wireId, end, nextRef) {
 
 function placeReference() {
   if (!canPlaceReference(SESSION_MODE)) return;
-  const ref = puzzle().reference;
+  const architectureId = puzzle().walkthrough[walkIndex]?.architectureId;
+  const architecture = puzzle().architectures?.find((candidate) => candidate.id === architectureId);
+  const ref = architecture?.build ?? puzzle().reference;
   applyEdit(() => {
     playerParts = structuredClone(ref.parts).map((p) => ({ config: defaultConfig(p.kind), ...p }));
     playerWires = structuredClone(ref.wires).map((w, i) => ({ id: `ref${i}`, ...w }));
@@ -1084,7 +1106,7 @@ function renderBoard() {
     const validity = placementValidity(m.parts, p.board, x, y);
     const cx = x * CELL + CELL / 2;
     const cy = y * CELL + CELL / 2;
-    const preview = { id: '__placement__', kind: armedTool, x, y, config: defaultConfig(armedTool) };
+    const preview = { id: '__placement__', kind: armedTool, x, y, config: levelDefaultConfig(armedTool) };
     s += `<g class="placement-ghost ${validity.valid ? 'valid' : 'blocked'}${splicePreview ? ' splice' : ''}" ` +
       `data-placement-valid="${validity.valid}" aria-label="${validity.reason ?? (splicePreview ? 'Insert into wire' : 'Valid placement')}">`;
     s += `<rect class="part-box" x="${cx - 29}" y="${cy - 25}" width="58" height="50" rx="9"></rect>`;
@@ -1148,6 +1170,22 @@ function renderCommissionTitle() {
   $('commission-title').innerHTML = `<h2>${puzzle().title}</h2>`;
 }
 
+function renderArchitectureComparison(p) {
+  const rows = p.architectures.map((architecture) => {
+    const witness = {
+      parts: [...p.fixed, ...architecture.build.parts],
+      wires: architecture.build.wires.map((edge, index) => ({ id: `architecture-${index}`, ...edge })),
+    };
+    const runs = p.cases.map((kase) => runCase(witness, kase, 500));
+    const measured = measureScore(witness, {
+      playerPartCount: architecture.build.parts.length,
+      runs,
+    });
+    return `<li><strong>${architecture.title}</strong> · Parts ${measured.parts} · Wire ${measured.wire} · Time ${measured.time ?? 'n/a'}</li>`;
+  }).join('');
+  return `<div class="depth-comparison"><strong>MEASURED BUILDS</strong><ul>${rows}</ul></div>`;
+}
+
 // Teaching decks explain new parts. Advanced decks expose their observation,
 // optional nudge and reference witness one step at a time. Searched drills stay
 // quiet unless reference mode is explicitly reviewing every answer.
@@ -1156,7 +1194,8 @@ const deckShown = () => showsWalkthrough(puzzle(), { referenceMode: REFERENCE_MO
 function renderDeck() {
   const p = puzzle();
   const panel = $('walkthrough-panel');
-  panel.hidden = !deckShown();
+  const depthUnlocked = !DEPTH_LAB_MODE || REFERENCE_MODE || sessionSolved.has(p.id);
+  panel.hidden = !deckShown() || !depthUnlocked;
   if (panel.hidden) {
     document.querySelectorAll('[data-region]').forEach((el) => el.classList.remove('spotlight'));
     return;
@@ -1165,11 +1204,15 @@ function renderDeck() {
   const step = p.walkthrough[walkIndex];
   $('deck-body').hidden = deckHidden;
   $('deck-toggle').textContent = deckHidden ? 'show' : 'hide';
-  $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>`;
+  const comparison = DEPTH_LAB_MODE && walkIndex === 0
+    ? renderArchitectureComparison(p)
+    : '';
+  $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>${comparison}`;
   $('deck-counter').textContent = `${walkIndex + 1} / ${p.walkthrough.length}`;
   $('deck-prev').disabled = walkIndex === 0;
   $('deck-next').disabled = walkIndex === p.walkthrough.length - 1;
-  $('deck-reference').hidden = !canPlaceReference(SESSION_MODE) || deckHidden || walkIndex !== p.walkthrough.length - 1;
+  const referenceStep = DEPTH_LAB_MODE ? Boolean(step.architectureId) : walkIndex === p.walkthrough.length - 1;
+  $('deck-reference').hidden = !canPlaceReference(SESSION_MODE) || deckHidden || !referenceStep;
   document.querySelectorAll('[data-region]').forEach((el) => {
     el.classList.toggle('spotlight', !deckHidden && el.dataset.region === step.focus);
   });
@@ -1198,7 +1241,7 @@ function renderScore() {
     playerPartCount: playerParts.length,
     runs: verifiedRuns,
   });
-  const best = save.bests[puzzle().id];
+  const best = (DEPTH_LAB_MODE ? sessionBests : save.bests)[puzzle().id];
   $('score-parts').textContent = score.parts;
   $('score-wire').textContent = score.wire;
   $('score-time').textContent = score.time ?? 'n/a';
@@ -1216,7 +1259,7 @@ function renderPalette() {
       const classes = [armedTool === kind && 'armed', left <= 0 && 'exhausted'].filter(Boolean).join(' ');
       return `<button data-tool="${kind}" aria-pressed="${armedTool === kind}" class="${classes}">` +
           `<svg class="palette-icon" viewBox="-32 -26 64 52" aria-hidden="true">` +
-          `${partFace({ kind, config: defaultConfig(kind) })}</svg>` +
+          `${partFace({ kind, config: levelDefaultConfig(kind) })}</svg>` +
           `<span class="palette-name">${KIND_NAMES[kind]}</span><span class="count">×${left}</span></button>`;
       }).join('')
     : '<span class="count">no parts this level: just wires</span>';
@@ -1314,7 +1357,7 @@ function renderToolHelp(kind) {
         ? 'Placement is active. Press Esc to cancel.'
         : 'Select to place this part.';
   $('inspector').innerHTML = `<div class="tool-inspection">` +
-    `<svg viewBox="-34 -28 68 56" aria-hidden="true">${partFace({ kind, config: defaultConfig(kind) })}</svg>` +
+    `<svg viewBox="-34 -28 68 56" aria-hidden="true">${partFace({ kind, config: levelDefaultConfig(kind) })}</svg>` +
     `<div><strong>${KIND_NAMES[kind]}</strong><code>${help.rule}</code><p class="prose">${help.body}</p></div></div>` +
     `<p class="tool-ports"><span>IN</span> ${inputs} <span>OUT</span> ${outputs}</p>` +
     `<p class="tool-hint">${hint}</p>`;
@@ -1331,9 +1374,12 @@ function partControlMarkup(part, fixed) {
       `<strong>${part.config.k}</strong><button data-k="1" aria-label="Increase split position">+</button></div>`;
   }
   if (part.kind === 'fork') {
+    const modes = allowedForkModes();
     html += `<div class="row"><span>note</span>${noteChips(part.config.note, 'note')}</div>` +
-      `<div class="row"><span>mode</span><button data-mode="peek" class="${part.config.mode === 'peek' ? 'active' : ''}">peek</button>` +
-      `<button data-mode="consume" class="${part.config.mode === 'consume' ? 'active' : ''}">bite</button></div>`;
+      `<div class="row"><span>mode</span><button data-mode="peek" class="${part.config.mode === 'peek' ? 'active' : ''}" ` +
+      `${modes.includes('peek') ? '' : 'disabled title="This study permits Bite only"'}>peek</button>` +
+      `<button data-mode="consume" class="${part.config.mode === 'consume' ? 'active' : ''}" ` +
+      `${modes.includes('consume') ? '' : 'disabled title="This study permits Peek only"'}>bite</button></div>`;
   }
   if (part.kind === 'coupling') {
     html += `<div class="coupling-choice route-a"><strong>B decides A</strong>` +
@@ -1353,6 +1399,7 @@ function partControlMarkup(part, fixed) {
 function bindPartControls(box, part) {
   const setConfig = (key, value) => {
     if (!editable() || part.config[key] === value) return;
+    if (part.kind === 'fork' && key === 'mode' && !allowedForkModes().includes(value)) return;
     applyEdit(() => {
       const current = playerParts.find((candidate) => candidate.id === part.id);
       if (current) current.config[key] = value;
@@ -1496,7 +1543,7 @@ function renderInspector() {
 
 function renderNav() {
   const groups = [];
-  LEVELS.forEach((p, i) => {
+  ACTIVE_LEVELS.forEach((p, i) => {
     if (!groups.length || groups.at(-1).chapter !== p.chapter) groups.push({ chapter: p.chapter, items: [] });
     groups.at(-1).items.push({ p, i });
   });
@@ -1505,8 +1552,10 @@ function renderNav() {
     `<span class="nav-chapter">${g.chapter}</span><div class="nav-levels">` +
     g.items.map(({ p, i }) => {
       const unlocked = levelIsUnlocked(i);
-      const title = unlocked ? p.title : `Locked: fill level ${i} first`;
-      const solved = save.solved.includes(p.id);
+      const prerequisite = ACTIVE_LEVELS.find((candidate) =>
+        candidate.id === prerequisiteId(ACTIVE_LEVELS, i));
+      const title = unlocked ? p.title : `Locked: fill ${prerequisite?.title ?? 'the prerequisite commission'} first`;
+      const solved = DEPTH_LAB_MODE ? sessionSolved.has(p.id) : save.solved.includes(p.id);
       return `<button class="level-choice${i === levelIndex ? ' current' : ''}${solved ? ' solved' : ''}${unlocked ? '' : ' locked'}" ` +
         `data-level="${i}" title="${title}" aria-label="Level ${i + 1}: ${title}" aria-disabled="${!unlocked}">` +
         `${i + 1}. ${p.title}${solved ? ' ✓' : ''}</button>`;
@@ -1966,9 +2015,9 @@ document.addEventListener('click', (e) => {
 {
   const requestedNumber = Number(QUERY.get('level'));
   const requestedId = UNLOCK_ALL_LEVELS && Number.isInteger(requestedNumber) && requestedNumber > 0
-    ? LEVELS[requestedNumber - 1]?.id
+    ? ACTIVE_LEVELS[requestedNumber - 1]?.id
     : save.levelId;
-  loadLevel(initialLevelIndex(LEVELS, {
+  loadLevel(initialLevelIndex(ACTIVE_LEVELS, {
     solved: save.solved,
     requestedId,
     unlockAll: UNLOCK_ALL_LEVELS,

@@ -3,6 +3,7 @@
 
 export function sessionMode(query) {
   if (query.has('reference')) return 'reference';
+  if (query.has('depthlab')) return 'depthlab';
   if (query.has('playtest')) return 'playtest';
   return 'normal';
 }
@@ -11,11 +12,23 @@ export function canPlaceReference(mode) {
   return mode !== 'playtest';
 }
 
+export function prerequisiteId(levels, index) {
+  if (index <= 0 || index >= levels.length) return null;
+  const explicit = levels[index].meta?.unlockAfter;
+  if (explicit) return explicit;
+
+  let previous = index - 1;
+  while (previous >= 0 && levels[previous].meta?.optional) previous -= 1;
+  return levels[previous]?.id ?? null;
+}
+
 export function isLevelUnlocked(levels, index, { solved = [], unlockAll = false } = {}) {
   if (index < 0 || index >= levels.length) return false;
   if (unlockAll || index === 0) return true;
   const solvedIds = new Set(solved);
-  return solvedIds.has(levels[index].id) || solvedIds.has(levels[index - 1].id);
+  if (solvedIds.has(levels[index].id)) return true;
+  const prerequisite = prerequisiteId(levels, index);
+  return prerequisite !== null && solvedIds.has(prerequisite);
 }
 
 export function initialLevelIndex(
