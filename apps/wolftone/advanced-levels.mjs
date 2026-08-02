@@ -48,7 +48,7 @@ export const ADVANCED_LEVELS = [
     tier: 'journeyman',
     id: 'journeyman-fourfold-seal',
     title: 'Journeyman I: Fourfold Seal',
-    observation: 'Compare the opening note, required resonator, and final note in each performance.',
+    observation: 'Compare the lead marble, required Resonator, and final marble in each performance.',
     nudge: 'Separate the decision about the destination from the work unique to that destination.',
     board: { cols: 15, rows: 9 },
     fixed: [
@@ -97,7 +97,7 @@ export const ADVANCED_LEVELS = [
     id: 'journeyman-crossed-ledger',
     title: 'Journeyman II: Crossed Ledger',
     observation: 'Read the four performances as a truth table. Changing only one voice sometimes moves only the other voice.',
-    nudge: 'The two decisions are related. Look for a device that can observe the opposite input while preserving both words.',
+    nudge: 'The two decisions are related. Look for a device that can observe the opposite input while preserving both trains.',
     board: { cols: 13, rows: 12 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 3, label: 'first voice' },
@@ -141,8 +141,8 @@ export const ADVANCED_LEVELS = [
     tier: 'optional-masterwork',
     id: 'masterwork-sealed-quartet',
     title: 'Masterwork I: Sealed Quartet',
-    observation: 'The archive and the sounding hall are both required. A solution that merely removes the first note has thrown away required work.',
-    nudge: 'Keep the one-note label beside its body long enough for both to follow the same decision tree.',
+    observation: 'The archive and the sounding hall are both required. A solution that merely removes the lead marble has thrown away required work.',
+    nudge: 'Keep the one-marble label train beside its body train long enough for both to follow the same decision tree.',
     board: { cols: 19, rows: 11 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 5 },
@@ -198,9 +198,9 @@ export const ADVANCED_LEVELS = [
   advancedLevel({
     tier: 'journeyman',
     id: 'journeyman-six-note-law',
-    title: 'Journeyman III: Six-note Law',
-    observation: 'Read each seed as three adjacent two-note phrases, then compare where every output phrase came from and what changed.',
-    nudge: 'Solve the rearrangement on paper before placing anything. One phrase is shortened; the lost note returns elsewhere as a constant.',
+    title: 'Journeyman III: Six-marble Law',
+    observation: 'Read each input train as three adjacent two-marble groups, then compare where every output group came from and what changed.',
+    nudge: 'Solve the rearrangement on paper before placing anything. One group is shortened; the removed marble returns elsewhere as a constant.',
     board: { cols: 17, rows: 9 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 4 },
@@ -240,8 +240,8 @@ export const ADVANCED_LEVELS = [
     tier: 'optional-masterwork',
     id: 'masterwork-long-cadence',
     title: 'Masterwork II: Long Cadence',
-    observation: 'Compare the three performances that converge, then use the reprise to distinguish “remove a prefix” from “remove everything before a particular note.”',
-    nudge: 'There are two normalization stages before the surviving head can choose among three endings.',
+    observation: 'Compare the three performances that converge, then use the reprise to distinguish “remove a prefix” from “remove everything before a particular marble.”',
+    nudge: 'There are two normalization stages before the surviving lead marble can choose among three endings.',
     board: { cols: 19, rows: 11 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 1, y: 5 },

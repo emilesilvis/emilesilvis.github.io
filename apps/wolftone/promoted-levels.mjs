@@ -223,8 +223,8 @@ export const PROMOTED_LEVELS = [
       { name: 'Cadenza', seeds: { q1: 'BB' }, targets: { r1: 'BB' } },
     ],
     architectures: [splitAndReturn, appendAndDamp, biteAndRebuild],
-    observation: 'Compare the first note with what disappears or moves to the end. One machine must satisfy all four performances.',
-    nudge: 'Try separating the first note from the rest. A bitten one-note word becomes an empty word, and that silence can still occupy a Unison seat.',
+    observation: 'Compare the lead marble with what disappears or moves to the tail. One machine must satisfy all four performances.',
+    nudge: 'Try separating the lead marble from the rest. A bitten one-marble train becomes an empty train, and that silence can still occupy a Unison seat.',
   }),
 
   masteryLevel({
@@ -239,8 +239,8 @@ export const PROMOTED_LEVELS = [
       { name: 'Cadenza', seeds: { q1: 'BA' }, targets: { r1: 'BA' } },
     ],
     architectures: [biteAndAppend, splitAndRotate],
-    observation: 'Compare this contract with the earlier rotation. Pay attention to how many leading notes move before the word is delivered.',
-    nudge: 'Handle one leading A, then deliver the result instead of returning it for another pass. Words beginning with B can bypass that work.',
+    observation: 'Compare this contract with the earlier rotation. Pay attention to how many leading marbles move before the train is delivered.',
+    nudge: 'Handle one leading A marble, then deliver the result instead of returning it for another pass. Trains beginning with B can bypass that work.',
   }),
 
   masteryLevel({
@@ -254,8 +254,8 @@ export const PROMOTED_LEVELS = [
       { name: 'Cadenza', seeds: { q1: 'BB' }, targets: { r1: 'B' } },
     ],
     architectures: [alternatingSteps],
-    observation: 'The contract removes B and then A, but stops as soon as the next expected note is absent.',
-    nudge: 'After a B is bitten, send the remainder to a fork expecting A. A mismatch should return the remaining word unchanged.',
+    observation: 'The contract removes B and then A, but stops as soon as the next expected marble is absent.',
+    nudge: 'After a B marble is bitten, send the remainder to a Tuning Fork expecting A. A mismatch should return the remaining train unchanged.',
   }),
 
   masteryLevel({
@@ -272,6 +272,6 @@ export const PROMOTED_LEVELS = [
     ],
     architectures: [alternatingLoop, alternatingLine],
     observation: 'Alternating Steps stopped after B then A. This contract sometimes continues and sometimes stops earlier.',
-    nudge: 'The route can remember the next expected note. After biting A, return to the B test; on a mismatch, deliver the remaining word unchanged.',
+    nudge: 'The route can remember the next expected marble. After biting A, return to the B test; on a mismatch, deliver the remaining train unchanged.',
   }),
 ];

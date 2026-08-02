@@ -1,8 +1,7 @@
 // SVG notation primitives. Stationary source and target words read like score
-// cards; words moving through the machine ride the wires as exposed beads.
+// cards; words moving through the machine become individual letter marbles.
 
 const CARD_PITCH_OFFSETS = { A: 4, B: 2, C: 0, D: -2 };
-const WIRE_PITCH_OFFSETS = { A: 3, B: 1, C: -1, D: -3 };
 
 function wordLayout(x, word, spacing, padding) {
   const shown = [...word].slice(0, 6);
@@ -33,21 +32,34 @@ export function drawWordCard(x, y, word) {
   return notation;
 }
 
-export function drawStrungWord(x, y, word) {
-  const { shown, width, left } = wordLayout(x, word, 15, 3);
-  let notation = `<path class="word-course" d="M${left + 1} ${y} Q${left + width / 2} ${y - 3} ${left + width - 1} ${y}"></path>`;
-  if (!word) {
-    notation += `<circle class="word-note-rim" cx="${left + width / 2}" cy="${y}" r="7"></circle>` +
-      `<text class="word-note-letter" x="${left + width / 2}" y="${y + 2}">∅</text>`;
-    return notation;
-  }
+export function drawMarble(note, x, y, { index = null, surfaceRoll = 0 } = {}) {
+  const data = index === null ? '' : ` data-marble="${index}"`;
+  const tone = note || 'empty';
+  const letter = note || '∅';
+  return `<g class="letter-marble"${data} transform="translate(${x} ${y})">` +
+    '<circle class="marble-shadow" cx="1.4" cy="2.3" r="9.1"></circle>' +
+    '<circle class="marble-rim" cx="0" cy="0" r="8.8"></circle>' +
+    `<circle class="marble-shell note-${tone}" cx="0" cy="0" r="8.2"></circle>` +
+    `<g class="marble-rolling-surface" data-marble-surface transform="rotate(${surfaceRoll})">` +
+    '<path class="marble-vein light" d="M-6.5-1.5C-2.5-5.4 2.8-5.2 6.2-1.4"></path>' +
+    '<path class="marble-vein dark" d="M-6.2 2.1C-1.8 5.7 3.5 5.1 6.4 1.2"></path></g>' +
+    '<ellipse class="marble-depth" cx="1.2" cy="3.5" rx="5.1" ry="2.7"></ellipse>' +
+    '<ellipse class="marble-glow" cx="-2.2" cy="-2.1" rx="3.6" ry="4.3"></ellipse>' +
+    '<circle class="marble-glint" cx="-3.2" cy="-3.5" r="1.55"></circle>' +
+    '<circle class="marble-pinpoint" cx="-3.7" cy="-4" r="0.55"></circle>' +
+    '<g class="marble-etching">' +
+    `<text class="marble-letter-groove" x="0" y="2.8">${letter}</text>` +
+    `<text class="marble-letter" x="0" y="2.5">${letter}</text></g></g>`;
+}
+
+export function drawMarbleWord(x, y, word) {
+  const spacing = 19;
+  const { shown, width, left } = wordLayout(x, word, spacing, 3);
+  if (!word) return drawMarble('', x, y);
+  let notation = '';
   shown.forEach((note, index) => {
-    const noteX = left + 9 + index * 15;
-    const noteY = y + (WIRE_PITCH_OFFSETS[note] ?? 0);
-    notation += `<circle class="word-note-rim" cx="${noteX}" cy="${noteY}" r="6.2"></circle>` +
-      `<ellipse class="word-note-bead" cx="${noteX}" cy="${noteY}" rx="5.2" ry="4.2" ` +
-      `transform="rotate(-18 ${noteX} ${noteY})" fill="var(--note-${note})"></ellipse>` +
-      `<text class="word-note-letter" x="${noteX}" y="${noteY + 2}">${note}</text>`;
+    const noteX = left + 11 + index * spacing;
+    notation += drawMarble(note, noteX, y, { index });
   });
   if (word.length > 6) notation += `<text class="word-more" x="${left + width + 2}" y="${y + 2}">+${word.length - 6}</text>`;
   return notation;

@@ -124,7 +124,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "I · Études",
-        "body": "Moulds append notes, and dampers remove first notes. These parts do not inspect the word. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Moulds add marbles, and dampers remove lead marbles. These parts do not inspect the train. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -254,12 +254,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "I · Études",
-        "body": "Moulds append notes, and dampers remove first notes. These parts do not inspect the word. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Moulds add marbles, and dampers remove lead marbles. These parts do not inspect the train. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Use two moulds. Their order determines the final two notes."
+        "body": "Use two moulds. Their order determines the final two marbles."
       }
     ]
   },
@@ -400,12 +400,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "I · Études",
-        "body": "Moulds append notes, and dampers remove first notes. These parts do not inspect the word. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Moulds add marbles, and dampers remove lead marbles. These parts do not inspect the train. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "A damper takes exactly one head note per pass. Two stray notes means the string must meet a damper twice."
+        "body": "A damper removes exactly one lead marble per pass. Two stray marbles mean the train must meet a damper twice."
       }
     ]
   },
@@ -548,7 +548,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "I · Études",
-        "body": "Moulds append notes, and dampers remove first notes. These parts do not inspect the word. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Moulds add marbles, and dampers remove lead marbles. These parts do not inspect the train. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -690,12 +690,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "II · Duets",
-        "body": "Splitters divide words at a fixed position. Unisons join words in input order. Neither part checks note values. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Splitters divide marble trains at a fixed position. Unisons join trains in input order. Neither part checks the letters on the marbles. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Join the words before appending C so the note is added to the combined word."
+        "body": "Join the trains before adding C so the marble is added to the combined train."
       }
     ]
   },
@@ -822,7 +822,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "II · Duets",
-        "body": "Splitters divide words at a fixed position. Unisons join words in input order. Neither part checks note values. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Splitters divide marble trains at a fixed position. Unisons join trains in input order. Neither part checks the letters on the marbles. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -974,12 +974,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "II · Duets",
-        "body": "Splitters divide words at a fixed position. Unisons join words in input order. Neither part checks note values. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Splitters divide marble trains at a fixed position. Unisons join trains in input order. Neither part checks the letters on the marbles. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Split after the second note, append D to the first half, then join the halves again."
+        "body": "Split after the second marble, add D to the first half, then join the halves again."
       }
     ]
   },
@@ -1114,7 +1114,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "II · Duets",
-        "body": "Splitters divide words at a fixed position. Unisons join words in input order. Neither part checks note values. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Splitters divide marble trains at a fixed position. Unisons join trains in input order. Neither part checks the letters on the marbles. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -1274,12 +1274,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "III · Sight-reading",
-        "body": "Forks route words according to their first note. Different performances can therefore use different paths. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Tuning Forks route trains according to their lead marble. Different performances can therefore use different paths. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Route the word first, then place the correct mould on each output path."
+        "body": "Route the train first, then place the correct mould on each output path."
       }
     ]
   },
@@ -1441,12 +1441,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "III · Sight-reading",
-        "body": "Forks route words according to their first note. Different performances can therefore use different paths. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Tuning Forks route trains according to their lead marble. Different performances can therefore use different paths. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Use one fork for A. Send its right output to a second fork that checks for B."
+        "body": "Use one fork for A. Send other (≠) to a second fork that checks for B."
       }
     ]
   },
@@ -1584,7 +1584,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "IV · Wolf notes",
-        "body": "A fork in bite mode removes one matching first note. A loop can repeat this until the first note changes. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "A Tuning Fork in bite mode removes one matching lead marble. A loop can repeat this until the lead marble changes. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -1727,12 +1727,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "IV · Wolf notes",
-        "body": "A fork in bite mode removes one matching first note. A loop can repeat this until the first note changes. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "A Tuning Fork in bite mode removes one matching lead marble. A loop can repeat this until the lead marble changes. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "After the fork removes an A, use a mould to append it before returning the word to the fork."
+        "body": "After the Tuning Fork removes an A marble, use a Mould to add it to the tail before returning the train."
       }
     ]
   },
@@ -1889,7 +1889,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "IV · Wolf notes",
-        "body": "A fork in bite mode removes one matching first note. A loop can repeat this until the first note changes. Use one machine for all 4 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "A Tuning Fork in bite mode removes one matching lead marble. A loop can repeat this until the lead marble changes. Use one machine for all 4 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -2070,12 +2070,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "V · Entanglements",
-        "body": "A coupling waits for two words. Each word’s route is determined by the other word’s first note. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "A Coupling waits for two trains. Each train’s route is determined by the other train’s lead marble. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Connect the payload and label to opposite coupling inputs. Each input is routed by the first note on the other input."
+        "body": "Connect the payload and label trains to opposite Coupling inputs. Each train is routed by the lead marble on the other train."
       }
     ]
   },
@@ -2259,12 +2259,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "V · Entanglements",
-        "body": "A coupling waits for two words. Each word’s route is determined by the other word’s first note. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "A Coupling waits for two trains. Each train’s route is determined by the other train’s lead marble. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Set both coupling notes, then trace one performance through all four outputs."
+        "body": "Set both Coupling matches, then trace one performance through all four outputs."
       }
     ]
   },
@@ -2479,7 +2479,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "VI · Tempo",
-        "body": "Wire length sets travel time. A valve adds a selected delay before passing the word through unchanged. Use one machine for all 2 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "Track length sets travel time. A Valve adds a selected delay before passing the train through unchanged. Use one machine for all 2 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -2661,12 +2661,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "VII · Concerto",
-        "body": "These levels combine splitting, joining, routing, loops, and cross-routing. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "These levels combine splitting, joining, routing, loops, and cross-routing. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Split after one note, then connect the two results to opposite coupling inputs."
+        "body": "Split after one marble, then connect the two trains to opposite Coupling inputs."
       }
     ]
   },
@@ -2862,7 +2862,7 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "VII · Concerto",
-        "body": "These levels combine splitting, joining, routing, loops, and cross-routing. Use one machine for all 3 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "These levels combine splitting, joining, routing, loops, and cross-routing. Use one machine for all 3 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
@@ -3070,12 +3070,12 @@ export const CAMPAIGN = [
       {
         "focus": "commission",
         "title": "VII · Concerto",
-        "body": "These levels combine splitting, joining, routing, loops, and cross-routing. Use one machine for all 4 performances. Each resonator must receive its target word; resonators marked “stay silent” must receive nothing."
+        "body": "These levels combine splitting, joining, routing, loops, and cross-routing. Use one machine for all 4 performances. Each resonator must receive its target train; resonators marked “stay silent” must receive nothing."
       },
       {
         "focus": "board",
         "title": "A nudge",
-        "body": "Remove A notes in a loop, route the result once, then place the correct mould on each output path."
+        "body": "Remove A marbles in a loop, route the resulting train once, then place the correct Mould on each output path."
       }
     ]
   },

@@ -1,10 +1,11 @@
 // Assemble every level source into the player-visible chapter order. Keeping
 // this DOM-free makes the exact catalogue testable without importing the UI.
-import { PUZZLES } from './puzzles.mjs?v=0.8.8-1';
-import { CAMPAIGN } from './campaign.mjs?v=0.8.8-1';
-import { PROMOTED_LEVELS } from './promoted-levels.mjs?v=0.8.8-1';
-import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.8.8-1';
-import { CHAPTER_ORDER } from './chapters.mjs?v=0.8.8-1';
+import { PUZZLES } from './puzzles.mjs?v=0.9.0-1';
+import { CAMPAIGN } from './campaign.mjs?v=0.9.0-1';
+import { PROMOTED_LEVELS } from './promoted-levels.mjs?v=0.9.0-1';
+import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.9.0-1';
+import { CHAPTER_ORDER } from './chapters.mjs?v=0.9.0-1';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.0-1';
 
 // Promoted contracts follow the generated levels in their chapter. This keeps
 // their prerequisite Wolf sequence intact while leaving the authored teaching
@@ -51,7 +52,7 @@ function mountOnSharedBoard(level) {
   };
 }
 
-export const ALL_LEVELS = SOURCE_LEVELS.map(mountOnSharedBoard);
+export const ALL_LEVELS = SOURCE_LEVELS.map(mountOnSharedBoard).map(spatializeReference);
 export const LEVELS = CHAPTER_ORDER.flatMap((chapter) =>
   ALL_LEVELS.filter((level) => level.chapter === chapter));
 

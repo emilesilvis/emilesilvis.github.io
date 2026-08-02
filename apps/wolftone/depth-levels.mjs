@@ -36,7 +36,7 @@ function depthLevel({ studyKind, postSolve, architectures, ...level }) {
 const feedbackLoop = {
   id: 'feedback-loop',
   title: 'Feedback loop',
-  summary: 'One fork is reused. This uses fewer parts and less wire, but takes longer for repeated prefixes.',
+  summary: 'One fork is reused. This uses fewer parts and less track, but takes longer for repeated prefixes.',
   build: {
     parts: [
       { id: 'f1', kind: 'fork', x: 4, y: 4, config: { note: 'A', mode: 'consume' } },
@@ -52,7 +52,7 @@ const feedbackLoop = {
 const unrolledLine = {
   id: 'unrolled-line',
   title: 'Unrolled line',
-  summary: 'Three forks perform the checks in sequence. This uses more parts and wire, but finishes sooner.',
+  summary: 'Three forks perform the checks in sequence. This uses more parts and track, but finishes sooner.',
   build: {
     parts: [
       { id: 'f1', kind: 'fork', x: 2, y: 4, config: { note: 'A', mode: 'consume' } },
@@ -74,7 +74,7 @@ const unrolledLine = {
 const sharedPipeline = {
   id: 'shared-pipeline',
   title: 'Shared workshop',
-  summary: 'Three words share one pair of moulds, then forks route the results to their resonators.',
+  summary: 'Three trains share one pair of Moulds, then Tuning Forks route the results to their Resonators.',
   build: {
     parts: [
       { id: 'mC', kind: 'mould', x: 3, y: 2, config: { note: 'C' } },
@@ -99,7 +99,7 @@ const sharedPipeline = {
 const parallelPipelines = {
   id: 'parallel-pipelines',
   title: 'Parallel workshops',
-  summary: 'Each word uses its own pair of moulds. This needs more parts but does not need a shared queue or routing forks.',
+  summary: 'Each train uses its own pair of Moulds. This needs more parts but does not need a shared queue or routing Tuning Forks.',
   build: {
     parts: [
       { id: 'aC', kind: 'mould', x: 4, y: 0, config: { note: 'C' } },
@@ -120,7 +120,7 @@ const parallelPipelines = {
 const freePeek = {
   id: 'free-peek',
   title: 'Peek-only reading',
-  summary: 'A fork in peek mode routes the unchanged word directly.',
+  summary: 'A Tuning Fork in peek mode routes the unchanged train directly.',
   build: {
     parts: [
       { id: 'f1', kind: 'fork', x: 6, y: 4, config: { note: 'A', mode: 'peek' } },
@@ -136,7 +136,7 @@ const freePeek = {
 const biteAndReconstruct = {
   id: 'bite-and-reconstruct',
   title: 'Bite-only reading',
-  summary: 'Bite removes the first A. A mould and unison add it back before delivery.',
+  summary: 'Bite removes the lead A marble. A Mould and Unison add it back before delivery.',
   build: {
     parts: [
       { id: 'f1', kind: 'fork', x: 2, y: 4, config: { note: 'A', mode: 'consume' } },
@@ -164,7 +164,7 @@ const preservationCases = [
 const splitLeadingNote = {
   id: 'split-leading-note',
   title: 'Split and return',
-  summary: 'A splitter isolates the first note. A Bite loop removes A or passes B into the tail seat for recombination.',
+  summary: 'A Splitter isolates the lead marble. A Bite loop removes A or passes B into the tail seat for recombination.',
   build: {
     parts: [
       { id: 's1', kind: 'splitter', x: 3, y: 4, config: { k: 1 } },
@@ -205,7 +205,7 @@ const appendAndDamp = {
 const biteAndRebuildTail = {
   id: 'bite-and-rebuild-tail',
   title: 'Bite and rebuild',
-  summary: 'Bite removes A directly. A B word takes a second path that appends B, then removes the original B.',
+  summary: 'Bite removes A directly. A train beginning with B takes a second path that adds B to the tail, then removes the original B.',
   build: {
     parts: [
       { id: 'fA', kind: 'fork', x: 3, y: 4, config: { note: 'A', mode: 'consume' } },
@@ -225,7 +225,7 @@ const biteAndRebuildTail = {
 const biteAndAppend = {
   id: 'bite-and-append',
   title: 'Bite and append',
-  summary: 'Bite removes a leading A and a mould restores it at the tail. B words bypass both changes.',
+  summary: 'Bite removes a leading A marble and a Mould restores it at the tail. Trains beginning with B bypass both changes.',
   build: {
     parts: [
       { id: 'f1', kind: 'fork', x: 4, y: 4, config: { note: 'A', mode: 'consume' } },
@@ -243,7 +243,7 @@ const biteAndAppend = {
 const splitAndRotate = {
   id: 'split-and-rotate',
   title: 'Split and rotate',
-  summary: 'Peek sends A words through a splitter and rejoins the tail before the isolated head. B words bypass the workshop.',
+  summary: 'Peek sends trains beginning with A through a Splitter and rejoins the tail before the isolated lead marble. Trains beginning with B bypass the workshop.',
   build: {
     parts: [
       { id: 'f1', kind: 'fork', x: 3, y: 4, config: { note: 'A', mode: 'peek' } },
@@ -283,7 +283,7 @@ const alternatingLoop = {
 const alternatingLine = {
   id: 'alternating-line',
   title: 'Unrolled alternation',
-  summary: 'Three Bite forks spell out B, then A, then B. It uses an extra part and more wire but avoids feedback.',
+  summary: 'Three Bite forks spell out B, then A, then B. It uses an extra part and more track but avoids feedback.',
   build: {
     parts: [
       { id: 'fB1', kind: 'fork', x: 2, y: 4, config: { note: 'B', mode: 'consume' } },
@@ -383,7 +383,7 @@ export const DEPTH_LEVELS = [
     id: 'mined-leading-motion',
     title: 'Study V: First Chair',
     studyKind: 'mined-contract',
-    postSolve: 'This contract was discovered by grouping small machines with the same bounded behaviour. Compare three different decompositions of its head-note rule.',
+    postSolve: 'This contract was discovered by grouping small machines with the same bounded behaviour. Compare three different decompositions of its lead-marble rule.',
     board: { cols: 13, rows: 9 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 0, y: 4 },
@@ -403,7 +403,7 @@ export const DEPTH_LEVELS = [
     id: 'mined-turning-phrase',
     title: 'Study VI: Refrain',
     studyKind: 'mined-contract',
-    postSolve: 'The same conditional rotation can be expressed by destructive reading and repair or by splitting and recombining the word.',
+    postSolve: 'The same conditional rotation can be expressed by destructive reading and repair or by splitting and recombining the train.',
     board: { cols: 13, rows: 9 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 0, y: 4 },
@@ -423,7 +423,7 @@ export const DEPTH_LEVELS = [
     id: 'mined-alternating-prefix',
     title: 'Study VII: Long Bow',
     studyKind: 'mined-contract',
-    postSolve: 'The cases bound an alternating-prefix rule to three notes. Compare a reusable two-state loop with a fully unrolled three-test line.',
+    postSolve: 'The cases bound an alternating-prefix rule to three marbles. Compare a reusable two-state loop with a fully unrolled three-test line.',
     board: { cols: 13, rows: 9 },
     fixed: [
       { id: 'q1', kind: 'quill', x: 0, y: 4 },
