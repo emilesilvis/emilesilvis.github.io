@@ -4,8 +4,8 @@
 // architectures, mining bounds, and routed score evidence remain attached here
 // for tests and author review.
 
-import { measureScore, runCase } from './engine.mjs?v=0.9.1-1';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.1-1';
+import { measureScore, runCase } from './engine.mjs?v=0.9.1-7';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.1-7';
 
 const CHAPTER = 'II · Campaign';
 const TERMINAL_KINDS = new Set(['quill', 'resonator']);
@@ -35,8 +35,8 @@ const refrainBench = () => [
 
 const fanoutBench = () => [
   { id: 'q1', kind: 'quill', x: 1, y: 0 },
-  { id: 'rA', kind: 'resonator', x: 9, y: 1, label: 'lower ledger' },
-  { id: 'rB', kind: 'resonator', x: 9, y: 2, label: 'upper ledger' },
+  { id: 'rA', kind: 'resonator', x: 9, y: 1, label: 'lower ledger', commissionOrder: 2 },
+  { id: 'rB', kind: 'resonator', x: 9, y: 2, label: 'upper ledger', commissionOrder: 1 },
 ];
 
 const mergerBench = () => [
@@ -178,6 +178,8 @@ function promotedContract({
       id: architecture.id,
       title: architecture.title,
       graphClass: architecture.graphClass,
+      explanation: architecture.explanation,
+      optimization: architecture.optimization,
       logicalBuild: architecture.build,
       board: architecture.board,
       machine: architecture.machine,
@@ -215,6 +217,8 @@ const leadingAppendTest = {
   id: 'leading-append-test',
   title: 'Append, then test',
   graphClass: 'append-then-test',
+  explanation: 'The Mould adds A before the Tuning Fork reads the lead note. A leading A is then bitten off, while every other lead passes unchanged, leaving the new A at the tail.',
+  optimization: 'Explicit operation order. In the left-to-right layout it ties the alternative on every routed score.',
   build: {
     parts: [
       { id: 'mA', kind: 'mould', x: 3, y: 1, config: { note: 'A' } },
@@ -233,6 +237,8 @@ const leadingTestAppend = {
   id: 'leading-test-append',
   title: 'Test, then append',
   graphClass: 'test-then-append',
+  explanation: 'The Tuning Fork reads first. It bites a leading A, preserves every other lead, and sends both routes through one Mould that restores A at the tail.',
+  optimization: 'An equally compact reversed operation order. In the left-to-right layout it ties the alternative on every routed score.',
   build: {
     parts: [
       { id: 'mA', kind: 'mould', x: 3, y: 1, config: { note: 'A' } },
@@ -248,9 +254,9 @@ const leadingTestAppend = {
 };
 
 const firstVoicesBench = () => [
-  { id: 'qA', kind: 'quill', x: 1, y: 0, label: 'tail voice' },
+  { id: 'qB', kind: 'quill', x: 1, y: 0, label: 'lead voice', commissionOrder: 1 },
   { id: 'r1', kind: 'resonator', x: 9, y: 2 },
-  { id: 'qB', kind: 'quill', x: 1, y: 3, label: 'lead voice' },
+  { id: 'qA', kind: 'quill', x: 1, y: 3, label: 'tail voice', commissionOrder: 2 },
 ];
 
 const twinCadencesBench = () => [
@@ -263,6 +269,8 @@ const firstVoicesDirect = {
   id: 'first-voices-direct',
   title: 'Direct normalization',
   graphClass: 'branch-and-merge',
+  explanation: 'The lead voice passes through one biting C test, then either route goes directly to the lead seat of the Unison. The untouched tail voice waits in the other seat.',
+  optimization: 'Cost and Time for the displayed contract through a direct, forward-only merge.',
   build: {
     parts: [
       { id: 'u1', kind: 'unison', x: 6, y: 1 },
@@ -282,6 +290,8 @@ const firstVoicesFeedback = {
   id: 'first-voices-feedback',
   title: 'Feedback normalizer',
   graphClass: 'feedback-normalizer',
+  explanation: 'A matching C returns to the same biting Tuning Fork, so the route can remove every leading C before releasing the remainder into the Unison.',
+  optimization: 'Generality through logical reuse. The loop handles any run of leading C notes, rather than minimizing the routed scores.',
   build: {
     parts: [
       { id: 'u1', kind: 'unison', x: 6, y: 1 },
@@ -301,6 +311,8 @@ const turningPhraseDirect = {
   id: 'turning-phrase-direct',
   title: 'Direct turn',
   graphClass: 'split-and-turn',
+  explanation: 'One Splitter removes the lead note. The remainder takes the lead seat of the Unison and the one-note head takes the tail seat, rotating the phrase in one recombination.',
+  optimization: 'Cost, Time, and Area through the smallest direct decomposition of the phrase.',
   build: {
     parts: [
       { id: 's1', kind: 'splitter', x: 3, y: 1, config: { k: 1 } },
@@ -319,6 +331,8 @@ const turningPhraseExpanded = {
   id: 'turning-phrase-expanded',
   title: 'Expanded turn',
   graphClass: 'decompose-and-turn',
+  explanation: 'Two Splitters decompose the phrase into smaller pieces. One Unison rebuilds the remainder and a second places the original lead note last, spelling out the same turn in more stages.',
+  optimization: 'Explicit intermediate structure. It makes the decomposition visible rather than minimizing a routed score.',
   build: {
     parts: [
       { id: 's1', kind: 'splitter', x: 3, y: 1, config: { k: 1 } },
@@ -342,6 +356,8 @@ const twinCadencesSplitFirst = {
   id: 'twin-cadences-split-first',
   title: 'Split, then append',
   graphClass: 'split-then-append',
+  explanation: 'The Splitter sends the one-note head straight to the first hall. Only the remaining phrase visits the Mould, which appends A before it reaches the second hall.',
+  optimization: 'A visibly separate route for each result. It exposes the split-first structure rather than minimizing a routed score.',
   build: {
     parts: [
       { id: 's1', kind: 'splitter', x: 3, y: 2, config: { k: 1 } },
@@ -360,6 +376,8 @@ const twinCadencesAppendFirst = {
   id: 'twin-cadences-append-first',
   title: 'Append, then split',
   graphClass: 'append-then-split',
+  explanation: 'The Mould appends A to the complete phrase first. The Splitter then sends the original lead note to the first hall and the full remainder, including that new A, to the second.',
+  optimization: 'Time and Area. One compact shared prefix keeps both routed outputs short, while Cost stays tied.',
   build: {
     parts: [
       { id: 'mA', kind: 'mould', x: 3, y: 2, config: { note: 'A' } },
@@ -378,6 +396,8 @@ const fanoutPeek = {
   id: 'two-ledgers-branch',
   title: 'Branch and merge',
   graphClass: 'branch-and-merge',
+  explanation: 'The Splitter sends the remainder to the lower ledger. A peeking Tuning Fork routes the one-note head: B goes straight to the upper ledger, while every other note gains B before the branches rejoin.',
+  optimization: 'Cost and Time. Forward-only conditional routes avoid the extra crossings and repeated travel of feedback.',
   build: {
     parts: [
       { id: 's1', kind: 'splitter', x: 3, y: 3, config: { k: 1 } },
@@ -399,6 +419,8 @@ const fanoutFeedback = {
   id: 'two-ledgers-feedback',
   title: 'Bite and return',
   graphClass: 'feedback-normalizer',
+  explanation: 'The Splitter sends the remainder to the lower ledger. The one-note head returns through a biting B test until it no longer matches, then a Mould appends B for the upper ledger.',
+  optimization: 'Area. Reused feedback keeps the routed footprint narrower, trading additional crossings and travel time.',
   build: {
     parts: [
       { id: 's1', kind: 'splitter', x: 3, y: 3, config: { k: 1 } },
@@ -420,6 +442,8 @@ const mergerBranch = {
   id: 'counterpoint-branch',
   title: 'Conditional tail',
   graphClass: 'branch-and-merge',
+  explanation: 'A peeking C test normalizes the tail voice without consuming it: matching phrases join directly, while every other phrase gains C first. The second voice leads both routes through the Unison.',
+  optimization: 'Cost and Time. Forward-only branches avoid the extra crossings and repeated travel of feedback.',
   build: {
     parts: [
       { id: 'u1', kind: 'unison', x: 7, y: 5 },
@@ -441,6 +465,8 @@ const mergerFeedback = {
   id: 'counterpoint-feedback',
   title: 'Feedback normalizer',
   graphClass: 'feedback-normalizer',
+  explanation: 'The tail voice loops through a biting C test until its lead no longer matches. It then joins behind the second voice, and one shared Mould appends the final C after the merge.',
+  optimization: 'Area and generality. A reusable loop normalizes any run of leading C notes in a narrower routed footprint.',
   build: {
     parts: [
       { id: 'u1', kind: 'unison', x: 7, y: 3 },
@@ -462,6 +488,8 @@ const alternatingLoop = {
   id: 'long-bow-loop',
   title: 'Alternating loop',
   graphClass: 'feedback-loop',
+  explanation: 'Two biting Tuning Forks remember the expected B then A pattern. Each match removes a note and advances to the other test; the first mismatch releases the untouched suffix.',
+  optimization: 'Cost and Area. Two logical tests are reused through feedback.',
   build: {
     parts: [fork('fB', 'B', 4, 2), fork('fA', 'A', 6, 4)],
     wires: [
@@ -478,6 +506,8 @@ const alternatingLine = {
   id: 'long-bow-line',
   title: 'Unrolled alternation',
   graphClass: 'finite-unrolling',
+  explanation: 'A fixed B, A, B chain performs each possible prefix test once. A mismatch exits immediately, trading duplicated Tuning Forks and a larger route for less repeated travel.',
+  optimization: 'Time. Separate forward tests remove the return journey through a loop.',
   build: {
     parts: [
       fork('fB1', 'B', 3, 3),
@@ -504,6 +534,10 @@ function refrainLoop({ routed = false } = {}) {
     id: routed ? 'three-doors-loop' : 'after-refrain-loop',
     title: 'Cyclic refrain scanner',
     graphClass: 'feedback-loop',
+    explanation: routed
+      ? 'Three biting Tuning Forks form a reusable A, B, C cycle. A match advances around the loop; a mismatch exits from the test that noticed it and therefore selects the corresponding hall.'
+      : 'Three biting Tuning Forks form a reusable A, B, C cycle. Matches consume the refrain and circle back to A; the first mismatch releases the untouched suffix.',
+    optimization: 'Cost and Area. Three logical tests handle a refrain of any length by reusing the same cycle.',
     build: {
       parts: [
         fork('fA', 'A', 3, positions.A),
@@ -544,6 +578,10 @@ function refrainLine({ routed = false } = {}) {
     id: routed ? 'three-doors-line' : 'after-refrain-line',
     title: 'Six-test unrolling',
     graphClass: 'finite-unrolling',
+    explanation: routed
+      ? 'Six Tuning Forks lay out two A, B, C passes as one line. Each mismatch exits toward the hall assigned to that expected position, avoiding feedback at the cost of a much larger machine.'
+      : 'Six Tuning Forks lay out two A, B, C passes as one line. A mismatch releases the suffix immediately, avoiding feedback at the cost of duplicated tests and a much larger machine.',
+    optimization: 'Time. The fixed forward chain removes every return trip through the three-test cycle.',
     build: { parts, wires },
   };
 }
@@ -572,7 +610,7 @@ export const CANDIDATE_LEVELS = [
       extendedAgreement: '126/126',
       logicalArchitectures: 2,
       foundationReason: 'one conditional composition after single-part tutorials',
-      spatialCompetition: 'test-then-append dominates after routing; foundation exception recorded',
+      spatialCompetition: 'left-to-right routing produces an exact score tie; foundation exception recorded',
     },
     observation: 'Every result ends in A. Compare what changes when the input begins with A and when it begins with another note.',
     nudge: 'One part can add the final A. Another can remove a matching lead A while preserving every other lead note.',
@@ -586,7 +624,7 @@ export const CANDIDATE_LEVELS = [
     palette: { unison: 1, fork: 1, damper: 1 },
     cases: [
       { name: 'Aria', seeds: { qA: 'A', qB: 'C' }, targets: { r1: 'A' } },
-      { name: 'Canon', seeds: { qA: 'C', qB: 'C' }, targets: { r1: 'C' } },
+      { name: 'Canon', seeds: { qA: 'A', qB: 'B' }, targets: { r1: 'BA' } },
       { name: 'Fugue', seeds: { qA: 'ABCD', qB: 'DC' }, targets: { r1: 'DCABCD' } },
       { name: 'Cadenza', seeds: { qA: 'DC', qB: 'ABCD' }, targets: { r1: 'ABCDDC' } },
     ],
@@ -601,7 +639,7 @@ export const CANDIDATE_LEVELS = [
       extendedAgreement: '15/15',
       logicalArchitectures: 6,
       foundationReason: 'two-part multi-input composition before the three-part merger',
-      spatialCompetition: 'direct merge dominates after routing; foundation exception recorded',
+      spatialCompetition: 'left-to-right routing keeps a Cost/Time versus Area frontier; foundation exception recorded',
     },
     observation: 'The tail voice is always last. Compare what happens to a leading C in the lead voice before the two voices join.',
     nudge: 'Normalize the lead voice first, then place it in the lead seat of a Unison.',
@@ -632,7 +670,7 @@ export const CANDIDATE_LEVELS = [
       foundationReason: 'a split-and-recombine composition before larger campaign graphs',
       spatialCompetition: 'direct turn dominates the expanded decomposition; foundation exception recorded',
     },
-    observation: 'The same lead marble moves from the beginning to the end in every performance; the middle keeps its order.',
+    observation: 'The same lead note moves from the beginning to the end in every performance; the middle keeps its order.',
     nudge: 'The two phrases from one cut can take opposite seats when they rejoin.',
   }),
 
@@ -659,9 +697,9 @@ export const CANDIDATE_LEVELS = [
       extendedAgreement: '5460/5460',
       logicalArchitectures: 2,
       foundationReason: 'a transparent multi-output composition before Two Ledgers',
-      spatialCompetition: 'routed frontier: split-first is 5 Time faster; append-first is 40 Area smaller',
+      spatialCompetition: 'append-first dominates after left-to-right routing; foundation exception recorded',
     },
-    observation: 'The first hall receives only the lead marble. The other hall receives everything after it, followed by the same final marble.',
+    observation: 'The first hall receives a one-note word marble made from the lead note. The other hall receives everything after it, followed by the same final note.',
     nudge: 'Adding the final A before the phrase separates does not change the lead-only cadence.',
   }),
 
@@ -687,8 +725,8 @@ export const CANDIDATE_LEVELS = [
       extendedAgreement: '21/21',
       logicalArchitectures: 3,
     },
-    observation: 'Compare what each hall receives when only the first marble changes. The long performance follows the same contract.',
-    nudge: 'One operation can separate the lead marble from the entire remaining phrase before the two products take different routes.',
+    observation: 'Compare what each hall receives when only the first note changes. The long performance follows the same contract.',
+    nudge: 'One operation can separate the lead note from the entire remaining phrase before the two word marbles take different routes.',
   }),
 
   promotedContract({
@@ -740,7 +778,7 @@ export const CANDIDATE_LEVELS = [
       logicalArchitectures: 2,
     },
     observation: 'Compare where each input first stops following the same alternating opening. Everything from that point onward survives.',
-    nudge: 'A route can remember which lead marble should come next, then return a shortened phrase to an earlier test.',
+    nudge: 'A route can remember which lead note should come next, then return a shortened phrase to an earlier test.',
   }),
 
   promotedContract({
@@ -767,7 +805,7 @@ export const CANDIDATE_LEVELS = [
       logicalArchitectures: 2,
     },
     observation: 'Several performances begin alike, but the surviving phrase starts at a different point. Compare the complete opening carefully.',
-    nudge: 'Three successive expectations can form a reusable cycle; a mismatch can leave that cycle without consuming its lead marble.',
+    nudge: 'Three successive expectations can form a reusable cycle; a mismatch can leave that cycle without consuming its lead note.',
   }),
 
   promotedContract({

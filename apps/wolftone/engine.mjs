@@ -6,9 +6,12 @@
 // PROTOTYPE: throwaway. It answers "does strings-are-tapes play?", not
 // "how should this be built".
 
-import { machineArea, wireTravelTime } from './wire-routing.mjs?v=0.9.1-1';
+import { machineArea, wireTravelTime } from './wire-routing.mjs?v=0.9.1-7';
 
 export const NOTES = ['A', 'B', 'C', 'D'];
+
+const CROSSING_INPUT_PORTS = ['inA', 'outA', 'inB', 'outB'];
+const CROSSING_OUTPUT_PORTS = ['outA', 'inA', 'outB', 'inB'];
 
 export const PORTS = {
   quill:     { ins: [],               outs: ['out'] },
@@ -19,7 +22,7 @@ export const PORTS = {
   splitter:  { ins: ['in'],           outs: ['head', 'rest'] },
   fork:      { ins: ['in'],           outs: ['left', 'right'] },
   coupling:  { ins: ['inA', 'inB'],   outs: ['outAL', 'outAR', 'outBL', 'outBR'] },
-  crossing:  { ins: ['inA', 'inB'],   outs: ['outA', 'outB'] },
+  crossing:  { ins: CROSSING_INPUT_PORTS, outs: CROSSING_OUTPUT_PORTS },
   junction:  { ins: ['inA', 'inB'],   outs: ['out'] },
   resonator: { ins: ['in'],           outs: [] },
 };
@@ -164,10 +167,10 @@ function firePart(machine, kase, state, part, t, ev) {
     if (state.emitted[id]) return false;
     const seed = kase.seeds[id];
     if (seed === undefined) { state.emitted[id] = true; return false; }
-    if (!wired('out')) return stall('its out port has no track: it cannot release the marble train');
+    if (!wired('out')) return stall('its out port has no track: it cannot release the word marble');
     state.emitted[id] = true;
     send(machine, state, id, 'out', seed, t);
-    say(`${label(machine, id)} transcribed sound ${prettyWord(seed)} into a marble train`);
+    say(`${label(machine, id)} transcribed sound ${prettyWord(seed)} into a word marble`);
     return true;
   }
 
@@ -176,13 +179,13 @@ function firePart(machine, kase, state, part, t, ev) {
     if (!q.length) return false;
     const w = q.shift();
     const want = kase.targets[id];
-    if (want === undefined) { sour(state, id, `${label(machine, id)} sounded when it should have stayed silent: marble train ${prettyWord(w)} arrived`); return true; }
-    if (state.satisfied[id] !== undefined) { sour(state, id, `${label(machine, id)} had already sounded, then a second marble train arrived: ${prettyWord(w)}`); return true; }
+    if (want === undefined) { sour(state, id, `${label(machine, id)} sounded when it should have stayed silent: word marble ${prettyWord(w)} arrived`); return true; }
+    if (state.satisfied[id] !== undefined) { sour(state, id, `${label(machine, id)} had already sounded, then a second word marble arrived: ${prettyWord(w)}`); return true; }
     if (w === want) {
       state.satisfied[id] = w;
-      say(`${label(machine, id)} turned marble train ${prettyWord(w)} into sound waves`);
+      say(`${label(machine, id)} turned word marble ${prettyWord(w)} into sound waves`);
     } else {
-      sour(state, id, `${label(machine, id)} expected target train ${prettyWord(want)} but received ${prettyWord(w)}`);
+      sour(state, id, `${label(machine, id)} expected target word ${prettyWord(want)} but received ${prettyWord(w)}`);
     }
     return true;
   }
@@ -193,7 +196,7 @@ function firePart(machine, kase, state, part, t, ev) {
     if (!wired('out')) return stall('its out port has no track');
     const w = q.shift();
     send(machine, state, id, 'out', w + config.note, t);
-    say(`${label(machine, id)} added a ${config.note} marble: ${prettyWord(w)} → ${prettyWord(w + config.note)}`);
+    say(`${label(machine, id)} added note ${config.note}: ${prettyWord(w)} → ${prettyWord(w + config.note)}`);
     return true;
   }
 
@@ -201,10 +204,10 @@ function firePart(machine, kase, state, part, t, ev) {
     const q = queueOf(state, id, 'in');
     if (!q.length) return false;
     if (!wired('out')) return stall('its out port has no track');
-    if (q[0] === '') return stall('its train is empty: there is no lead marble to remove');
+    if (q[0] === '') return stall('its word marble is empty: there is no lead note to remove');
     const w = q.shift();
     send(machine, state, id, 'out', w.slice(1), t);
-    say(`${label(machine, id)} removed the lead ${w[0]} marble: ${prettyWord(w)} → ${prettyWord(w.slice(1))}`);
+    say(`${label(machine, id)} removed lead note ${w[0]}: ${prettyWord(w)} → ${prettyWord(w.slice(1))}`);
     return true;
   }
 
@@ -214,7 +217,7 @@ function firePart(machine, kase, state, part, t, ev) {
     if (!wired('out')) return stall('its out port has no track');
     const w = q.shift();
     state.holds.push({ part: id, word: w, release: t + config.delay });
-    say(`${label(machine, id)} holds marble train ${prettyWord(w)} for ${config.delay} tick${config.delay === 1 ? '' : 's'}`);
+    say(`${label(machine, id)} holds word marble ${prettyWord(w)} for ${config.delay} tick${config.delay === 1 ? '' : 's'}`);
     return true;
   }
 
@@ -227,7 +230,7 @@ function firePart(machine, kase, state, part, t, ev) {
     if (!wired('out')) return stall('its out port has no track');
     const w = lead.shift(), v = tail.shift();
     send(machine, state, id, 'out', w + v, t);
-    say(`${label(machine, id)} joined marble trains ${prettyWord(w)} + ${prettyWord(v)} → ${prettyWord(w + v)}`);
+    say(`${label(machine, id)} joined word marbles ${prettyWord(w)} + ${prettyWord(v)} → ${prettyWord(w + v)}`);
     return true;
   }
 
@@ -235,13 +238,13 @@ function firePart(machine, kase, state, part, t, ev) {
     const q = queueOf(state, id, 'in');
     if (!q.length) return false;
     const k = config.k;
-    if (q[0].length < k) return stall(`its marble train ${prettyWord(q[0])} is shorter than the cut after ${k}`);
+    if (q[0].length < k) return stall(`its word marble ${prettyWord(q[0])} is shorter than the cut after note ${k}`);
     if (!wired('head')) return stall('its head exit has no track');
     if (!wired('rest')) return stall('its rest exit has no track');
     const w = q.shift();
     send(machine, state, id, 'head', w.slice(0, k), t);
     send(machine, state, id, 'rest', w.slice(k), t);
-    say(`${label(machine, id)} split after marble ${k}: ${prettyWord(w)} → ${prettyWord(w.slice(0, k))} | ${prettyWord(w.slice(k))}`);
+    say(`${label(machine, id)} split after note ${k}: ${prettyWord(w)} → ${prettyWord(w.slice(0, k))} | ${prettyWord(w.slice(k))}`);
     return true;
   }
 
@@ -256,10 +259,10 @@ function firePart(machine, kase, state, part, t, ev) {
     if (!wired(dir)) return stall(`its ${branch} exit has no track and that is where ${prettyWord(q[0])} must go`);
     let w = q.shift();
     if (match && config.mode === 'consume') {
-      say(`${label(machine, id)} bit off the lead ${config.note} marble: ${prettyWord(w)} → ${prettyWord(w.slice(1))}, exits through match`);
+      say(`${label(machine, id)} bit off lead note ${config.note}: ${prettyWord(w)} → ${prettyWord(w.slice(1))}, exits through match`);
       w = w.slice(1);
     } else {
-      say(`${label(machine, id)} read the lead marble of ${prettyWord(w)}: ${match ? config.note + ': exits through match' : 'not ' + config.note + ': exits through other'}`);
+      say(`${label(machine, id)} read the lead note of ${prettyWord(w)}: ${match ? config.note + ': exits through match' : 'not ' + config.note + ': exits through other'}`);
     }
     send(machine, state, id, dir, w, t);
     return true;
@@ -269,8 +272,8 @@ function firePart(machine, kase, state, part, t, ev) {
     const qa = queueOf(state, id, 'inA');
     const qb = queueOf(state, id, 'inB');
     if (!qa.length && !qb.length) return false;
-    if (!qa.length) return stall('side B has a marble train but side A has not arrived: a coupling waits for both');
-    if (!qb.length) return stall('side A has a marble train but side B has not arrived: a coupling waits for both');
+    if (!qa.length) return stall('side B has a word marble but side A has not arrived: a coupling waits for both');
+    if (!qb.length) return stall('side A has a word marble but side B has not arrived: a coupling waits for both');
     const wa = qa[0], wb = qb[0];
     const dirA = wb.length > 0 && wb[0] === config.noteA ? 'outAL' : 'outAR';
     const dirB = wa.length > 0 && wa[0] === config.noteB ? 'outBL' : 'outBR';
@@ -279,25 +282,27 @@ function firePart(machine, kase, state, part, t, ev) {
     qa.shift(); qb.shift();
     send(machine, state, id, dirA, wa, t);
     send(machine, state, id, dirB, wb, t);
-    say(`${label(machine, id)} released both trains: ${prettyWord(wa)} exits ${dirA.slice(3)} (other lead ${wb[0] ?? '∅'}), ${prettyWord(wb)} exits ${dirB.slice(3)} (other lead ${wa[0] ?? '∅'})`);
+    say(`${label(machine, id)} released both word marbles: ${prettyWord(wa)} exits ${dirA.slice(3)} (other lead ${wb[0] ?? '∅'}), ${prettyWord(wb)} exits ${dirB.slice(3)} (other lead ${wa[0] ?? '∅'})`);
     return true;
   }
 
   if (kind === 'crossing') {
     let moved = false;
     for (const [input, output, name] of [
-      ['inA', 'outA', 'A'],
-      ['inB', 'outB', 'B'],
+      ['inA', 'outA', 'horizontal'],
+      ['outA', 'inA', 'horizontal'],
+      ['inB', 'outB', 'vertical'],
+      ['outB', 'inB', 'vertical'],
     ]) {
       const q = queueOf(state, id, input);
       if (!q.length) continue;
       if (!wired(output)) {
-        stall(`its ${name} exit has no track`);
+        stall(`its opposite ${name} socket has no track`);
         continue;
       }
       const w = q.shift();
       send(machine, state, id, output, w, t);
-      say(`${label(machine, id)} carried marble train ${prettyWord(w)} through channel ${name}`);
+      say(`${label(machine, id)} carried word marble ${prettyWord(w)} straight through its ${name} channel`);
       moved = true;
     }
     return moved;
@@ -311,7 +316,7 @@ function firePart(machine, kase, state, part, t, ev) {
     const source = qa.length ? 'A' : 'B';
     const w = (qa.length ? qa : qb).shift();
     send(machine, state, id, 'out', w, t);
-    say(`${label(machine, id)} passed marble train ${prettyWord(w)} from input ${source}`);
+    say(`${label(machine, id)} passed word marble ${prettyWord(w)} from input ${source}`);
     return true;
   }
 
@@ -336,7 +341,7 @@ export function stepRun(machine, kase, state, maxTicks = 200) {
     const where = collision.port === 'junction inputs'
       ? 'at its two inputs'
       : `at its ${collision.port} input`;
-    state.detail = `${label(machine, collision.part)} refused ${words.length} marble trains arriving simultaneously ${where} on tick ${collision.arrive}: ${words.join(', ')}`;
+    state.detail = `${label(machine, collision.part)} refused ${words.length} word marbles arriving simultaneously ${where} on tick ${collision.arrive}: ${words.join(', ')}`;
     return ev;
   }
   for (const d of due) {
@@ -351,7 +356,7 @@ export function stepRun(machine, kase, state, maxTicks = 200) {
   state.holds = state.holds.filter((h) => h.release > t);
   for (const h of released) {
     send(machine, state, h.part, 'out', h.word, t);
-    if (!state.mute) ev.push(`${label(machine, h.part)} releases marble train ${prettyWord(h.word)}`);
+    if (!state.mute) ev.push(`${label(machine, h.part)} releases word marble ${prettyWord(h.word)}`);
     activity += 1;
   }
 

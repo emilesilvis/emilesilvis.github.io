@@ -134,29 +134,15 @@ export function transitPosition(points, from, to, elapsedMs, durationMs, dwellFr
   return pointAlongPath(points, transitProgress(from, to, elapsedMs, durationMs, dwellFraction));
 }
 
-// Letters are separate marbles, so every member of a word samples the route
-// independently. This keeps a convoy inside orthogonal elbows instead of
-// drawing one rigid horizontal word across a turn. Twenty-six units leaves a
-// visible rolling gap even when two 17-unit marbles straddle a sharp elbow.
-export function marbleTrainStates(points, fraction, count, spacing = 26, radius = 8.2) {
-  if (count <= 0) return [];
+// A word is one physical marble. Its upright sound bar owns exact note order while
+// the glass surface rolls independently along the route.
+export function wordMarbleState(points, fraction, radius = 12.5) {
   const total = pathLength(points) || 1;
-  const centre = (count - 1) / 2;
-  const effectiveSpacing = count > 1 ? Math.min(spacing, total / (count - 1)) : spacing;
-  const halfTrain = centre * effectiveSpacing;
-  const centreDistance = Math.max(halfTrain, Math.min(total - halfTrain, fraction * total));
-  return Array.from({ length: count }, (_, index) => {
-    const distance = centreDistance + (centre - index) * effectiveSpacing;
-    return {
-      ...pointAlongPath(points, distance / total),
-      surfaceRoll: ((distance / radius) * 180 / Math.PI) % 360,
-    };
-  });
-}
-
-export function marbleTrainPositions(points, fraction, count, spacing = 26) {
-  return marbleTrainStates(points, fraction, count, spacing)
-    .map(({ x, y }) => ({ x, y }));
+  const distance = Math.max(0, Math.min(total, fraction * total));
+  return {
+    ...pointAlongPath(points, distance / total),
+    surfaceRoll: ((distance / radius) * 180 / Math.PI) % 360,
+  };
 }
 
 // A discrete Step frame has no between-tick time in which to interpolate.

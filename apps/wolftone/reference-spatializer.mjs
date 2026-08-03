@@ -3,10 +3,10 @@
 // router: the returned machines contain concrete orientations, footprints,
 // Junctions, Crossings, and explicit route arrays before the UI can load them.
 
-import { spliceWire } from './board-layout.mjs?v=0.9.1-1';
-import { runCase } from './engine.mjs?v=0.9.1-1';
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-1';
-import { cellKey, routeValidity, wirePathCells } from './wire-routing.mjs?v=0.9.1-1';
+import { spliceWire } from './board-layout.mjs?v=0.9.1-7';
+import { runCase } from './engine.mjs?v=0.9.1-7';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-7';
+import { cellKey, routeValidity, wirePathCells } from './wire-routing.mjs?v=0.9.1-7';
 
 const DIRECTIONS = [
   { name: 'east', x: 1, y: 0 },
@@ -87,6 +87,149 @@ function expandFanIn(parts, sourceWires) {
     wires.push(edge(previousOutput, target));
   }
   return wires;
+}
+
+// Collapse feedback loops before assigning columns. Edges between components
+// form a DAG, so every non-feedback stage can advance from left to right while
+// the members of a loop stay together in one compact workshop band.
+function stronglyConnectedComponents(parts, wires) {
+  const ids = new Set(parts.map((part) => part.id));
+  const outgoing = new Map(parts.map((part) => [part.id, []]));
+  for (const wire of wires) {
+    if (ids.has(wire.from.part) && ids.has(wire.to.part)) {
+      outgoing.get(wire.from.part).push(wire.to.part);
+    }
+  }
+
+  let nextIndex = 0;
+  const indexes = new Map();
+  const lowLinks = new Map();
+  const stack = [];
+  const stacked = new Set();
+  const components = [];
+
+  function visit(id) {
+    indexes.set(id, nextIndex);
+    lowLinks.set(id, nextIndex);
+    nextIndex += 1;
+    stack.push(id);
+    stacked.add(id);
+
+    for (const target of outgoing.get(id)) {
+      if (!indexes.has(target)) {
+        visit(target);
+        lowLinks.set(id, Math.min(lowLinks.get(id), lowLinks.get(target)));
+      } else if (stacked.has(target)) {
+        lowLinks.set(id, Math.min(lowLinks.get(id), indexes.get(target)));
+      }
+    }
+
+    if (lowLinks.get(id) !== indexes.get(id)) return;
+    const component = [];
+    let member = null;
+    do {
+      member = stack.pop();
+      stacked.delete(member);
+      component.push(member);
+    } while (member !== id);
+    components.push(component);
+  }
+
+  for (const part of parts) {
+    if (!indexes.has(part.id)) visit(part.id);
+  }
+  return components;
+}
+
+function leftToRightLayout(parts, wires, spacing) {
+  const components = stronglyConnectedComponents(parts, wires);
+  const componentByPart = new Map();
+  components.forEach((component, index) => {
+    for (const id of component) componentByPart.set(id, index);
+  });
+
+  const successors = components.map(() => new Set());
+  const incoming = components.map(() => 0);
+  for (const wire of wires) {
+    const from = componentByPart.get(wire.from.part);
+    const to = componentByPart.get(wire.to.part);
+    if (from === undefined || to === undefined || from === to || successors[from].has(to)) continue;
+    successors[from].add(to);
+    incoming[to] += 1;
+  }
+
+  const ranks = components.map(() => 0);
+  const queue = incoming
+    .map((count, index) => ({ count, index }))
+    .filter(({ count }) => count === 0)
+    .map(({ index }) => index);
+  while (queue.length) {
+    const current = queue.shift();
+    for (const successor of successors[current]) {
+      ranks[successor] = Math.max(ranks[successor], ranks[current] + 1);
+      incoming[successor] -= 1;
+      if (incoming[successor] === 0) queue.push(successor);
+    }
+  }
+
+  // Align every destination on the final column. A short direct branch should
+  // not put one Resonator in the middle of a longer machine.
+  const byId = new Map(parts.map((part) => [part.id, part]));
+  const processingRanks = components
+    .map((component, index) => component.some((id) => byId.get(id).kind !== 'resonator')
+      ? ranks[index]
+      : null)
+    .filter((rank) => rank !== null);
+  const resonatorRank = Math.max(...processingRanks, 0) + 1;
+  components.forEach((component, index) => {
+    if (component.every((id) => byId.get(id).kind === 'resonator')) ranks[index] = resonatorRank;
+  });
+
+  const componentLayouts = components.map((component, index) => {
+    const members = component.map((id) => byId.get(id)).sort((a, b) =>
+      Number(Boolean(a.referenceAdded)) - Number(Boolean(b.referenceAdded)) ||
+      a.x - b.x || a.y - b.y || a.id.localeCompare(b.id));
+    // A feedback component is still a miniature directed graph. Pack larger
+    // loops across a few columns so repeated journeys remain short and the
+    // machine does not become one very tall stack.
+    const width = members.length <= 2
+      ? 1
+      : Math.max(2, Math.ceil(Math.sqrt(members.length * 1.4)));
+    return {
+      index,
+      rank: ranks[index],
+      members,
+      width,
+      height: Math.ceil(members.length / width),
+      authoredY: Math.min(...members.map((part) => part.y)),
+    };
+  });
+  const layers = new Map();
+  for (const component of componentLayouts) {
+    const layer = layers.get(component.rank) ?? [];
+    layer.push(component);
+    layers.set(component.rank, layer);
+  }
+
+  let column = 0;
+  let rows = 1;
+  for (const rank of [...layers.keys()].sort((a, b) => a - b)) {
+    const layer = layers.get(rank).sort((a, b) =>
+      a.authoredY - b.authoredY || a.index - b.index);
+    const layerWidth = Math.max(...layer.map((component) => component.width));
+    let row = 0;
+    for (const component of layer) {
+      component.members.forEach((part, index) => {
+        part.x = (column + index % component.width) * spacing;
+        part.y = (row + Math.floor(index / component.width)) * spacing;
+      });
+      row += component.height;
+    }
+    rows = Math.max(rows, row);
+    column += layerWidth;
+  }
+
+  return { columns: column, rows };
 }
 
 function connectedPorts(wires) {
@@ -387,15 +530,9 @@ function spatializeReferenceAtSpacing(level, spacing) {
   const logicalWires = expandFanIn(originalParts, original.reference.wires);
   // Leave enough room for the physical port stubs while keeping bundled
   // examples close enough to read as one machine rather than scattered parts.
-  const columns = Math.max(2, Math.ceil(Math.sqrt(originalParts.length * 1.4)));
-  const orderedForLayout = [...originalParts].sort((a, b) =>
-    Number(Boolean(a.referenceAdded)) - Number(Boolean(b.referenceAdded)) ||
-    a.y - b.y || a.x - b.x || a.id.localeCompare(b.id));
-  orderedForLayout.forEach((part, index) => {
-    part.x = (index % columns) * spacing;
-    part.y = Math.floor(index / columns) * spacing;
-  });
-  const rows = Math.ceil(originalParts.length / columns);
+  // Graph layers make the authored answer read in the same direction as text:
+  // Quills on the left, transformations in the middle, Resonators on the right.
+  const { columns, rows } = leftToRightLayout(originalParts, logicalWires, spacing);
   const margin = 4;
   const board = {
     cols: (columns - 1) * spacing + margin * 2 + 2,
@@ -405,6 +542,12 @@ function spatializeReferenceAtSpacing(level, spacing) {
   if (level.id === 'the-valve') {
     const delayedTail = logicalWires.find((wire) => wire.from.part === 'q4');
     if (delayedTail) delayedTail.waypoint = { x: 1, y: board.rows - 2 };
+  }
+  if (level.id === 'valve-race') {
+    const delayedLead = logicalWires.find((wire) => wire.from.part === 'q1');
+    const delayedTail = logicalWires.find((wire) => wire.from.part === 'q4');
+    if (delayedLead) delayedLead.waypoint = { x: 1, y: board.rows - 2 };
+    if (delayedTail) delayedTail.waypoint = { x: 1, y: 1 };
   }
   // The archived shared-pipeline study deliberately sends three simultaneous
   // Quills through one workshop. Its old Manhattan placement staggered those

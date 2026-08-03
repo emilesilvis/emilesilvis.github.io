@@ -2,7 +2,7 @@
 // introduce construction and each player-facing mechanism once; the campaign
 // that follows is made only of open-ended contracts.
 
-import { PUZZLES } from './puzzles.mjs?v=0.9.1-1';
+import { PUZZLES } from './puzzles.mjs?v=0.9.1-7';
 
 const CHAPTER = 'I · Tutorial';
 const authoredById = new Map(PUZZLES.map((level) => [level.id, level]));
@@ -62,12 +62,12 @@ const crossingTutorial = {
     {
       focus: 'board',
       title: 'Let two tracks cross',
-      body: 'Tracks cannot overlap. Place a Crossing where the two routes meet, then use its horizontal A channel for one voice and its vertical B channel for the other.',
+      body: 'Lay the first track, then drag the second straight through it at a right angle. A Crossing appears automatically and keeps the horizontal and vertical routes separate.',
     },
     {
       focus: 'board',
       title: 'The channels stay separate',
-      body: 'A Crossing never mixes or changes marble trains. A always leaves through A and B always leaves through B, even when both pass through together.',
+      body: 'Every side can accept or release a word marble. It leaves through the opposite side without turning, even when another word passes through the other channel.',
     },
   ],
 };
@@ -110,7 +110,7 @@ const junctionTutorial = {
     {
       focus: 'board',
       title: 'Merge routes deliberately',
-      body: 'Connect the two Quills to inputs A and B, then connect the Junction output to the Resonator. Two trains arriving on the same tick would collide, so timing still matters in later machines.',
+      body: 'Connect the two Quills to inputs A and B, then connect the Junction output to the Resonator. Two word marbles arriving on the same tick would collide, so timing still matters in later machines.',
     },
   ],
 };

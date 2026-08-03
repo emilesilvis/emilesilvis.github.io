@@ -12,7 +12,6 @@ export const PART_ART_SELECTIONS = Object.freeze({
   fork: selection('fork', 'a'),
   coupling: selection('coupling', 'a'),
   crossing: selection('crossing', 'a'),
-  junction: selection('junction', 'a'),
   resonator: selection('resonator', 'b'),
 });
 

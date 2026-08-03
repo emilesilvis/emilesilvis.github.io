@@ -66,10 +66,10 @@ export const PART_GEOMETRY = {
   crossing: {
     footprint: ONE_CELL,
     ports: {
-      inA: { cell: { x: 0, y: 0 }, side: 'west', dir: 'in' },
-      outA: { cell: { x: 0, y: 0 }, side: 'east', dir: 'out' },
-      inB: { cell: { x: 0, y: 0 }, side: 'north', dir: 'in' },
-      outB: { cell: { x: 0, y: 0 }, side: 'south', dir: 'out' },
+      inA: { cell: { x: 0, y: 0 }, side: 'west', dir: 'both' },
+      outA: { cell: { x: 0, y: 0 }, side: 'east', dir: 'both' },
+      inB: { cell: { x: 0, y: 0 }, side: 'north', dir: 'both' },
+      outB: { cell: { x: 0, y: 0 }, side: 'south', dir: 'both' },
     },
   },
   junction: {
@@ -121,10 +121,14 @@ export const PART_VISUAL_ANCHORS = {
   crossing: {
     queue: {
       inA: { x: -12, y: 0 },
+      outA: { x: 12, y: 0 },
       inB: { x: 0, y: -12 },
+      outB: { x: 0, y: 12 },
     },
     output: {
+      inA: { x: -12, y: 0 },
       outA: { x: 12, y: 0 },
+      inB: { x: 0, y: -12 },
       outB: { x: 0, y: 12 },
     },
   },
@@ -224,31 +228,38 @@ export function localPortGeometry(kind, port, orientation = 0, cellSize = 64) {
   };
 }
 
-export function portTagWidth(text = '') {
-  return Math.max(13, text.length * 7 + 6);
+export function portTagWidth(text = '', fontSize = 20) {
+  return Math.ceil(Math.max(fontSize + 4, text.length * fontSize * 0.6 + 8));
 }
 
 // Labels sit tangentially beside a socket rather than on the normal string
 // corridor. East/west labels also move inward by half their own width, keeping
-// even multi-character badges inside the part footprint and out of routable
-// neighboring cells.
-export function localPortTagGeometry(kind, port, orientation = 0, cellSize = 64, text = '') {
+// even multi-character badges inside the part footprint. North/south labels
+// point toward the part's centre so larger badges stay on the chassis.
+export function localPortTagGeometry(kind, port, orientation = 0, cellSize = 64, text = '', fontSize = 20) {
   const socket = localPortGeometry(kind, port, orientation, cellSize);
   if (!socket) return null;
   if (socket.side === 'west' || socket.side === 'east') {
     const inward = socket.side === 'west' ? 1 : -1;
     return {
-      x: socket.x + inward * portTagWidth(text) / 2,
-      y: socket.y - 15,
+      x: socket.x + inward * portTagWidth(text, fontSize) / 2,
+      y: socket.y - 16,
       side: socket.side,
       textAnchor: 'middle',
     };
   }
-  return { x: socket.x + 7, y: socket.y, side: socket.side, textAnchor: 'start' };
+  const pivot = localPartPivot(kind, cellSize);
+  const inward = socket.x <= pivot.x ? 1 : -1;
+  return {
+    x: socket.x + inward * 8,
+    y: socket.y,
+    side: socket.side,
+    textAnchor: inward > 0 ? 'start' : 'end',
+  };
 }
 
-export function portTagGeometry(part, port, cellSize = 64, text = '') {
-  const local = localPortTagGeometry(part.kind, port, part.orientation, cellSize, text);
+export function portTagGeometry(part, port, cellSize = 64, text = '', fontSize = 20) {
+  const local = localPortTagGeometry(part.kind, port, part.orientation, cellSize, text, fontSize);
   if (!local) return null;
   const pivot = partPivotCentre(part, cellSize);
   return { ...local, x: pivot.x + local.x, y: pivot.y + local.y };
@@ -269,23 +280,24 @@ export function partVisualAnchor(part, channel, port = null, cellSize = 64) {
   return { x: anchor.x + rotated.x, y: anchor.y + rotated.y };
 }
 
-// Terminal score cards occupy the lower half of the square chassis. Their
-// positions rotate with the device while their notation stays screen-readable
-// in the renderer.
+// Terminal annotations form a screen-stable vertical stack around the
+// mechanism: its diagram name above and its sound bar below. Neither annotation
+// moves when the physical terminal rotates.
 export function terminalCardGeometry(part, cellSize = 64) {
-  const canonical = { x: 32, y: 51 };
   const scale = cellSize / 64;
-  const localPivot = localPartPivot(part.kind, cellSize);
-  const scaled = { x: canonical.x * scale, y: canonical.y * scale };
-  const offset = rotateOffset({
-    x: scaled.x - localPivot.x,
-    y: scaled.y - localPivot.y,
-  }, part.orientation);
-  const anchor = partPivotCentre(part, cellSize);
   return {
-    x: anchor.x + localPivot.x + offset.x,
-    y: anchor.y + localPivot.y + offset.y,
-    side: rotateSide('north', part.orientation),
+    x: (part.x + 1) * cellSize,
+    y: part.y * cellSize + 110 * scale,
+    side: 'south',
+  };
+}
+
+export function terminalNameGeometry(part, cellSize = 64) {
+  const scale = cellSize / 64;
+  return {
+    x: (part.x + 1) * cellSize,
+    y: part.y * cellSize + 10 * scale,
+    side: 'north',
   };
 }
 
@@ -322,7 +334,8 @@ export function portGeometry(part, port) {
 
 export function portsForKind(kind) {
   return Object.entries(PART_GEOMETRY[kind]?.ports ?? {}).reduce((ports, [name, port]) => {
-    ports[port.dir === 'in' ? 'ins' : 'outs'].push(name);
+    if (port.dir === 'in' || port.dir === 'both') ports.ins.push(name);
+    if (port.dir === 'out' || port.dir === 'both') ports.outs.push(name);
     return ports;
   }, { ins: [], outs: [] });
 }

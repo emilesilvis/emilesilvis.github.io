@@ -7,7 +7,7 @@
 // adjacent, facing ports has an empty route and takes one tick, while every
 // detour adds ticks.
 
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-1';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-7';
 
 export const cellKey = ({ x, y }) => `${x},${y}`;
 
@@ -49,6 +49,20 @@ export function wirePathCells(machine, wire) {
   ];
 }
 
+// A Crossing can replace a routed cell only when the existing track passes
+// straight through it. Returning the axis keeps painting feedback aligned with
+// the same geometric rule used by the committed crossing edit.
+export function wireAxisAtCell(machine, wire, cell) {
+  const path = wirePathCells(machine, wire);
+  const index = path.findIndex((candidate) => sameCell(candidate, cell));
+  if (index <= 0 || index >= path.length - 1) return null;
+  const previous = path[index - 1];
+  const next = path[index + 1];
+  if (previous.x === cell.x && next.x === cell.x) return 'vertical';
+  if (previous.y === cell.y && next.y === cell.y) return 'horizontal';
+  return null;
+}
+
 export function wireTravelTime(machine, wire) {
   const route = wireRouteCells(machine, wire);
   const from = partById(machine, wire.from.part);
@@ -77,6 +91,11 @@ export function occupiedWireCells(machine, { exceptWireId = null } = {}) {
 // A physical port accepts one endpoint. Keeping this rule beside the route
 // model lets painting, snapping, and final validation share the same answer.
 export function wireEndpointOccupied(wires, ref, dir, { exceptWireId = null } = {}) {
+  if (dir === 'both') {
+    return wires.some((wire) => wire.id !== exceptWireId &&
+      ((wire.from.part === ref.part && wire.from.port === ref.port) ||
+       (wire.to.part === ref.part && wire.to.port === ref.port)));
+  }
   const end = dir === 'out' ? 'from' : dir === 'in' ? 'to' : null;
   if (!end) return false;
   return wires.some((wire) => wire.id !== exceptWireId &&
@@ -91,7 +110,8 @@ export function routeValidity(machine, board, wire, { exceptWireId = wire.id } =
 
   const fromPort = portGeometry(from, wire.from.port);
   const toPort = portGeometry(to, wire.to.port);
-  if (!fromPort || fromPort.dir !== 'out' || !toPort || toPort.dir !== 'in') {
+  if (!fromPort || !['out', 'both'].includes(fromPort.dir) ||
+      !toPort || !['in', 'both'].includes(toPort.dir)) {
     return { valid: false, reason: 'Track needs a physical output and input' };
   }
 
@@ -121,6 +141,95 @@ export function routeValidity(machine, board, wire, { exceptWireId = wire.id } =
     return { valid: false, reason: 'Route enters from the wrong port side' };
   }
   return { valid: true, reason: null };
+}
+
+const CARDINAL_STEPS = [
+  { x: 1, y: 0, direction: 'east' },
+  { x: 0, y: 1, direction: 'south' },
+  { x: -1, y: 0, direction: 'west' },
+  { x: 0, y: -1, direction: 'north' },
+];
+
+// Find a compact legal route for an existing pair of endpoints. Part movement
+// uses this to keep connected tracks attached. Reusing old cells is the primary
+// cost; among equally conservative routes, fewer bends and a shorter path win.
+// That preserves deliberate timing detours whenever the new endpoint can still
+// reach them.
+export function findWireRoute(machine, board, wire) {
+  const from = partById(machine, wire.from.part);
+  const to = partById(machine, wire.to.part);
+  if (!from || !to) return null;
+  const fromPort = portGeometry(from, wire.from.port);
+  const toPort = portGeometry(to, wire.to.port);
+  if (!fromPort || !['out', 'both'].includes(fromPort.dir) ||
+      !toPort || !['in', 'both'].includes(toPort.dir)) {
+    return null;
+  }
+
+  // Facing ports in neighboring cells have no intervening route cell.
+  if (sameCell(fromPort.neighbor, toPort.cell) && sameCell(toPort.neighbor, fromPort.cell)) return [];
+
+  const start = fromPort.neighbor;
+  const goal = toPort.neighbor;
+  const onBoard = (cell) => cell.x >= 0 && cell.y >= 0 && cell.x < board.cols && cell.y < board.rows;
+  if (!onBoard(start) || !onBoard(goal)) return null;
+
+  const blocked = new Set(machine.parts.flatMap(partFootprintCells).map(cellKey));
+  for (const candidate of machine.wires) {
+    if (candidate.id === wire.id) continue;
+    for (const cell of wireRouteCells(machine, candidate)) blocked.add(cellKey(cell));
+  }
+  if (blocked.has(cellKey(start)) || blocked.has(cellKey(goal))) return null;
+
+  const preferred = new Set(wireRouteCells(machine, wire).map(cellKey));
+  let order = 0;
+  const frontier = [{
+    cell: { ...start },
+    path: [{ ...start }],
+    direction: null,
+    length: 1,
+    changed: preferred.has(cellKey(start)) ? 0 : 1,
+    bends: 0,
+    order: order++,
+  }];
+  const best = new Map();
+  const score = ({ length, changed, bends }) => changed * 1_000_000 + bends * 1_000 + length;
+
+  while (frontier.length) {
+    frontier.sort((left, right) => score(left) - score(right) || left.order - right.order);
+    const current = frontier.shift();
+    const stateKey = `${cellKey(current.cell)}|${current.direction ?? 'start'}`;
+    if (best.has(stateKey) && best.get(stateKey) <= score(current)) continue;
+    best.set(stateKey, score(current));
+    if (sameCell(current.cell, goal)) return current.path;
+
+    const nextSteps = CARDINAL_STEPS
+      .map((step) => ({
+        ...step,
+        cell: { x: current.cell.x + step.x, y: current.cell.y + step.y },
+      }))
+      .sort((left, right) => {
+        const leftDistance = Math.abs(goal.x - left.cell.x) + Math.abs(goal.y - left.cell.y);
+        const rightDistance = Math.abs(goal.x - right.cell.x) + Math.abs(goal.y - right.cell.y);
+        return leftDistance - rightDistance;
+      });
+    for (const next of nextSteps) {
+      const key = cellKey(next.cell);
+      if (!onBoard(next.cell) || blocked.has(key) || current.path.some((cell) => sameCell(cell, next.cell))) {
+        continue;
+      }
+      frontier.push({
+        cell: next.cell,
+        path: [...current.path, next.cell],
+        direction: next.direction,
+        length: current.length + 1,
+        changed: current.changed + (preferred.has(key) ? 0 : 1),
+        bends: current.bends + (current.direction && current.direction !== next.direction ? 1 : 0),
+        order: order++,
+      });
+    }
+  }
+  return null;
 }
 
 export function machineArea(machine) {
@@ -159,7 +268,7 @@ export function extendRoute(route, destination, anchor, canOccupy) {
         // its physical side to seed the route again.
         return [];
       }
-      if (!canOccupy(candidate)) return next;
+      if (!canOccupy(candidate, current)) return next;
       next.push(candidate);
       current = candidate;
     }
@@ -173,6 +282,6 @@ export function extendRoute(route, destination, anchor, canOccupy) {
 export function extendRouteFromPort(route, destination, anchor, neighbor, canOccupy) {
   if (sameCell(destination, anchor)) return [];
   if (route.length) return extendRoute(route, destination, anchor, canOccupy);
-  if (!neighbor || !canOccupy(neighbor)) return [];
+  if (!neighbor || !canOccupy(neighbor, anchor)) return [];
   return extendRoute([{ ...neighbor }], destination, anchor, canOccupy);
 }

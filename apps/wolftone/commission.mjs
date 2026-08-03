@@ -1,46 +1,52 @@
 // Turn a performance case into the complete input/output contract shown on
-// the Commission slip. Labels come from the board; unlabeled endpoints use
-// stable positional names so the specification never depends on prose.
+// the Commission slip. Terminal names are stable diagram references rather
+// than prose authored for an individual commission.
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
-function ordered(parts) {
-  return [...parts].sort((a, b) => a.y - b.y || a.x - b.x || a.id.localeCompare(b.id));
+export function orderCommissionParts(parts) {
+  const commissionOrder = (part) => part.commissionOrder ?? Number.MAX_SAFE_INTEGER;
+  return [...parts].sort((a, b) =>
+    commissionOrder(a) - commissionOrder(b) || a.y - b.y || a.x - b.x || a.id.localeCompare(b.id));
 }
 
-function fallbackLabel(part, parts) {
-  const sorted = ordered(parts);
-  const index = sorted.findIndex((candidate) => candidate.id === part.id);
-  const noun = part.kind === 'quill' ? 'input' : 'output';
-
-  // IN and OUT already name a lone endpoint's role on the Commission slip.
-  // Keep only explicit labels or fallback labels that distinguish siblings.
-  if (parts.length === 1) return null;
-  if (parts.length === 2 && sorted[0].y !== sorted[1].y) {
-    return part.kind === 'quill'
-      ? ['top input', 'bottom input'][index]
-      : ['upper output', 'lower output'][index];
+function romanNumeral(value) {
+  const numerals = [
+    [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+    [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I'],
+  ];
+  let remaining = value;
+  let result = '';
+  for (const [amount, numeral] of numerals) {
+    while (remaining >= amount) {
+      result += numeral;
+      remaining -= amount;
+    }
   }
-  return `${noun} ${index + 1}`;
+  return result;
 }
 
-function endpointLabel(part, parts) {
-  return part.label || fallbackLabel(part, parts);
+export function terminalName(part, parts) {
+  const siblings = orderCommissionParts(parts.filter((candidate) => candidate.kind === part.kind));
+  const index = siblings.findIndex((candidate) => candidate.id === part.id);
+  const prefix = part.kind === 'quill' ? 'Q' : 'R';
+  return `${prefix}${romanNumeral(index + 1)}`;
 }
 
 export function commissionCaseSpec(level, performance) {
-  const quills = ordered(level.fixed.filter((part) => part.kind === 'quill'));
-  const resonators = ordered(level.fixed.filter((part) => part.kind === 'resonator'));
+  const quills = orderCommissionParts(level.fixed.filter((part) => part.kind === 'quill'));
+  const resonators = orderCommissionParts(level.fixed.filter((part) => part.kind === 'resonator'));
 
   return {
     inputs: quills
       .filter((part) => hasOwn(performance.seeds, part.id))
-      .map((part) => ({ label: endpointLabel(part, quills), word: performance.seeds[part.id] })),
+      .map((part) => ({ label: terminalName(part, quills), word: performance.seeds[part.id] })),
     targets: resonators
       .filter((part) => hasOwn(performance.targets, part.id))
-      .map((part) => ({ label: endpointLabel(part, resonators), word: performance.targets[part.id] })),
+      .map((part) => ({ label: terminalName(part, resonators), word: performance.targets[part.id] })),
     silent: resonators
       .filter((part) => !hasOwn(performance.targets, part.id))
-      .map((part) => endpointLabel(part, resonators)),
+      .map((part) => terminalName(part, resonators)),
   };
 }

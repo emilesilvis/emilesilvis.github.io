@@ -5,41 +5,43 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.1-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.9.1-1';
+} from './engine.mjs?v=0.9.1-7';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.1-7';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.1-1';
+} from './progression.mjs?v=0.9.1-7';
 import {
-  marbleTrainStates,
+  wordMarbleState,
   pathDirectionMarkers,
   pointAlongPath,
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.1-1';
-import { fitCamera } from './board-camera.mjs?v=0.9.1-1';
+} from './motion.mjs?v=0.9.1-7';
+import { fitCamera } from './board-camera.mjs?v=0.9.1-7';
 import {
-  movementValidity,
+  groupMovementEdit,
+  partMovementEdit,
   placementValidity,
   retargetWire as retargetWireEdit,
+  routeWireWithCrossings,
+  spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.1-1';
-import { commissionCaseSpec } from './commission.mjs?v=0.9.1-1';
-import { drawMarble, drawMarbleWord, drawWordCard } from './notation.mjs?v=0.9.1-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.1-1';
+} from './board-layout.mjs?v=0.9.1-7';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.1-7';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.1-7';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.1-7';
 import {
   cellKey,
   extendRouteFromPort,
   occupiedWireCells,
-  routeValidity,
+  wireAxisAtCell,
   wireEndpointOccupied,
-  wirePathCells,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.1-1';
+} from './wire-routing.mjs?v=0.9.1-7';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -51,12 +53,13 @@ import {
   portTagWidth,
   portGeometry,
   terminalCardGeometry,
-} from './part-geometry.mjs?v=0.9.1-1';
-import { partArtSelection } from './part-art.mjs?v=0.9.1-1';
+  terminalNameGeometry,
+} from './part-geometry.mjs?v=0.9.1-7';
+import { partArtSelection } from './part-art.mjs?v=0.9.1-7';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.1-1';
+} from './audio.mjs?v=0.9.1-7';
 
 // Tutorials show teaching decks. Campaign contracts show one neutral
 // observation and one optional nudge. Reference review stays quiet.
@@ -98,11 +101,12 @@ const TRAY_KIND_RANK = new Map(TRAY_KIND_ORDER.map((kind, index) => [kind, index
 const CONSTRUCTION_NAMES = { [WIRE_TOOL]: 'Track', ...KIND_NAMES };
 const REDUCED_MOTION = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
-// ?reference loads every level with its hidden reference build already
-// placed: a review mode for walking the campaign's answers. It is strictly
-// read-only about progress: persist() is a no-op under it, so browsing the
-// answers can neither overwrite a player's saved machines nor mark levels
-// solved. Anything run or edited in this mode evaporates on reload.
+// ?reference loads every level with a hidden reference build already placed.
+// Campaign commissions can switch between all their routed architecture
+// witnesses. The mode is strictly read-only about progress: persist() is a
+// no-op under it, so browsing the answers can neither overwrite a player's
+// saved machines nor mark levels solved. Anything run or edited evaporates on
+// reload.
 const QUERY = new URLSearchParams(location.search);
 const SESSION_MODE = sessionMode(QUERY);
 const REFERENCE_MODE = SESSION_MODE === 'reference';
@@ -220,7 +224,7 @@ let run = null;
 let recital = null;
 let timer = null;
 let speedIdx = 0;
-let selection = null;       // { kind: 'part'|'wire', id } | { kind: 'tool', toolKind }
+let selection = null;       // { kind: 'parts', ids, primaryId } | wire | tool
 let hoverInspection = null; // temporary Inspector preview; click selection persists
 let armedTool = null;       // construction kind from the tray, including Track
 let placementOrientation = 0; // quarter turns for the armed placement ghost
@@ -228,6 +232,7 @@ let placementHover = null;  // grid cell under an armed part ghost
 let drag = null;            // new wire or endpoint retarget gesture
 let justWired = false;
 let partDrag = null;        // movable part gesture with an uncommitted grid preview
+let marquee = null;         // Shift-drag selection rectangle on empty board
 let interactionNotice = ''; // last rejected move, rotation, placement, or route
 let suppressPartClick = false;
 let boardPan = null;        // pointer + scroll origins while grabbing empty board
@@ -239,10 +244,11 @@ let verifiedRuns = null;    // exact successful runCase results from verifyAll
 let bannerAction = null;    // { kind: 'case'|'level', index }
 let undoStack = [];
 let redoStack = [];
+const referenceArchitectureIndexes = new Map();
 
 const puzzle = () => LEVELS[levelIndex];
-const contractTerminals = () => puzzle().fixed.filter((part) =>
-  part.kind === 'quill' || part.kind === 'resonator');
+const contractTerminals = () => orderCommissionParts(puzzle().fixed.filter((part) =>
+  part.kind === 'quill' || part.kind === 'resonator'));
 const suppliedDevices = () => puzzle().fixed.filter((part) =>
   part.kind !== 'quill' && part.kind !== 'resonator');
 const fixedParts = () => contractTerminals().flatMap((part) => {
@@ -250,11 +256,78 @@ const fixedParts = () => contractTerminals().flatMap((part) => {
   // Reference review falls back to the authored solved position. In a normal
   // session, terminals begin in the tray until the player places them.
   if (position === null || (!REFERENCE_MODE && !position)) return [];
-  return [{ orientation: 0, ...part, ...(position ?? {}) }];
+  return [{
+    orientation: 0,
+    ...part,
+    label: terminalName(part, contractTerminals()),
+    ...(position ?? {}),
+  }];
 });
 const machine = () => ({ parts: [...fixedParts(), ...playerParts], wires: playerWires });
 const currentCase = () => puzzle().cases[caseIndex];
 const editable = () => !run;
+
+function partReference(part) {
+  return TERMINAL_KINDS.has(part?.kind) ? part.label : part?.id;
+}
+
+function currentReferenceArchitectureIndex() {
+  const choices = referenceMachines(puzzle());
+  const requested = referenceArchitectureIndexes.get(puzzle().id) ?? 0;
+  return requested >= 0 && requested < choices.length ? requested : 0;
+}
+
+function currentReferenceArchitecture() {
+  const choices = referenceMachines(puzzle());
+  return choices[currentReferenceArchitectureIndex()] ?? null;
+}
+
+function partSelection(ids, primaryId = ids.at(-1) ?? null) {
+  const uniqueIds = [...new Set(ids)];
+  if (!uniqueIds.length) return null;
+  return {
+    kind: 'parts',
+    ids: uniqueIds,
+    primaryId: uniqueIds.includes(primaryId) ? primaryId : uniqueIds.at(-1),
+  };
+}
+
+function normalizeSelection(value) {
+  if (value?.kind === 'part') return partSelection([value.id], value.id);
+  if (value?.kind === 'parts') return partSelection(value.ids ?? [], value.primaryId);
+  return value ?? null;
+}
+
+function selectedPartIds() {
+  return selection?.kind === 'parts' ? selection.ids : [];
+}
+
+function isPartSelected(id) {
+  return selectedPartIds().includes(id);
+}
+
+function primarySelectedPart() {
+  if (selection?.kind !== 'parts') return null;
+  return byId(machine(), selection.primaryId);
+}
+
+function togglePartSelection(id) {
+  const ids = selectedPartIds();
+  selection = ids.includes(id)
+    ? partSelection(ids.filter((candidate) => candidate !== id))
+    : partSelection([...ids, id], id);
+}
+
+function selectAllParts() {
+  if (!editable()) return false;
+  const ids = machine().parts.map((part) => part.id);
+  if (!ids.length) return false;
+  selection = partSelection(ids, ids.at(-1));
+  interactionNotice = '';
+  renderBoard();
+  renderInspector();
+  return true;
+}
 
 function terminalWordForPart(part) {
   if (part?.kind === 'quill') return currentCase().seeds[part.id] ?? null;
@@ -282,12 +355,13 @@ function restoreSnapshot(snapshot) {
   playerParts = restored.parts;
   playerWires = restored.wires;
   terminalPositions = restored.terminalPositions ?? {};
-  selection = restored.selection ?? null;
+  selection = normalizeSelection(restored.selection);
   armedTool = null;
   placementOrientation = 0;
   placementHover = null;
   drag = null;
   partDrag = null;
+  marquee = null;
 }
 
 function finishEdit() {
@@ -332,11 +406,21 @@ function loadLevel(i) {
   stopTimer();
   levelIndex = requested;
   if (REFERENCE_MODE) {
-    const ref = puzzle().reference;
-    playerParts = structuredClone([...suppliedDevices(), ...ref.parts])
+    const references = referenceMachines(puzzle());
+    const referenceIndex = currentReferenceArchitectureIndex();
+    referenceArchitectureIndexes.set(puzzle().id, referenceIndex);
+    const placed = references[referenceIndex].machine;
+    const terminalIds = new Set(contractTerminals().map((part) => part.id));
+    playerParts = structuredClone(placed.parts.filter((part) => !terminalIds.has(part.id)))
       .map((p) => ({ orientation: 0, config: defaultConfig(p.kind), ...p }));
-    playerWires = structuredClone(ref.wires).map((w, i2) => ({ id: `ref${i2}`, ...w }));
-    terminalPositions = structuredClone(ref.terminalPositions ?? {});
+    playerWires = structuredClone(placed.wires).map((w, i2) => ({ id: `ref${i2}`, ...w }));
+    terminalPositions = Object.fromEntries(placed.parts
+      .filter((part) => terminalIds.has(part.id))
+      .map((part) => [part.id, {
+        x: part.x,
+        y: part.y,
+        orientation: part.orientation ?? 0,
+      }]));
   } else {
     const stored = save.machines[puzzle().id];
     playerParts = structuredClone(stored?.parts ?? suppliedDevices())
@@ -485,7 +569,7 @@ function doTick() {
     } else {
       if (recital) { recital.paused = true; recital.failed = true; }
       const why = run.stalls.length
-        ? run.stalls.map((s) => `${s.part}: ${s.reason}`).join(' · ')
+        ? run.stalls.map((s) => `${partReference(byId(machine(), s.part))}: ${s.reason}`).join(' · ')
         : run.detail;
       showBanner('silent', 'The machine went silent', why, false);
       caseStatuses[caseIndex] = 'fail';
@@ -639,41 +723,56 @@ function placePart(kind, x, y, splice = null) {
       playerParts.push({ id, kind, x, y, orientation: placementOrientation, config: levelDefaultConfig(kind) });
     }
     if (splice) {
-      const ports = PORTS[kind];
       const spliced = spliceWire(
-        playerWires, splice.id, id, ports.ins[0], ports.outs[0], nextWireId(), splice.cells,
+        playerWires, splice.id, id, splice.inputPort, splice.outputPort, nextWireId(), splice.cells,
       );
       if (spliced) playerWires = spliced;
     }
-    if (remaining(kind) <= 0) armedTool = null;
-    selection = { kind: 'part', id };
+    armedTool = null;
+    placementOrientation = 0;
+    selection = null;
+  });
+}
+
+function moveParts(ids, dx, dy, primaryId = ids.at(-1)) {
+  if (!ids.length || (dx === 0 && dy === 0)) return false;
+  const edit = groupMovementEdit(
+    machine().parts, puzzle().board, ids, { dx, dy }, playerWires,
+  );
+  if (!edit.valid) return false;
+  return applyEdit(() => {
+    const movedById = new Map(edit.parts.map((part) => [part.id, part]));
+    playerParts = playerParts.map((part) => movedById.get(part.id) ?? part);
+    for (const id of ids) {
+      const part = movedById.get(id);
+      if (part?.kind === 'quill' || part?.kind === 'resonator') {
+        terminalPositions[id] = {
+          ...(terminalPositions[id] ?? {}),
+          x: part.x,
+          y: part.y,
+        };
+      }
+    }
+    playerWires = edit.wires;
+    selection = partSelection(ids, primaryId);
   });
 }
 
 function movePart(id, x, y) {
   const part = byId(machine(), id);
-  if (!part || (part.x === x && part.y === y)) return false;
-  return applyEdit(() => {
-    const playerPart = playerParts.find((candidate) => candidate.id === id);
-    if (playerPart) {
-      playerPart.x = x;
-      playerPart.y = y;
-    } else if (part.kind === 'quill' || part.kind === 'resonator') {
-      terminalPositions[id] = { ...(terminalPositions[id] ?? {}), x, y };
-    }
-    selection = { kind: 'part', id };
-  });
+  if (!part) return false;
+  return moveParts([id], x - part.x, y - part.y, id);
 }
 
 function rotatePart(id) {
   const part = byId(machine(), id);
   if (!part) return false;
   const orientation = ((part.orientation ?? 0) + 1) % 4;
-  const validity = movementValidity(
+  const edit = partMovementEdit(
     machine().parts, puzzle().board, id, { orientation }, playerWires,
   );
-  if (!validity.valid) {
-    interactionNotice = `Cannot rotate: ${validity.reason}`;
+  if (!edit.valid) {
+    interactionNotice = `Cannot rotate: ${edit.reason}`;
     renderBoard();
     return false;
   }
@@ -684,18 +783,22 @@ function rotatePart(id) {
     else if (part.kind === 'quill' || part.kind === 'resonator') {
       terminalPositions[id] = { ...(terminalPositions[id] ?? {}), orientation };
     }
-    selection = { kind: 'part', id };
+    playerWires = edit.wires;
+    selection = partSelection([id], id);
   });
 }
 
 function deleteSelection() {
   if (!selection || !editable()) return;
-  if (selection.kind === 'part') {
-    const id = selection.id;
+  if (selection.kind === 'parts') {
+    const ids = new Set(selection.ids);
     applyEdit(() => {
-      if (contractTerminals().some((part) => part.id === id)) terminalPositions[id] = null;
-      playerParts = playerParts.filter((p) => p.id !== id);
-      playerWires = playerWires.filter((w) => w.from.part !== id && w.to.part !== id);
+      for (const id of ids) {
+        if (contractTerminals().some((part) => part.id === id)) terminalPositions[id] = null;
+      }
+      playerParts = playerParts.filter((part) => !ids.has(part.id));
+      playerWires = playerWires.filter((wire) =>
+        !ids.has(wire.from.part) && !ids.has(wire.to.part));
       selection = null;
     });
     return;
@@ -709,7 +812,9 @@ function deleteSelection() {
 }
 
 function physicalPortOccupied(ref, dir, exceptWireId = null) {
-  return wireEndpointOccupied(playerWires, ref, dir, { exceptWireId });
+  const part = byId(machine(), ref.part);
+  const physicalDir = portGeometry(part, ref.port)?.dir ?? dir;
+  return wireEndpointOccupied(playerWires, ref, physicalDir === 'both' ? 'both' : dir, { exceptWireId });
 }
 
 function addWire(from, to, route) {
@@ -720,20 +825,24 @@ function addWire(from, to, route) {
     return false;
   }
   const candidate = { id: nextWireId(), from, to, route: structuredClone(route) };
-  const nextMachine = { parts: machine().parts, wires: [...playerWires, candidate] };
-  const validity = routeValidity(nextMachine, puzzle().board, candidate);
-  if (!validity.valid) {
-    interactionNotice = `Cannot route: ${validity.reason}`;
+  const edit = routeWireWithCrossings(machine(), puzzle().board, candidate);
+  if (!edit.valid) {
+    interactionNotice = `Cannot route: ${edit.reason}`;
     return false;
   }
   return applyEdit(() => {
-    playerWires.push(candidate);
-    selection = { kind: 'wire', id: playerWires.at(-1).id };
+    playerParts.push(...edit.crossings);
+    playerWires = edit.wires;
+    selection = { kind: 'wire', id: candidate.id };
   });
 }
 
 function retargetWire(wireId, end, nextRef, route) {
   const storedRoute = end === 'from' ? [...route].reverse() : route;
+  if (physicalPortOccupied(nextRef, end === 'from' ? 'out' : 'in', wireId)) {
+    interactionNotice = 'Cannot route: that physical port already has a track';
+    return false;
+  }
   const next = retargetWireEdit(playerWires, wireId, end, nextRef, storedRoute);
   if (!next) {
     interactionNotice = 'Cannot route: that physical port already has a track';
@@ -744,13 +853,14 @@ function retargetWire(wireId, end, nextRef, route) {
   if (current?.part === nextRef.part && current?.port === nextRef.port &&
       JSON.stringify(currentWire.route ?? null) === JSON.stringify(storedRoute)) return false;
   const candidate = next.find((wire) => wire.id === wireId);
-  const validity = routeValidity({ parts: machine().parts, wires: next }, puzzle().board, candidate);
-  if (!validity.valid) {
-    interactionNotice = `Cannot route: ${validity.reason}`;
+  const edit = routeWireWithCrossings(machine(), puzzle().board, candidate);
+  if (!edit.valid) {
+    interactionNotice = `Cannot route: ${edit.reason}`;
     return false;
   }
   return applyEdit(() => {
-    playerWires = next;
+    playerParts.push(...edit.crossings);
+    playerWires = edit.wires;
     selection = { kind: 'wire', id: wireId };
   });
 }
@@ -826,7 +936,15 @@ function paintRouteGesture(gesture, point) {
     partFootprintCells(part).map((cell) => [cellKey(cell), part.id])));
   gesture.blockedCell = null;
   gesture.blockedReason = null;
-  const canOccupy = (cell) => {
+  const axisBetween = (first, second) => first.x === second.x
+    ? 'vertical'
+    : first.y === second.y ? 'horizontal' : null;
+  const crossingAxis = (cell) => {
+    const wireId = occupied.get(cellKey(cell));
+    const wire = wireId ? m.wires.find((candidate) => candidate.id === wireId) : null;
+    return wire ? wireAxisAtCell(m, wire, cell) : null;
+  };
+  const canOccupy = (cell, previous) => {
     const block = (reason) => {
       gesture.blockedCell = { ...cell };
       gesture.blockedReason = reason;
@@ -842,7 +960,19 @@ function paintRouteGesture(gesture, point) {
       if (sameGridCell(cell, destination)) return false;
       return block(`Occupied by ${partCells.get(cellKey(cell))}`);
     }
-    if (occupied.has(cellKey(cell))) return block(`Occupied by track ${occupied.get(cellKey(cell))}`);
+    const incomingAxis = axisBetween(previous, cell);
+    if (occupied.has(cellKey(cell))) {
+      const existingAxis = crossingAxis(cell);
+      if (!existingAxis || !incomingAxis || existingAxis === incomingAxis) {
+        return block('Tracks can cross only at right angles');
+      }
+    }
+    if (occupied.has(cellKey(previous))) {
+      const existingAxis = crossingAxis(previous);
+      if (!existingAxis || !incomingAxis || existingAxis === incomingAxis) {
+        return block('A Crossing must continue straight through');
+      }
+    }
     return true;
   };
   const previousRoute = gesture.route;
@@ -874,54 +1004,6 @@ function routeGesturePoints(m, gesture) {
 
 function sameGridCell(a, b) {
   return a?.x === b?.x && a?.y === b?.y;
-}
-
-// Only a one-input/one-output mechanism has an unambiguous automatic splice.
-// When two tracks cross the same cell, neither wins: select and retarget the
-// intended route explicitly instead of letting placement guess.
-function spliceCandidateAtCell(m, kind, x, y, orientation = placementOrientation) {
-  const ports = PORTS[kind];
-  const insertionPorts = kind === 'crossing' || kind === 'junction'
-    ? { input: 'inA', output: kind === 'crossing' ? 'outA' : 'out' }
-    : ports.ins.length === 1 && ports.outs.length === 1
-      ? { input: ports.ins[0], output: ports.outs[0] }
-      : null;
-  if (!insertionPorts) return null;
-  const candidates = m.wires.filter((wire) =>
-    wireRouteCells(m, wire).some((cell) => cell.x === x && cell.y === y));
-  if (candidates.length !== 1) return null;
-  const wire = candidates[0];
-  const inserted = { id: '__insertion__', kind, x, y, orientation };
-  const footprint = partFootprintCells(inserted);
-  const input = portGeometry(inserted, insertionPorts.input);
-  const output = portGeometry(inserted, insertionPorts.output);
-  if (!input || !output || (input.cell.x !== output.cell.x && input.cell.y !== output.cell.y)) return null;
-  const course = [input.cell];
-  let cursor = input.cell;
-  while (!sameGridCell(cursor, output.cell)) {
-    cursor = {
-      x: cursor.x + Math.sign(output.cell.x - cursor.x),
-      y: cursor.y + Math.sign(output.cell.y - cursor.y),
-    };
-    course.push(cursor);
-  }
-  const courseKeys = new Set(course.map(cellKey));
-  const unusedFootprint = footprint.filter((cell) => !courseKeys.has(cellKey(cell)));
-  if (unusedFootprint.some((cell) =>
-    m.parts.some((part) => partFootprintCells(part).some((occupied) => sameGridCell(cell, occupied))) ||
-    m.wires.some((candidate) => wireRouteCells(m, candidate).some((occupied) => sameGridCell(cell, occupied))))) {
-    return null;
-  }
-  const path = wirePathCells(m, wire);
-  const indexes = course.map((courseCell) => path.findIndex((cell) => sameGridCell(cell, courseCell)));
-  if (indexes.some((index) => index <= 0 || index >= path.length - 1) ||
-      indexes.some((index, position) => position > 0 && index !== indexes[position - 1] + 1)) return null;
-  const previous = path[indexes[0] - 1];
-  const next = path[indexes.at(-1) + 1];
-  if (!previous || !next || (previous.x !== next.x && previous.y !== next.y)) return null;
-  return sameGridCell(input?.neighbor, previous) && sameGridCell(output?.neighbor, next)
-    ? { ...wire, cells: course }
-    : null;
 }
 
 // An outgoing word first appears over the working area of the part that made
@@ -978,7 +1060,6 @@ const PORT_LABELS = {
   splitter: { head: 'w', rest: 'v' },
   fork: { left: '=', right: '≠' },
   coupling: { inA: 'A', inB: 'B', outAL: 'AL', outAR: 'AR', outBL: 'BL', outBR: 'BR' },
-  crossing: { inA: 'A', outA: 'A', inB: 'B', outB: 'B' },
   junction: { inA: 'A', inB: 'B', out: 'out' },
 };
 
@@ -987,8 +1068,8 @@ function playerPortName(kind, port) {
   if (kind === 'fork' && port === 'right') return 'other';
   if (kind === 'coupling' && port.startsWith('out')) return port.slice(3);
   if (kind === 'coupling' && (port === 'inA' || port === 'inB')) return port.at(-1);
-  if ((kind === 'crossing' || kind === 'junction') && (port === 'inA' || port === 'outA')) return 'A';
-  if ((kind === 'crossing' || kind === 'junction') && (port === 'inB' || port === 'outB')) return 'B';
+  if (kind === 'junction' && (port === 'inA' || port === 'outA')) return 'A';
+  if (kind === 'junction' && (port === 'inB' || port === 'outB')) return 'B';
   return port;
 }
 
@@ -1001,16 +1082,22 @@ function couplingRouteClass(kind, port) {
 
 function portTagMarkup(part, port, text, { preview = false } = {}) {
   if (!text) return '';
+  const fontSize = preview ? 10.5 : 20;
   const tag = preview
-    ? localPortTagGeometry(part.kind, port, part.orientation, CELL, text)
-    : portTagGeometry(part, port, CELL, text);
+    ? localPortTagGeometry(part.kind, port, part.orientation, CELL, text, fontSize)
+    : portTagGeometry(part, port, CELL, text, fontSize);
   if (!tag) return '';
-  const width = portTagWidth(text);
-  const rectX = tag.textAnchor === 'start' ? tag.x - 2 : tag.x - width / 2;
+  const width = portTagWidth(text, fontSize);
+  const rectX = tag.textAnchor === 'start'
+    ? tag.x - 2
+    : tag.textAnchor === 'end' ? tag.x - width + 2 : tag.x - width / 2;
   const prefix = preview ? 'preview-' : '';
+  const height = preview ? 16 : 27;
+  const radius = preview ? 3.5 : 5;
+  const textOffset = preview ? 4 : 7;
   return `<g class="${prefix}port-tag" aria-hidden="true">` +
-    `<rect class="${prefix}port-tag-bg" x="${rectX}" y="${tag.y - 6.5}" width="${width}" height="13" rx="3"></rect>` +
-    `<text class="${prefix}port-tag-text" x="${tag.x}" y="${tag.y + 3}" ` +
+    `<rect class="${prefix}port-tag-bg" x="${rectX}" y="${tag.y - height / 2}" width="${width}" height="${height}" rx="${radius}"></rect>` +
+    `<text class="${prefix}port-tag-text" x="${tag.x}" y="${tag.y + textOffset}" ` +
     `style="text-anchor:${tag.textAnchor}">${text}</text></g>`;
 }
 
@@ -1018,7 +1105,7 @@ function previewPortsMarkup(part, { labels = true } = {}) {
   if (part.kind === WIRE_TOOL) return '';
   const ports = PORTS[part.kind] ?? { ins: [], outs: [] };
   let markup = '';
-  for (const port of [...ports.ins, ...ports.outs]) {
+  for (const port of new Set([...ports.ins, ...ports.outs])) {
     const geometry = localPortGeometry(part.kind, port, part.orientation, CELL);
     if (!geometry) continue;
     markup += `<circle class="preview-port-bezel ${geometry.dir}" ` +
@@ -1046,20 +1133,18 @@ function boardPreviewPortsMarkup(part) {
 function terminalAnnotationMarkup(part, kase) {
   if (part.kind !== 'quill' && part.kind !== 'resonator') return '';
   const card = terminalCardGeometry(part, CELL);
+  const name = terminalNameGeometry(part, CELL);
   const word = part.kind === 'quill' ? kase.seeds[part.id] : kase.targets[part.id];
-  const labelY = card.y + 31;
   let markup = '';
   if (word !== undefined) {
-    markup += `<g class="goal-word terminal-word-card" data-word="${word}" ` +
-      `transform="translate(${card.x} ${card.y})">${drawWordCard(0, 0, word)}</g>`;
+    markup += `<g class="goal-word terminal-word-card sound-bar" data-word="${word}" ` +
+      `transform="translate(${card.x} ${card.y})">${drawSoundBar(0, 0, word)}</g>`;
   } else if (part.kind === 'resonator') {
     markup += `<g class="terminal-silent-card" transform="translate(${card.x} ${card.y})">` +
-      '<rect x="-44" y="-12" width="88" height="24" rx="4"></rect>' +
-      '<text x="0" y="3.5">SILENT</text></g>';
+      '<rect x="-44" y="-14" width="88" height="28" rx="5"></rect>' +
+      '<text x="0" y="6">SILENT</text></g>';
   }
-  if (part.label) {
-    markup += `<text class="terminal-name" x="${card.x}" y="${labelY}">${part.label}</text>`;
-  }
+  markup += `<text class="terminal-name" x="${name.x}" y="${name.y}">${part.label}</text>`;
   return markup;
 }
 
@@ -1105,21 +1190,49 @@ function partFaceClass(part, state = {}) {
   return `part-face part-face-${part.kind}${stateClasses ? ` ${stateClasses}` : ''}`;
 }
 
+// A Junction is track infrastructure, not a bench-top mechanism. Keep its
+// live SVG in the same copper/groove material language as routed track so the
+// merge reads as part of the route in every orientation and UI scale.
+function junctionTrackFaceMarkup() {
+  const course = 'M-28 0H18C29 0 35 7 43 16' +
+    'M-28 64H1C18 64 23 35 43 16' +
+    'M43 16C54 5 63 0 92 0';
+  return '<g class="junction-track" aria-hidden="true">' +
+    '<g class="junction-track-ties">' +
+      '<path d="M-18-9V9M0-9V9M17-8V8M-18 55V73M0 55V73"></path>' +
+      '<path d="M11 50 27 58M18 35 35 43M29 21 42 34M48 5 59 18M62-9V9M80-9V9"></path>' +
+    '</g>' +
+    `<path class="junction-track-shadow" d="${course}"></path>` +
+    `<path class="junction-track-bed" d="${course}"></path>` +
+    `<path class="junction-track-groove" d="${course}"></path>` +
+    `<path class="junction-track-live" d="${course}"></path>` +
+    '<circle class="junction-track-joint" cx="43" cy="16" r="5.5"></circle>' +
+    '<g class="junction-direction" transform="translate(71 0)">' +
+      '<rect x="-11" y="-8" width="22" height="16" rx="7"></rect>' +
+      '<path d="M-4-4 0 0-4 4M2-4 6 0 2 4"></path>' +
+    '</g>' +
+    '<path class="junction-collision-mark" d="M36 9 50 23M50 9 36 23"></path>' +
+  '</g>';
+}
+
 function partFace(part, cx = 0, cy = 0, state = {}) {
   const config = { ...defaultConfig(part.kind), ...part.config };
   const cls = partFaceClass(part, state);
   const counterRotation = -(part.orientation ?? 0) * 90;
-  const plate = (text, x = 0, y = 0, w = 28, extra = '') =>
-    `<g class="face-plate ${extra}"><rect x="${x - w / 2}" y="${y - 9}" width="${w}" height="18" rx="3"></rect>` +
-    `<text x="${x}" y="${y + 3.6}" transform="rotate(${counterRotation} ${x} ${y})">${text}</text></g>`;
+  const plate = (text, x = 0, y = 0, w = 28, extra = '') => {
+    const width = Math.max(w, text.length * 12 + 10);
+    return `<g class="face-plate ${extra}"><rect x="${x - width / 2}" y="${y - 11}" width="${width}" height="22" rx="4"></rect>` +
+      `<text x="${x}" y="${y + 6}" transform="rotate(${counterRotation} ${x} ${y})">${text}</text></g>`;
+  };
   let face = '';
 
   if (part.kind === WIRE_TOOL) {
     face = '<path class="track-tool-ties" d="M-22 4V20M-8 4V20M-8 4H8M-8-10H8M8-20V-4M22-20V-4"></path>' +
       '<path class="track-tool-bed" d="M-29 12H0V-12H29"></path>' +
       '<path class="track-tool-groove" d="M-29 12H0V-12H29"></path>' +
-      '<path class="track-tool-rail" d="M-29 12H0V-12H29"></path>' +
-      '<g transform="translate(-16 12)">' + drawMarble('A', 0, 0) + '</g>';
+      '<path class="track-tool-rail" d="M-29 12H0V-12H29"></path>';
+  } else if (part.kind === 'junction') {
+    face = junctionTrackFaceMarkup();
   } else {
     const art = partArtSelection(part.kind);
     const size = part.kind === 'crossing' ? 64 : 128;
@@ -1148,9 +1261,6 @@ function partFace(part, cx = 0, cy = 0, state = {}) {
       face += '<circle class="unison-state-seat lead" cx="-13" cy="0" r="5"></circle>' +
         '<circle class="unison-state-seat tail" cx="-13" cy="64" r="5"></circle>' +
         '<path class="unison-carriage part-action-trace" d="M1 0C22 0 30 17 43 25M1 64C22 64 30 47 43 39"></path>';
-    }
-    if (part.kind === 'junction') {
-      face += '<path class="junction-collision-mark" d="M25 25 39 39M39 25 25 39"></path>';
     }
     if (part.kind === 'resonator') {
       face += '<circle class="resonator-state-ring" cx="32" cy="22" r="24"></circle>';
@@ -1182,7 +1292,7 @@ function partVisualState(part, m) {
   };
 }
 
-function animateTransitMarbles(motions) {
+function animateTransitWords(motions) {
   if (transitAnimationFrame) cancelAnimationFrame(transitAnimationFrame);
   transitAnimationFrame = null;
   if (REDUCED_MOTION || !motions.length) return;
@@ -1196,13 +1306,11 @@ function animateTransitMarbles(motions) {
       const progress = transitProgress(
         motion.from, motion.to, elapsed, motion.duration, motion.dwellFraction,
       );
-      const states = marbleTrainStates(motion.points, progress, motion.marbleCount);
-      states.forEach((state, index) => {
-        const marble = node.querySelector(`[data-marble="${index}"]`);
-        marble?.setAttribute('transform', `translate(${state.x} ${state.y})`);
-        marble?.querySelector('[data-marble-surface]')
-          ?.setAttribute('transform', `rotate(${state.surfaceRoll})`);
-      });
+      const state = wordMarbleState(motion.points, progress);
+      const wordMarble = node.querySelector('[data-marble="0"]');
+      wordMarble?.setAttribute('transform', `translate(${state.x} ${state.y})`);
+      wordMarble?.querySelector('[data-marble-surface]')
+        ?.setAttribute('transform', `rotate(${state.surfaceRoll})`);
       if (elapsed < motion.duration) unfinished = true;
     }
     if (unfinished) transitAnimationFrame = requestAnimationFrame(frame);
@@ -1211,19 +1319,14 @@ function animateTransitMarbles(motions) {
   transitAnimationFrame = requestAnimationFrame(frame);
 }
 
-function marbleTrainMarkup(points, progress, word, { motionId = null, processing = false } = {}) {
-  const notes = word ? [...word].slice(0, 6) : [''];
-  const states = marbleTrainStates(points, progress, notes.length);
+function wordMarbleMarkup(points, progress, word, { motionId = null, processing = false } = {}) {
+  const state = wordMarbleState(points, progress);
   const motion = motionId ? ` data-motion="${motionId}"` : '';
-  const classes = `transit-word marble-train${processing ? ' processing-word' : ''}`;
-  return `<g class="${classes}"${motion}>` + notes.map((note, index) => {
-    const state = states[index];
-    return drawMarble(note, state.x, state.y, {
-      index,
-      surfaceRoll: state.surfaceRoll,
-      lead: Boolean(word) && index === 0,
-    });
-  }).join('') + '</g>';
+  const classes = `transit-word moving-word${processing ? ' processing-word' : ''}`;
+  return `<g class="${classes}"${motion}>` + drawWordMarble(word, state.x, state.y, {
+    index: 0,
+    surfaceRoll: state.surfaceRoll,
+  }) + '</g>';
 }
 
 function partBodyMarkup(part, classes = '', state = {}) {
@@ -1333,12 +1436,25 @@ function wireGestureMarkup(m) {
     `<path class="temp-track-rail" d="${path}"></path>`;
 }
 
+function marqueeMarkup() {
+  if (!marquee?.moved) return '';
+  const x = Math.min(marquee.startX, marquee.x);
+  const y = Math.min(marquee.startY, marquee.y);
+  const width = Math.abs(marquee.x - marquee.startX);
+  const height = Math.abs(marquee.y - marquee.startY);
+  return `<rect class="selection-marquee" x="${x}" y="${y}" width="${width}" height="${height}"></rect>`;
+}
+
+function boardInteractionMarkup(m) {
+  return wireGestureMarkup(m) + marqueeMarkup();
+}
+
 function renderBoardInteraction() {
   const p = puzzle();
   const width = p.board.cols * CELL;
   const height = p.board.rows * CELL;
   const { interactionLayer } = ensureBoardLayers(p, width, height);
-  interactionLayer.innerHTML = wireGestureMarkup(machine());
+  interactionLayer.innerHTML = boardInteractionMarkup(machine());
   renderInteractionStatus();
 }
 
@@ -1429,15 +1545,14 @@ function renderBoardRun(m = machine(), layers = null) {
       const duration = SPEEDS[speedIdx];
       const dwellFraction = item.depart === run.tick ? PROCESSING_DWELL : 0;
       if (discreteFrames) {
-        markup += marbleTrainMarkup(points, from, item.word);
+        markup += wordMarbleMarkup(points, from, item.word);
       } else if (REDUCED_MOTION) {
-        markup += marbleTrainMarkup(points, to, item.word);
+        markup += wordMarbleMarkup(points, to, item.word);
       } else {
-        markup += marbleTrainMarkup(points, from, item.word, {
+        markup += wordMarbleMarkup(points, from, item.word, {
           motionId, processing: Boolean(dwellFraction),
         });
-        const marbleCount = item.word ? Math.min(item.word.length, 6) : 1;
-        transitMotions.push({ id: motionId, points, from, to, duration, dwellFraction, marbleCount });
+        transitMotions.push({ id: motionId, points, from, to, duration, dwellFraction });
       }
     }
     for (const [partId, ports] of Object.entries(run.queues)) {
@@ -1449,19 +1564,30 @@ function renderBoardRun(m = machine(), layers = null) {
           const routeClass = part.kind === 'coupling'
             ? port === 'inB' ? 'coupling-head route-a' : port === 'inA' ? 'coupling-head route-b' : ''
             : '';
-          markup += `<g class="${routeClass}">${drawMarbleWord(pos.x, pos.y - index * 14, word)}</g>`;
+          markup += `<g class="${routeClass}">${drawWordMarble(word, pos.x, pos.y - index * 26)}</g>`;
         });
       }
     }
     for (const hold of run.holds) {
       const part = byId(m, hold.part);
       const pos = partVisualAnchor(part, 'hold', null, CELL);
-      markup += drawMarbleWord(pos.x, pos.y, hold.word);
+      markup += drawWordMarble(hold.word, pos.x, pos.y);
     }
   }
 
   runLayer.innerHTML = markup;
-  animateTransitMarbles(transitMotions);
+  animateTransitWords(transitMotions);
+}
+
+function partDragEdit(baseMachine = machine()) {
+  if (!partDrag?.moved) return null;
+  return groupMovementEdit(
+    baseMachine.parts,
+    puzzle().board,
+    partDrag.ids,
+    { dx: partDrag.x - partDrag.originX, dy: partDrag.y - partDrag.originY },
+    baseMachine.wires,
+  );
 }
 
 function renderBoard() {
@@ -1475,27 +1601,15 @@ function renderBoard() {
   }
   const p = puzzle();
   const baseMachine = machine();
-  const movePreview = partDrag?.moved
-    ? {
-        x: partDrag.x,
-        y: partDrag.y,
-        validity: movementValidity(
-          baseMachine.parts, p.board, partDrag.id,
-          { x: partDrag.x, y: partDrag.y }, baseMachine.wires,
-        ),
-      }
-    : null;
-  const m = movePreview?.validity.valid
-    ? {
-        parts: baseMachine.parts.map((part) => part.id === partDrag.id
-          ? { ...part, x: movePreview.x, y: movePreview.y }
-          : part),
-        wires: baseMachine.wires,
-      }
+  const movePreview = partDragEdit(baseMachine);
+  const m = movePreview?.valid
+    ? { parts: movePreview.parts, wires: movePreview.wires }
     : baseMachine;
   const partTool = armedPartKind();
   const splicePreview = partTool && placementHover && editable()
-    ? spliceCandidateAtCell(m, partTool, placementHover.x, placementHover.y)
+    ? spliceCandidateAtCell(
+        m, partTool, placementHover.x, placementHover.y, placementOrientation,
+      )
     : null;
   const kase = currentCase();
   const W = p.board.cols * CELL, H = p.board.rows * CELL;
@@ -1504,7 +1618,9 @@ function renderBoard() {
   svg.classList.toggle('discrete', discreteFrames);
   svg.classList.toggle('running', Boolean(timer) && !discreteFrames && !REDUCED_MOTION);
   const routingActive = editable() && (armedTool === WIRE_TOOL || Boolean(drag));
-  const wantedPortDir = drag ? (drag.end === 'from' ? 'out' : 'in') : null;
+  const wantedPortDir = drag
+    ? drag.end === 'from' ? 'out' : drag.end === 'to' ? 'in' : null
+    : null;
   svg.classList.toggle('wire-mode', routingActive);
   svg.style.setProperty('--tick-ms', `${SPEEDS[speedIdx]}ms`);
   let s = '';
@@ -1543,24 +1659,25 @@ function renderBoard() {
   });
 
   for (const part of m.parts) {
-    const sel = selection?.kind === 'part' && selection.id === part.id ? ' selected' : '';
-    const moving = partDrag?.moved && partDrag.id === part.id ? ' moving' : '';
+    const selected = partDrag ? partDrag.ids.includes(part.id) : isPartSelected(part.id);
+    const sel = selected ? ' selected' : '';
+    const moving = partDrag?.moved && partDrag.ids.includes(part.id) ? ' moving' : '';
     s += `<g data-part="${part.id}" class="movable-part">`;
     s += partBodyMarkup(part, `${sel}${moving}`);
 
     const def = PORTS[part.kind];
-    for (const port of [...def.ins, ...def.outs]) {
+    for (const port of new Set([...def.ins, ...def.outs])) {
       const pos = portPos(m, { part: part.id, port });
       const portRef = { part: part.id, port };
       const taken = physicalPortOccupied(portRef, pos.dir, drag?.wireId ?? null);
-      const compatible = !wantedPortDir || pos.dir === wantedPortDir;
+      const compatible = !wantedPortDir || pos.dir === wantedPortDir || pos.dir === 'both';
       const wireClass = !routingActive ? ''
         : taken ? ' wire-taken'
           : compatible ? ' wire-ready' : ' wire-incompatible';
       const routeClass = couplingRouteClass(part.kind, port);
       const portState = taken ? 'occupied' : compatible ? 'free' : 'incompatible';
-      const portRole = pos.dir === 'in' ? 'input' : 'output';
-      const displayPort = playerPortName(part.kind, port);
+      const portRole = pos.dir === 'both' ? 'bidirectional' : pos.dir === 'in' ? 'input' : 'output';
+      const displayPort = part.kind === 'crossing' ? pos.side : playerPortName(part.kind, port);
       const namedPort = port === 'in' || port === 'out' ? '' : ` ${displayPort}`;
       const portAria = `${KIND_NAMES[part.kind]}${namedPort} ${portRole} port, ${portState}`;
       s += `<circle class="port-bezel ${pos.dir}" cx="${pos.x}" cy="${pos.y}" r="10.2"></circle>`;
@@ -1575,17 +1692,17 @@ function renderBoard() {
 
   s += wireHandles;
 
-  if (movePreview && !movePreview.validity.valid) {
-    const part = {
-      ...baseMachine.parts.find((candidate) => candidate.id === partDrag.id),
-      x: movePreview.x,
-      y: movePreview.y,
-    };
-    s += `<g class="movement-ghost blocked" aria-label="${movePreview.validity.reason}">`;
-    s += partBodyMarkup(part);
-    s += boardPreviewPortsMarkup(part);
-    s += terminalAnnotationMarkup(part, kase);
-    s += '</g>';
+  if (movePreview && !movePreview.valid) {
+    const dx = partDrag.x - partDrag.originX;
+    const dy = partDrag.y - partDrag.originY;
+    for (const original of baseMachine.parts.filter((part) => partDrag.ids.includes(part.id))) {
+      const part = { ...original, x: original.x + dx, y: original.y + dy };
+      s += `<g class="movement-ghost blocked" aria-label="${movePreview.reason}">`;
+      s += partBodyMarkup(part);
+      s += boardPreviewPortsMarkup(part);
+      s += terminalAnnotationMarkup(part, kase);
+      s += '</g>';
+    }
   }
 
   if (partTool && placementHover && editable()) {
@@ -1607,7 +1724,7 @@ function renderBoard() {
   machineLayer.innerHTML = s;
   machineLayer.dataset.mounted = 'true';
   renderBoardRun(m, { machineLayer, runLayer });
-  interactionLayer.innerHTML = wireGestureMarkup(m);
+  interactionLayer.innerHTML = boardInteractionMarkup(m);
   renderInteractionStatus();
   requestAnimationFrame(positionContextEditor);
 }
@@ -1616,25 +1733,80 @@ function renderBoard() {
 
 function renderCommissionTitle() {
   $('commission-title').innerHTML = `<h2>${puzzle().title}</h2>`;
+  const control = $('reference-architecture-control');
+  const select = $('reference-architecture-select');
+  if (!REFERENCE_MODE) {
+    control.hidden = true;
+    select.replaceChildren();
+    return;
+  }
+  const references = referenceMachines(puzzle());
+  control.hidden = references.length < 2;
+  select.replaceChildren(...references.map((reference, index) => {
+    const option = document.createElement('option');
+    option.value = String(index);
+    option.textContent = reference.title ?? `Architecture ${index + 1}`;
+    return option;
+  }));
+  select.value = String(currentReferenceArchitectureIndex());
 }
 
 // Walkthroughs are player-facing teaching and hint material. Reference review
-// suppresses them because it already shows the answer directly.
+// reuses the same panel to explain the selected architecture and its trade-off.
 const deckShown = () => showsWalkthrough(puzzle(), { referenceMode: REFERENCE_MODE });
 
 function renderDeck() {
   const p = puzzle();
   const panel = $('walkthrough-panel');
-  panel.hidden = !deckShown();
+  const reference = REFERENCE_MODE ? currentReferenceArchitecture() : null;
+  panel.classList.toggle('architecture-explanation', REFERENCE_MODE);
+  panel.hidden = REFERENCE_MODE ? !reference?.explanation : !deckShown();
   if (panel.hidden) {
     document.querySelectorAll('[data-region]').forEach((el) => el.classList.remove('spotlight'));
     return;
   }
+  panel.setAttribute('aria-label', REFERENCE_MODE ? 'Architecture explanation' : 'Walkthrough');
+  $('deck-body').hidden = deckHidden;
+  $('deck-toggle').textContent = deckHidden ? 'show' : 'hide';
+  $('deck-nav').hidden = REFERENCE_MODE;
+
+  if (REFERENCE_MODE) {
+    $('deck-label').textContent = 'ARCHITECTURE EXPLANATION';
+    const step = $('deck-step');
+    const title = document.createElement('strong');
+    title.textContent = reference.title;
+    const explanation = document.createElement('p');
+    explanation.textContent = reference.explanation;
+    const optimization = document.createElement('p');
+    optimization.className = 'architecture-optimization';
+    const optimizationLabel = document.createElement('b');
+    optimizationLabel.textContent = 'OPTIMIZES FOR';
+    optimization.append(optimizationLabel, ` ${reference.optimization}`);
+    const scores = document.createElement('div');
+    scores.className = 'architecture-score';
+    scores.setAttribute('aria-label', 'Routed reference score; lower is better');
+    const scoreHint = document.createElement('span');
+    scoreHint.className = 'architecture-score-hint';
+    scoreHint.textContent = 'ROUTED RESULT · LOWER IS BETTER';
+    scores.append(scoreHint);
+    for (const [axis, label] of [['cost', 'COST'], ['time', 'TIME'], ['area', 'AREA']]) {
+      const measure = document.createElement('span');
+      measure.className = 'architecture-score-measure';
+      const name = document.createElement('small');
+      name.textContent = label;
+      const value = document.createElement('strong');
+      value.textContent = reference.score?.[axis] ?? 'n/a';
+      measure.append(name, value);
+      scores.append(measure);
+    }
+    step.replaceChildren(title, explanation, optimization, scores);
+    document.querySelectorAll('[data-region]').forEach((el) => el.classList.remove('spotlight'));
+    return;
+  }
+
   walkIndex = Math.max(0, Math.min(walkIndex, p.walkthrough.length - 1));
   const step = p.walkthrough[walkIndex];
   $('deck-label').textContent = p.meta?.tier?.endsWith('-contract') ? 'OPTIONAL NOTES' : 'WALKTHROUGH';
-  $('deck-body').hidden = deckHidden;
-  $('deck-toggle').textContent = deckHidden ? 'show' : 'hide';
   $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>`;
   $('deck-counter').textContent = `${walkIndex + 1} / ${p.walkthrough.length}`;
   $('deck-prev').disabled = walkIndex === 0;
@@ -1646,11 +1818,12 @@ function renderDeck() {
 
 function renderCases() {
   const p = puzzle();
-  const marbleWord = (word) => {
-    if (!word) return '<span class="commission-empty">∅</span>';
-    return `<span class="commission-marbles" aria-label="sound phrase ${prettyWord(word)}">` +
-      [...word].map((note) => `<span class="commission-marble note-${note}">` +
-        `<span>${note}</span></span>`).join('') + '</span>';
+  const soundBar = (word) => {
+    const width = soundBarWidth(word);
+    return `<svg class="commission-sound-bar sound-bar" ` +
+      `viewBox="${-width / 2 - 2} ${-SOUND_BAR_HEIGHT / 2 - 2} ${width + 4} ${SOUND_BAR_HEIGHT + 4}" ` +
+      `width="${width + 4}" height="${SOUND_BAR_HEIGHT + 4}" ` +
+      `role="img" aria-label="sound phrase ${prettyWord(word)}">${drawSoundBar(0, 0, word)}</svg>`;
   };
   $('case-tabs').innerHTML = p.cases.map((kase, i) => {
     const status = caseStatuses[i];
@@ -1659,7 +1832,7 @@ function renderCases() {
     const spec = commissionCaseSpec(p, kase);
     const entries = (items) => items.map(({ label, word }) =>
       `<span class="case-entry${label ? '' : ' unlabeled'}">` +
-        `${label ? `<b>${label}</b>` : ''}<span class="case-entry-word">${marbleWord(word)}</span>` +
+        `${label ? `<b>${label}</b>` : ''}<span class="case-entry-word">${soundBar(word)}</span>` +
       '</span>').join('');
     const section = (label, items) =>
       `<span class="case-spec-section"><small>${label}</small>` +
@@ -1696,7 +1869,7 @@ function renderPalette() {
     ? kinds.map((kind) => {
       const preview = {
         kind,
-        orientation: armedTool === kind ? placementOrientation : 0,
+        orientation: 0,
         config: levelDefaultConfig(kind),
       };
       const left = remaining(kind);
@@ -1719,7 +1892,7 @@ function renderPalette() {
       ? 'track armed · drag from any free port and lay to a compatible port · right-click or Esc cancels'
       : armedTool
         ? 'ghost follows the board · R rotates · click places · right-click or Esc cancels'
-      : 'drag from either port to lay track · R rotates a selected part · occupied cells block · Del removes';
+      : 'Shift-click or Shift-drag selects parts · drag a selection to move · R rotates one part · Del removes';
 }
 
 function renderTransport() {
@@ -1758,59 +1931,59 @@ function noteChips(chosen, onAttr) {
 const CONSTRUCTION_HELP = {
   wire: {
     rule: 'port → routed cells → port',
-    body: 'Lays a marble track through exclusive orthogonal grid cells. Track length changes Time and Area, never Cost.',
+    body: 'Lays an orthogonal marble track. Drag straight through another track at a right angle to add a Crossing automatically. Track length changes Time and Area; each Crossing adds Cost.',
   },
   quill: {
-    rule: 'sound phrase → marble train',
-    body: 'Transcribes the performance’s input sound phrase into a train of lettered marbles at tick 1.',
+    rule: 'sound phrase → word marble',
+    body: 'Transcribes the performance’s input sound phrase into one word marble at tick 1. Its sound bar gives the exact note order.',
   },
   mould: {
-    rule: 'train → train·marble',
-    body: 'Adds the selected lettered marble to the end of each train.',
+    rule: 'word → word·note',
+    body: 'Adds the selected note to the tail of each word marble.',
   },
   damper: {
-    rule: 'lead marble·train → train',
-    body: 'Removes the lead marble. An empty train waits.',
+    rule: 'lead note·word → word',
+    body: 'Removes the lead note. An empty word marble waits.',
   },
   valve: {
-    rule: 'train → delayed train',
-    body: 'Holds a marble train, then releases it unchanged after the selected number of ticks.',
+    rule: 'word marble → delayed word marble',
+    body: 'Holds a word marble, then releases it unchanged after the selected number of ticks.',
   },
   unison: {
-    rule: '(lead train, tail train) → joined train',
-    body: 'Waits for both inputs, then joins the lead train followed by the tail train.',
+    rule: '(lead word, tail word) → joined word',
+    body: 'Waits for both inputs, then joins the lead word followed by the tail word into one marble.',
   },
   splitter: {
-    rule: 'train → (head, rest) after k marbles',
-    body: 'Sends the first k marbles to head and the remaining marbles to rest. Both outputs must be connected.',
+    rule: 'word → (head, rest) after k notes',
+    body: 'Makes two word marbles: the first k notes go to head and the remaining notes go to rest. Both outputs must be connected.',
   },
   fork: {
-    rule: 'lead marble = a ? match : other',
-    body: 'Routes a train by the letter on its lead marble. Bite removes a matching lead marble; Peek leaves the train unchanged.',
+    rule: 'lead note = a ? match : other',
+    body: 'Routes a word marble by its lead note. Bite removes a matching lead note; Peek leaves the word unchanged.',
   },
   coupling: {
-    rule: 'each train reads the other lead marble',
-    body: 'Waits for both inputs. Each train’s exit is selected by the other train’s lead marble. Both trains remain unchanged.',
+    rule: 'each word reads the other lead note',
+    body: 'Waits for both inputs. Each word marble’s exit is selected by the other word’s lead note. Both words remain unchanged.',
   },
   crossing: {
-    rule: 'A → A · B → B',
-    body: 'Carries two marble trains through one occupied cell on isolated channels. The trains never mix.',
+    rule: 'west ↔ east · north ↔ south',
+    body: 'Accepts a word marble from any side and passes it straight out the opposite side. The two channels never mix.',
   },
   junction: {
     rule: 'A | B → out',
-    body: 'Passes staggered marble trains from either input unchanged. Simultaneous arrivals collide.',
+    body: 'Passes staggered word marbles from either input unchanged. Simultaneous arrivals collide.',
   },
   resonator: {
-    rule: 'target train → sound waves',
-    body: 'Turns a matching target train into sound waves. A different train fails the performance; “stay silent” accepts no train.',
+    rule: 'target word marble → sound waves',
+    body: 'Turns a matching word marble into sound waves. A different word fails the performance; “stay silent” accepts no marble.',
   },
 };
 
 function renderToolHelp(kind) {
   const help = CONSTRUCTION_HELP[kind];
   const ports = PORTS[kind] ?? { ins: [], outs: [] };
-  const inputs = ports.ins.length ? ports.ins.map((port) => playerPortName(kind, port)).join(', ') : 'none';
-  const outputs = ports.outs.length ? ports.outs.map((port) => playerPortName(kind, port)).join(', ') : 'none';
+  const inputs = ports.ins.length ? [...new Set(ports.ins.map((port) => playerPortName(kind, port)))].join(', ') : 'none';
+  const outputs = ports.outs.length ? [...new Set(ports.outs.map((port) => playerPortName(kind, port)))].join(', ') : 'none';
   const preview = {
     kind,
     orientation: armedTool === kind ? placementOrientation : 0,
@@ -1834,6 +2007,8 @@ function renderToolHelp(kind) {
     `<div><strong>${CONSTRUCTION_NAMES[kind]}</strong><code>${help.rule}</code><p class="prose">${help.body}</p></div></div>` +
     (kind === WIRE_TOOL
       ? '<p class="tool-ports"><span>START</span> any free port <span>END</span> compatible free port</p>'
+      : kind === 'crossing'
+        ? '<p class="tool-ports"><span>SIDES</span> all four accept or release <span>PATH</span> straight across</p>'
       : `<p class="tool-ports"><span>IN</span> ${inputs} <span>OUT</span> ${outputs}</p>`) +
     `<p class="tool-hint">${hint}</p>`;
 }
@@ -1841,7 +2016,7 @@ function renderToolHelp(kind) {
 function partControlMarkup(part) {
   let html = '';
   if (part.kind === 'mould') {
-    html += `<div class="row"><span>marble to add</span>${noteChips(part.config.note, 'note')}</div>`;
+    html += `<div class="row"><span>note to add</span>${noteChips(part.config.note, 'note')}</div>`;
   }
   if (part.kind === 'splitter') {
     html += `<div class="row"><span>cut after</span><button data-k="-1" aria-label="Decrease split position">−</button>` +
@@ -1849,7 +2024,7 @@ function partControlMarkup(part) {
   }
   if (part.kind === 'fork') {
     const modes = allowedForkModes();
-    html += `<div class="row"><span>marble to match</span>${noteChips(part.config.note, 'note')}</div>` +
+    html += `<div class="row"><span>note to match</span>${noteChips(part.config.note, 'note')}</div>` +
       `<div class="row"><span>mode</span><button data-mode="peek" class="${part.config.mode === 'peek' ? 'active' : ''}" ` +
       `${modes.includes('peek') ? '' : 'disabled title="This study permits Bite only"'}>peek</button>` +
       `<button data-mode="consume" class="${part.config.mode === 'consume' ? 'active' : ''}" ` +
@@ -1857,10 +2032,10 @@ function partControlMarkup(part) {
   }
   if (part.kind === 'coupling') {
     html += `<div class="coupling-choice route-a"><strong>B decides A</strong>` +
-      `<span>lead marble</span><div class="coupling-notes">${noteChips(part.config.noteA, 'note-a')}</div>` +
+      `<span>lead note</span><div class="coupling-notes">${noteChips(part.config.noteA, 'note-a')}</div>` +
       `<span>match → <b>AL</b> · other → <b>AR</b></span></div>` +
       `<div class="coupling-choice route-b"><strong>A decides B</strong>` +
-      `<span>lead marble</span><div class="coupling-notes">${noteChips(part.config.noteB, 'note-b')}</div>` +
+      `<span>lead note</span><div class="coupling-notes">${noteChips(part.config.noteB, 'note-b')}</div>` +
       `<span>match → <b>BL</b> · other → <b>BR</b></span></div>`;
   }
   if (part.kind === 'valve') {
@@ -1877,7 +2052,7 @@ function bindPartControls(box, part) {
     applyEdit(() => {
       const current = playerParts.find((candidate) => candidate.id === part.id);
       if (current) current.config[key] = value;
-      selection = { kind: 'part', id: part.id };
+      selection = partSelection([part.id], part.id);
     });
   };
   box.querySelectorAll('[data-note]').forEach((button) => {
@@ -1902,8 +2077,8 @@ function bindPartControls(box, part) {
 
 function positionContextEditor() {
   const box = $('context-editor');
-  if (box.hidden || selection?.kind !== 'part') return;
-  const node = svg.querySelector(`[data-part="${selection.id}"]`);
+  if (box.hidden || selectedPartIds().length !== 1) return;
+  const node = svg.querySelector(`[data-part="${selection.primaryId}"]`);
   if (!node || !boardShell) return;
   const partRect = node.getBoundingClientRect();
   const shellRect = boardShell.getBoundingClientRect();
@@ -1929,12 +2104,12 @@ function positionContextEditor() {
 
 function renderContextEditor() {
   const box = $('context-editor');
-  if (!editable() || selection?.kind !== 'part') {
+  if (!editable() || selectedPartIds().length !== 1) {
     box.hidden = true;
     box.innerHTML = '';
     return;
   }
-  const part = byId(machine(), selection.id);
+  const part = primarySelectedPart();
   if (!part) {
     box.hidden = true;
     return;
@@ -1975,46 +2150,56 @@ function renderInspector() {
     }
     $('selection-kind').textContent = 'TRACK';
     const m = machine();
-    const fromKind = byId(m, w.from.part)?.kind;
-    const toKind = byId(m, w.to.part)?.kind;
-    box.innerHTML = `<p class="prose">${w.from.part}.${playerPortName(fromKind, w.from.port)} → ` +
-      `${w.to.part}.${playerPortName(toKind, w.to.port)} · travel time: ${wireTicks(m, w)} ticks</p>`;
+    const fromPart = byId(m, w.from.part);
+    const toPart = byId(m, w.to.part);
+    box.innerHTML = `<p class="prose">${partReference(fromPart)}.${playerPortName(fromPart?.kind, w.from.port)} → ` +
+      `${partReference(toPart)}.${playerPortName(toPart?.kind, w.to.port)} · travel time: ${wireTicks(m, w)} ticks</p>`;
     return;
   }
-  const part = byId(machine(), inspection.id);
+  if (inspection.kind === 'parts' && inspection.ids.length > 1) {
+    $('selection-kind').textContent = `${inspection.ids.length} PARTS SELECTED`;
+    box.innerHTML = '<p class="prose">Drag any selected part to move the collection. ' +
+      'Internal tracks keep their shape; tracks leaving the selection reconnect where possible.</p>' +
+      '<p class="tool-hint">Shift-click adjusts the selection · Delete returns every selected part to the tray · select one part to rotate or configure it</p>';
+    return;
+  }
+  const partId = inspection.kind === 'parts' ? inspection.primaryId : inspection.id;
+  const part = byId(machine(), partId);
   if (!part) {
     if (hoverInspection) hoverInspection = null;
     else selection = null;
     renderInspector();
     return;
   }
-  $('selection-kind').textContent = `${KIND_NAMES[part.kind].toUpperCase()} ${part.id}`;
+  $('selection-kind').textContent = TERMINAL_KINDS.has(part.kind)
+    ? part.label
+    : `${KIND_NAMES[part.kind].toUpperCase()} ${part.id}`;
   let html = '';
   const kase = currentCase();
 
-  if (part.kind === 'quill') html += `<p class="prose">Transcribes the sound phrase ${prettyWord(kase.seeds[part.id] ?? '')} into a marble train at tick 1.</p>`;
-  if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Target output sound: ${prettyWord(kase.targets[part.id])}. A matching marble train becomes sound waves; a different train fails the performance.` : 'Target: stay silent. Any arriving marble train fails the performance.'}</p>`;
-  if (part.kind === 'damper') html += '<p class="prose">Removes the lead marble. An empty train waits.</p>';
-  if (part.kind === 'unison') html += '<p class="prose">Waits for both inputs, then joins the lead train followed by the tail train.</p>';
-  if (part.kind === 'mould') html += `<p class="prose">Adds a ${part.config.note} marble to the end of each train.</p>`;
-  if (part.kind === 'splitter') html += `<p class="prose">Cuts after marble ${part.config.k}: head receives the first ${part.config.k}; rest receives the remainder.</p>`;
+  if (part.kind === 'quill') html += `<p class="prose">Transcribes the sound phrase ${prettyWord(kase.seeds[part.id] ?? '')} into one word marble at tick 1.</p>`;
+  if (part.kind === 'resonator') html += `<p class="prose">${kase.targets[part.id] !== undefined ? `Target output sound: ${prettyWord(kase.targets[part.id])}. A matching word marble becomes sound waves; a different word fails the performance.` : 'Target: stay silent. Any arriving word marble fails the performance.'}</p>`;
+  if (part.kind === 'damper') html += '<p class="prose">Removes the lead note. An empty word marble waits.</p>';
+  if (part.kind === 'unison') html += '<p class="prose">Waits for both inputs, then joins the lead word followed by the tail word into one marble.</p>';
+  if (part.kind === 'mould') html += `<p class="prose">Adds note ${part.config.note} to the tail of each word marble.</p>`;
+  if (part.kind === 'splitter') html += `<p class="prose">Cuts after note ${part.config.k}: head receives the first ${part.config.k}; rest receives the remainder as a second word marble.</p>`;
   if (part.kind === 'fork') {
-    html += `<p class="prose">A lead ${part.config.note} marble uses match (=); all other trains use other (≠). ` +
-      `${part.config.mode === 'consume' ? 'Bite removes that marble.' : 'Peek leaves the train unchanged.'}</p>`;
+    html += `<p class="prose">A lead ${part.config.note} note uses match (=); all other words use other (≠). ` +
+      `${part.config.mode === 'consume' ? 'Bite removes that note.' : 'Peek leaves the word unchanged.'}</p>`;
   }
   if (part.kind === 'coupling') {
     const feedback = couplingFeedback(part, machine());
     html += `<div class="coupling-summary route-a"><strong>B decides A</strong><span>B:${part.config.noteA} → AL · otherwise AR</span></div>` +
       `<div class="coupling-summary route-b"><strong>A decides B</strong><span>A:${part.config.noteB} → BL · otherwise BR</span></div>` +
-      '<p class="prose">The Coupling waits for both trains. Each train stays intact; the other train’s lead marble chooses its exit.</p>';
+      '<p class="prose">The Coupling waits for both word marbles. Each word stays intact; the other word’s lead note chooses its exit.</p>';
     if (feedback?.wordA !== undefined || feedback?.wordB !== undefined) {
       const exit = (output) => output?.startsWith('out') ? output.slice(3) : 'waiting';
       html += `<p class="coupling-live">Live: B sends A to ${exit(feedback.outA)} · A sends B to ${exit(feedback.outB)}</p>`;
     }
   }
-  if (part.kind === 'crossing') html += '<p class="prose">Channels A and B pass through independently. This part is the only legal way for two routes to cross.</p>';
-  if (part.kind === 'junction') html += '<p class="prose">Passes staggered marble trains from A or B to out. Simultaneous arrivals collide.</p>';
-  if (part.kind === 'valve') html += `<p class="prose">Holds each marble train for ${part.config.delay} ticks, then releases it unchanged.</p>`;
+  if (part.kind === 'crossing') html += '<p class="prose">Every side can accept or release a word marble. It always exits straight through the opposite side; the two channels never mix.</p>';
+  if (part.kind === 'junction') html += '<p class="prose">Passes staggered word marbles from A or B to out. Simultaneous arrivals collide.</p>';
+  if (part.kind === 'valve') html += `<p class="prose">Holds each word marble for ${part.config.delay} ticks, then releases it unchanged.</p>`;
   const classes = ['tool-inspection', ...footprintPreviewClasses(part)].join(' ');
   const help = CONSTRUCTION_HELP[part.kind];
   box.innerHTML = `<div class="${classes}">` +
@@ -2067,33 +2252,38 @@ function renderInteractionStatus() {
   const status = $('interaction-status');
   let text = '';
   if (partDrag?.moved) {
-    const validity = movementValidity(
-      machine().parts, puzzle().board, partDrag.id,
-      { x: partDrag.x, y: partDrag.y }, playerWires,
-    );
+    const validity = partDragEdit();
+    const count = partDrag.ids.length;
     text = validity.valid
-      ? 'Moving part · release to place · right-click or Esc cancels'
+      ? `Moving ${count === 1 ? 'part' : `${count} parts`} · release to place · right-click or Esc cancels`
       : `Blocked: ${validity.reason} · release to keep the current position`;
   }
+  else if (marquee?.moved) {
+    const count = selectedPartIds().length;
+    text = `Selecting ${count || ''}${count === 1 ? ' part' : count ? ' parts' : 'parts'} · release to finish · Esc cancels`;
+  }
   else if (drag?.blockedReason) text = `Blocked: ${drag.blockedReason} · backtrack or choose another cell`;
-  else if (drag?.kind === 'retarget') text = `Laying track to a new ${drag.end === 'from' ? 'source' : 'destination'} · occupied cells block · Esc cancels`;
-  else if (drag) text = `Laying orthogonal track · release on an ${drag.end === 'from' ? 'output' : 'input'} · occupied cells block`;
+  else if (drag?.kind === 'retarget') text = `Laying track to a new ${drag.end === 'from' ? 'source' : 'destination'} · cross straight tracks at right angles · Esc cancels`;
+  else if (drag?.end === 'either') text = 'Laying track from a Crossing · finish at any compatible free port · right-angle crossings are automatic';
+  else if (drag) text = `Laying orthogonal track · release on an ${drag.end === 'from' ? 'output' : 'input'} · right-angle crossings are automatic`;
   else if (interactionNotice) text = interactionNotice;
   else if (armedTool === WIRE_TOOL) text = 'Track armed · drag from any free port to lay a route · right-click or Esc cancels';
   else if (armedTool) text = `Placing ${KIND_NAMES[armedTool]} · R rotates · right-click or Esc cancels`;
-  else if (selection?.kind === 'part') {
-    const selected = byId(machine(), selection.id);
-    const deletion = selected && (selected.kind === 'quill' || selected.kind === 'resonator')
-      ? ''
-      : ' · Del returns it to the tray';
-    text = `Selected part · R rotates 90° · drag to move${deletion}`;
+  else if (selection?.kind === 'parts') {
+    const count = selection.ids.length;
+    text = count === 1
+      ? '1 part selected · drag to move · Shift-click adds or removes · R rotates · Esc clears'
+      : `${count} parts selected · drag any selected part to move · Shift-click adjusts · Esc clears`;
+  }
+  else if (editable() && machine().parts.length) {
+    text = 'Shift-drag empty space to box-select · Shift-click to add or remove · Select all uses ⌘/Ctrl+A';
   }
   status.hidden = !text;
   status.textContent = text;
 }
 
 function cancelBoardInteraction({ clearSelection = true } = {}) {
-  const capturedPointerIds = [partDrag?.pointerId, drag?.pointerId, boardPan?.pointerId]
+  const capturedPointerIds = [partDrag?.pointerId, drag?.pointerId, marquee?.pointerId, boardPan?.pointerId]
     .filter((pointerId) => pointerId !== undefined);
   for (const pointerId of capturedPointerIds) {
     if (svg.hasPointerCapture(pointerId)) svg.releasePointerCapture(pointerId);
@@ -2105,6 +2295,10 @@ function cancelBoardInteraction({ clearSelection = true } = {}) {
   hoverInspection = null;
   drag = null;
   partDrag = null;
+  if (marquee && !clearSelection) {
+    selection = partSelection(marquee.baseIds, marquee.basePrimaryId);
+  }
+  marquee = null;
   interactionNotice = '';
   boardPan = null;
   boardScroll.classList.remove('panning');
@@ -2132,9 +2326,25 @@ function inspectionAt(target) {
   return null;
 }
 
+function marqueePartIds(gesture) {
+  const left = Math.min(gesture.startX, gesture.x);
+  const right = Math.max(gesture.startX, gesture.x);
+  const top = Math.min(gesture.startY, gesture.y);
+  const bottom = Math.max(gesture.startY, gesture.y);
+  return machine().parts
+    .filter((part) => partFootprintCells(part).some((cell) =>
+      cell.x * CELL < right && (cell.x + 1) * CELL > left &&
+      cell.y * CELL < bottom && (cell.y + 1) * CELL > top))
+    .map((part) => part.id);
+}
+
 svg.addEventListener('pointerdown', (e) => {
   if (e.button === 0) svg.focus({ preventScroll: true });
   if (e.button === 0) interactionNotice = '';
+  // Shift-click belongs to multi-selection even when the pointer is directly
+  // over a socket; let the click handler toggle the containing part instead
+  // of beginning a routing gesture.
+  if (e.button === 0 && e.shiftKey && e.target.closest('[data-part]')) return;
   const handle = e.target.closest('[data-wire-handle]');
   if (handle && editable() && e.button === 0) {
     const wire = playerWires.find((candidate) => candidate.id === handle.dataset.wire);
@@ -2160,7 +2370,7 @@ svg.addEventListener('pointerdown', (e) => {
       const { x, y } = svgXY(e);
       drag = {
         kind: 'new',
-        end: dir === 'out' ? 'to' : 'from',
+        end: dir === 'out' ? 'to' : dir === 'in' ? 'from' : 'either',
         anchor,
         route: [],
         x,
@@ -2184,11 +2394,18 @@ svg.addEventListener('pointerdown', (e) => {
   if (movable && editable() && !armedTool && e.button === 0) {
     const placed = pressedPart;
     const { x, y } = svgXY(e);
+    const ids = isPartSelected(placed.id) ? selectedPartIds() : [placed.id];
     partDrag = {
       pointerId: e.pointerId,
       id: placed.id,
+      ids,
+      primaryId: placed.id,
       startX: x,
       startY: y,
+      offsetX: Math.floor(x / CELL) - placed.x,
+      offsetY: Math.floor(y / CELL) - placed.y,
+      originX: placed.x,
+      originY: placed.y,
       x: placed.x,
       y: placed.y,
       moved: false,
@@ -2198,6 +2415,22 @@ svg.addEventListener('pointerdown', (e) => {
     return;
   }
   const interactive = e.target.closest('[data-part], [data-wire], [data-word]');
+  if (e.shiftKey && !interactive && editable() && !armedTool && e.button === 0) {
+    const { x, y } = svgXY(e);
+    marquee = {
+      pointerId: e.pointerId,
+      startX: x,
+      startY: y,
+      x,
+      y,
+      moved: false,
+      baseIds: selectedPartIds(),
+      basePrimaryId: selection?.kind === 'parts' ? selection.primaryId : null,
+    };
+    svg.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    return;
+  }
   const canGrab = zoom > 1 && (e.button === 1 || (!interactive && !armedTool && e.button === 0));
   if (canGrab) {
     boardPan = {
@@ -2215,18 +2448,34 @@ svg.addEventListener('pointerdown', (e) => {
 });
 
 svg.addEventListener('pointermove', (e) => {
-  if (!boardPan && !drag && !partDrag) setHoverInspection(inspectionAt(e.target));
+  if (!boardPan && !drag && !partDrag && !marquee) setHoverInspection(inspectionAt(e.target));
   if (partDrag?.pointerId === e.pointerId) {
     const point = svgXY(e);
     if (Math.hypot(point.x - partDrag.startX, point.y - partDrag.startY) > 4) partDrag.moved = true;
     if (partDrag.moved) {
-      const x = Math.floor(point.x / CELL);
-      const y = Math.floor(point.y / CELL);
+      const x = Math.floor(point.x / CELL) - partDrag.offsetX;
+      const y = Math.floor(point.y / CELL) - partDrag.offsetY;
       if (partDrag.x !== x || partDrag.y !== y) {
         partDrag.x = x;
         partDrag.y = y;
         scheduleBoardRender();
       }
+    }
+    e.preventDefault();
+    return;
+  }
+  if (marquee?.pointerId === e.pointerId) {
+    const point = svgXY(e);
+    marquee.x = point.x;
+    marquee.y = point.y;
+    if (Math.hypot(point.x - marquee.startX, point.y - marquee.startY) > 4) marquee.moved = true;
+    if (marquee.moved) {
+      const hits = marqueePartIds(marquee);
+      selection = partSelection(
+        [...marquee.baseIds, ...hits],
+        hits.at(-1) ?? marquee.basePrimaryId,
+      );
+      scheduleBoardRender();
     }
     e.preventDefault();
     return;
@@ -2270,7 +2519,11 @@ svg.addEventListener('pointerleave', () => {
 function snapPort(partId, pt, dir) {
   const m = machine();
   const part = byId(m, partId);
-  const ports = (dir === 'in' ? PORTS[part.kind].ins : PORTS[part.kind].outs)
+  const ports = [...new Set(dir === 'in' ? PORTS[part.kind].ins : PORTS[part.kind].outs)]
+    .filter((port) => {
+      const physicalDir = portGeometry(part, port)?.dir;
+      return physicalDir === dir || physicalDir === 'both';
+    })
     .filter((port) => !physicalPortOccupied(
       { part: partId, port }, dir, drag?.wireId ?? null,
     ));
@@ -2287,28 +2540,62 @@ function snapPort(partId, pt, dir) {
 const snapInPort = (partId, pt) => snapPort(partId, pt, 'in');
 const snapOutPort = (partId, pt) => snapPort(partId, pt, 'out');
 
+function snapEitherPort(partId, pt) {
+  const m = machine();
+  const part = byId(m, partId);
+  const ports = [...new Set([...PORTS[part.kind].ins, ...PORTS[part.kind].outs])]
+    .map((port) => ({ port, dir: portGeometry(part, port)?.dir }))
+    .filter(({ port, dir }) => dir && !physicalPortOccupied(
+      { part: partId, port }, dir, drag?.wireId ?? null,
+    ));
+  let best = null, bestD = Infinity;
+  for (const candidate of ports) {
+    const pos = portPos(m, { part: partId, port: candidate.port });
+    const distance = Math.hypot(pos.x - pt.x, pos.y - pt.y);
+    if (distance < bestD) {
+      bestD = distance;
+      best = { ref: { part: partId, port: candidate.port }, dir: candidate.dir };
+    }
+  }
+  return best;
+}
+
 svg.addEventListener('pointerup', (e) => {
   if (partDrag?.pointerId === e.pointerId) {
     const gesture = partDrag;
+    const movement = partDragEdit();
     partDrag = null;
-    selection = { kind: 'part', id: gesture.id };
-    if (!gesture.moved) playTerminalWord(byId(machine(), gesture.id));
+    selection = partSelection(gesture.moved ? gesture.ids : [gesture.id], gesture.primaryId);
+    if (!gesture.moved) {
+      playTerminalWord(byId(machine(), gesture.id));
+    }
     // Pointer capture retargets the generated click to the SVG root. Suppress
     // that click so a stationary press selects instead of immediately clearing.
     suppressPartClick = true;
     setTimeout(() => { suppressPartClick = false; }, 0);
     if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
-    const validity = movementValidity(
-      machine().parts, puzzle().board, gesture.id,
-      { x: gesture.x, y: gesture.y }, playerWires,
-    );
-    if (gesture.moved && validity.valid) {
-      const changed = movePart(gesture.id, gesture.x, gesture.y);
+    if (gesture.moved && movement?.valid) {
+      const changed = moveParts(
+        gesture.ids,
+        gesture.x - gesture.originX,
+        gesture.y - gesture.originY,
+        gesture.primaryId,
+      );
       if (!changed) { renderBoard(); renderInspector(); }
     } else {
-      if (gesture.moved && !validity.valid) interactionNotice = `Cannot move: ${validity.reason}`;
+      if (gesture.moved && !movement?.valid) interactionNotice = `Cannot move: ${movement.reason}`;
       renderBoard(); renderInspector();
     }
+    e.preventDefault();
+    return;
+  }
+  if (marquee?.pointerId === e.pointerId) {
+    marquee = null;
+    suppressPartClick = true;
+    setTimeout(() => { suppressPartClick = false; }, 0);
+    if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+    renderBoard();
+    renderInspector();
     e.preventDefault();
     return;
   }
@@ -2327,24 +2614,37 @@ svg.addEventListener('pointerup', (e) => {
   const port = el?.closest?.('[data-port-part]');
   const pt = svgXY(e);
   paintRouteGesture(gesture, pt);
-  const wantedDir = gesture.end === 'from' ? 'out' : 'in';
+  const wantedDir = gesture.end === 'from' ? 'out' : gesture.end === 'to' ? 'in' : null;
   let target = null;
-  if (port && port.dataset.portDir === wantedDir) {
+  let targetDir = null;
+  const droppedPortDir = port?.dataset.portDir ?? null;
+  if (port && (!wantedDir || droppedPortDir === wantedDir || droppedPortDir === 'both')) {
     target = { part: port.dataset.portPart, port: port.dataset.portName };
+    targetDir = droppedPortDir;
   } else {
     const partEl = el?.closest?.('[data-part]');
     const cell = { x: Math.floor(pt.x / CELL), y: Math.floor(pt.y / CELL) };
     const cellPart = machine().parts.find((candidate) =>
       partFootprintCells(candidate).some((occupied) => sameGridCell(occupied, cell)));
     const targetId = partEl?.dataset.part ?? cellPart?.id;
-    if (targetId) target = wantedDir === 'in' ? snapInPort(targetId, pt) : snapOutPort(targetId, pt);
+    if (targetId && gesture.end === 'either') {
+      const snapped = snapEitherPort(targetId, pt);
+      target = snapped?.ref ?? null;
+      targetDir = snapped?.dir ?? null;
+    } else if (targetId) {
+      target = wantedDir === 'in' ? snapInPort(targetId, pt) : snapOutPort(targetId, pt);
+      targetDir = wantedDir;
+    }
   }
   drag = null;
   if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
   let changed = false;
   if (target) {
     if (gesture.kind === 'new') {
-      changed = gesture.end === 'to'
+      const end = gesture.end === 'either'
+        ? targetDir === 'out' ? 'from' : 'to'
+        : gesture.end;
+      changed = end === 'to'
         ? addWire(gesture.anchor, target, gesture.route)
         : addWire(target, gesture.anchor, [...gesture.route].reverse());
     } else {
@@ -2370,6 +2670,12 @@ svg.addEventListener('pointercancel', (e) => {
     drag = null;
     renderBoard();
   }
+  if (marquee?.pointerId === e.pointerId) {
+    selection = partSelection(marquee.baseIds, marquee.basePrimaryId);
+    marquee = null;
+    renderBoard();
+    renderInspector();
+  }
   if (boardPan?.pointerId !== e.pointerId) return;
   boardPan = null;
   boardScroll.classList.remove('panning');
@@ -2390,16 +2696,12 @@ svg.addEventListener('click', (e) => {
   if (pill) playWord(pill.dataset.word, { spacing: 110, gain: 0.3 });
   const partEl = e.target.closest('[data-part]');
   const wireEl = e.target.closest('[data-wire]');
-  if (partEl) {
-    selection = { kind: 'part', id: partEl.dataset.part };
-  } else if (wireEl) {
-    selection = { kind: 'wire', id: wireEl.dataset.wire };
-  } else if (armedPartKind() && editable()) {
+  if (armedPartKind() && editable()) {
     const { x, y } = svgXY(e);
     const gx = Math.floor(x / CELL), gy = Math.floor(y / CELL);
     const p = puzzle();
     const partTool = armedPartKind();
-    const splice = spliceCandidateAtCell(machine(), partTool, gx, gy);
+    const splice = spliceCandidateAtCell(machine(), partTool, gx, gy, placementOrientation);
     const candidate = {
       id: '__placement__', kind: partTool, x: gx, y: gy,
       orientation: placementOrientation,
@@ -2412,6 +2714,11 @@ svg.addEventListener('click', (e) => {
       return;
     }
     interactionNotice = `Cannot place: ${validity.reason}`;
+  } else if (partEl) {
+    if (e.shiftKey && editable()) togglePartSelection(partEl.dataset.part);
+    else selection = partSelection([partEl.dataset.part], partEl.dataset.part);
+  } else if (wireEl) {
+    selection = { kind: 'wire', id: wireEl.dataset.wire };
   } else {
     selection = null;
   }
@@ -2422,7 +2729,9 @@ $('palette').addEventListener('click', (e) => {
   const b = e.target.closest('[data-tool]');
   if (!b) return;
   const kind = b.dataset.tool;
-  const canPlace = editable() && remaining(kind) > 0;
+  const available = remaining(kind) > 0;
+  if (discreteFrames && run && available) onResetRun();
+  const canPlace = editable() && available;
   armedTool = canPlace && armedTool !== kind ? kind : null;
   interactionNotice = '';
   placementOrientation = 0;
@@ -2451,6 +2760,11 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   const boardFocused = document.activeElement === svg || document.activeElement === document.body;
+  if (!typing && command && boardFocused && e.key.toLowerCase() === 'a' && editable()) {
+    e.preventDefault();
+    selectAllParts();
+    return;
+  }
   if (!typing && !command && boardFocused && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     if (e.shiftKey) redoEdit(); else undoEdit();
@@ -2461,21 +2775,31 @@ document.addEventListener('keydown', (e) => {
     redoEdit();
     return;
   }
+  if (!typing && !command && !e.shiftKey && e.key === 'Tab') {
+    e.preventDefault();
+    onStepButton();
+    return;
+  }
   if (!typing && !command && (armedPartKind() || boardFocused) && e.key.toLowerCase() === 'r') {
     e.preventDefault();
     if (armedPartKind()) {
       placementOrientation = (placementOrientation + 1) % 4;
-      renderPalette();
       renderBoard();
       renderInspector();
       renderInteractionStatus();
-    } else if (selection?.kind === 'part') {
-      rotatePart(selection.id);
+    } else if (selectedPartIds().length === 1) {
+      rotatePart(selection.primaryId);
+    } else if (selectedPartIds().length > 1) {
+      interactionNotice = 'Select one part to rotate it';
+      renderBoard();
     }
     return;
   }
   if (e.key === 'Escape') {
-    cancelBoardInteraction();
+    e.preventDefault();
+    if (run) onResetRun();
+    else cancelBoardInteraction();
+    return;
   }
   if ((e.key === 'Delete' || e.key === 'Backspace') && selection && boardFocused) {
     e.preventDefault();
@@ -2554,6 +2878,10 @@ boardScroll.addEventListener('scroll', positionContextEditor, { passive: true })
 
 $('prev-level').addEventListener('click', () => loadLevel(levelIndex - 1));
 $('next-level').addEventListener('click', () => loadLevel(levelIndex + 1));
+$('reference-architecture-select').addEventListener('change', (event) => {
+  referenceArchitectureIndexes.set(puzzle().id, Number(event.currentTarget.value));
+  loadLevel(levelIndex);
+});
 $('level-menu-toggle').addEventListener('click', () => {
   setLevelMenu($('level-nav').hidden);
 });

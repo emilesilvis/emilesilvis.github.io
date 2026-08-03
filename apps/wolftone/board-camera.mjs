@@ -1,5 +1,5 @@
-import { partFootprintCells } from './part-geometry.mjs?v=0.9.1-1';
-import { wireRouteCells } from './wire-routing.mjs?v=0.9.1-1';
+import { partFootprintCells } from './part-geometry.mjs?v=0.9.1-7';
+import { wireRouteCells } from './wire-routing.mjs?v=0.9.1-7';
 
 function fullBoardBounds(board) {
   return {

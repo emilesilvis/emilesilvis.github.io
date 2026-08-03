@@ -25,10 +25,10 @@ export const PUZZLES = [
       wires: [{ from: { part: 'q1', port: 'out' }, to: { part: 'r1', port: 'in' } }],
     },
     walkthrough: [
-      { focus: 'commission', title: 'Sound enters the Quill', body: 'The Commission gives the Quill an input sound phrase, shown as coloured lettered marbles. Input sounds can change between performances, but your machine stays the same.' },
-      { focus: 'board', title: 'Sound becomes marbles', body: 'At tick 1, the Quill transcribes each sound phrase into a train of lettered marbles. Inside the machine, A·B is always an A marble followed by a B marble: one marble train.' },
-      { focus: 'board', title: 'Read from the lead', body: 'The first marble stays physically in front as its train follows the track. A·B travelling east can therefore look like B·A from left to right. Follow the track chevrons and the brass ring around the lead marble; the train itself has not reversed.' },
-      { focus: 'board', title: 'Marbles become sound', body: 'The Resonator turns a matching target train into sound waves. A different train sounds sour and fails the performance.' },
+      { focus: 'commission', title: 'Sound enters the Quill', body: 'The Commission gives the Quill an input sound phrase, shown as coloured notes. Input sounds can change between performances, but your machine stays the same.' },
+      { focus: 'board', title: 'Sound becomes one marble', body: 'At tick 1, the Quill transcribes each sound phrase into one word marble. The glass swirls together every note colour, while its sound bar preserves the exact order.' },
+      { focus: 'board', title: 'Read every direction', body: 'The sound bar always reads A·B from left to right, whether its marble travels east, west, north, or south. Track chevrons show where the word is moving.' },
+      { focus: 'board', title: 'The marble becomes sound', body: 'The Resonator turns a matching word marble into sound waves. A different word sounds sour and fails the performance.' },
       { focus: 'palette', title: 'Pick up Track', body: 'Select Track ∞ at the top of the tray. It stays armed so you can lay as many routes as the machine needs.' },
       { focus: 'transport', title: 'Connect and run', body: 'With Track armed, drag from the quill’s output socket to the resonator’s input socket. Then press Run. The number on the track is its travel time in ticks.' },
     ],
@@ -56,9 +56,9 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'Add one marble', body: 'Place a Mould on the board. It adds one selected lettered marble to the tail of each train. Select the Mould to choose that marble in the Inspector.' },
-      { focus: 'commission', title: 'Solve every performance', body: 'This commission has two different input sound phrases. The same machine must deliver the target marble train to the Resonator in both.' },
-      { focus: 'inspector', title: 'Add a C marble', body: 'A Mould starts set to A. Set this one to C because both target trains end in C. If the result is wrong, the report shows the train that arrived.' },
+      { focus: 'palette', title: 'Add one note', body: 'Place a Mould on the board. It adds one selected note to the tail of each word marble. Select the Mould to choose that note in the Inspector.' },
+      { focus: 'commission', title: 'Solve every performance', body: 'This commission has two different input sound phrases. The same machine must deliver the target word marble to the Resonator in both.' },
+      { focus: 'inspector', title: 'Add a C note', body: 'A Mould starts set to A. Set this one to C because both target words end in C. If the result is wrong, the report shows the word that arrived.' },
     ],
   },
 
@@ -84,8 +84,8 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'Remove the lead marble', body: 'A Damper removes the lead marble from a train. Moulds add at the tail; Dampers remove from the front.' },
-      { focus: 'board', title: 'Empty trains wait', body: 'A Damper cannot process an empty train, so it waits there. If the machine stops, the report identifies the waiting part and the reason.' },
+      { focus: 'palette', title: 'Remove the lead note', body: 'A Damper removes the lead note from a word marble. Moulds add at the tail; Dampers remove from the front.' },
+      { focus: 'board', title: 'Empty words wait', body: 'A Damper cannot process an empty word marble, so it waits there. If the machine stops, the report identifies the waiting part and the reason.' },
     ],
   },
 
@@ -113,8 +113,8 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'Join two trains', body: 'A Unison waits for one marble train in each input, then joins the lead train followed by the tail train.' },
-      { focus: 'board', title: 'Input order matters', body: 'Connect the top Quill to the lead input and the bottom Quill to the tail input. Swapping them reverses the order of the two trains.' },
+      { focus: 'palette', title: 'Join two words', body: 'A Unison waits for one word marble in each input, then joins the lead word followed by the tail word into one marble.' },
+      { focus: 'board', title: 'Input order matters', body: 'Connect the top Quill to the lead input and the bottom Quill to the tail input. Swapping them reverses the order of the two words.' },
     ],
   },
 
@@ -142,8 +142,8 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'Split by position', body: 'A Splitter sends the first k marbles to head and the remaining marbles to rest. A train shorter than k waits at the Splitter.' },
-      { focus: 'inspector', title: 'Cut after 2 marbles', body: 'Both target trains are two marbles long, so set k to 2. Connect both outputs; the Splitter waits if either is unconnected.' },
+      { focus: 'palette', title: 'Split by position', body: 'A Splitter makes two word marbles: the first k notes go to head and the remaining notes go to rest. A word shorter than k waits at the Splitter.' },
+      { focus: 'inspector', title: 'Cut after 2 notes', body: 'Both target words contain two notes, so set k to 2. Connect both outputs; the Splitter waits if either is unconnected.' },
     ],
   },
 
@@ -171,10 +171,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'palette', title: 'Route by the lead marble', body: 'A Tuning Fork checks the letter on the lead marble. A matching train exits through match (=); every other train, including an empty one, exits through other (≠).' },
-      { focus: 'commission', title: 'Use one machine for both routes', body: 'Each performance has a different input sound and target Resonator. The machine must inspect the lead marble to choose the correct route.' },
-      { focus: 'board', title: 'Unused Resonators stay silent', body: 'A Resonator without a target sound in the current performance must receive no train. Sending one to it fails the performance.' },
-      { focus: 'inspector', title: 'Peek preserves the train', body: 'In Peek mode, the Tuning Fork reads the lead marble without removing it. Match A to the upper Resonator and send other (≠) to the lower one.' },
+      { focus: 'palette', title: 'Route by the lead note', body: 'A Tuning Fork checks the lead note on the sound bar. A matching word marble exits through match (=); every other word, including an empty one, exits through other (≠).' },
+      { focus: 'commission', title: 'Use one machine for both routes', body: 'Each performance has a different input sound and target Resonator. The machine must inspect the lead note to choose the correct route.' },
+      { focus: 'board', title: 'Unused Resonators stay silent', body: 'A Resonator without a target sound in the current performance must receive no word marble. Sending one to it fails the performance.' },
+      { focus: 'inspector', title: 'Peek preserves the word', body: 'In Peek mode, the Tuning Fork reads the lead note without removing it. Match A to the upper Resonator and send other (≠) to the lower one.' },
     ],
   },
 
@@ -203,9 +203,9 @@ export const PUZZLES = [
     },
     walkthrough: [
       { focus: 'board', title: 'Build the loop in peek mode', body: 'Place a fork set to A. Connect match (=) back to its input and other (≠) to the resonator. Run Aria. Because peek does not remove the A, the loop repeats without finishing.' },
-      { focus: 'inspector', title: 'Switch to Bite mode', body: 'In Bite mode, the Tuning Fork removes a matching lead marble before sending the remaining train through match (=).' },
+      { focus: 'inspector', title: 'Switch to Bite mode', body: 'In Bite mode, the Tuning Fork removes a matching lead note before sending the remaining word through match (=).' },
       { focus: 'board', title: 'Run the loop again', body: 'Each pass removes one leading A. Aria needs two passes, Encore needs one, and Coda goes directly through other (≠).' },
-      { focus: 'inspector', title: 'Compare Peek and Bite', body: 'Bite shortens the train, so the loop eventually finishes. Peek leaves it unchanged, so this loop cannot finish.' },
+      { focus: 'inspector', title: 'Compare Peek and Bite', body: 'Bite shortens the word, so the loop eventually finishes. Peek leaves it unchanged, so this loop cannot finish.' },
     ],
   },
 
@@ -239,8 +239,8 @@ export const PUZZLES = [
     },
     walkthrough: [
       { focus: 'commission', title: 'Check both performances', body: 'The top quill sends the label: A in Aria and B in Encore. The bottom quill sends C·D. Route the payload to the resonator named by the label and route the label to the spent-labels resonator.' },
-      { focus: 'board', title: 'Connect one train to each side', body: 'Connect the label train to input A and the payload train to input B. The Coupling waits until both arrive, then releases both in the same tick.' },
-      { focus: 'inspector', title: 'Read the other lead marble', body: 'Each side reads the lead marble on the other train. Set “B decides A” to A. Connect BL to the hall of A and BR to the hall of B.' },
+      { focus: 'board', title: 'Connect one word to each side', body: 'Connect the label word marble to input A and the payload word marble to input B. The Coupling waits until both arrive, then releases both in the same tick.' },
+      { focus: 'inspector', title: 'Read the other lead note', body: 'Each side reads the lead note on the other word. Set “B decides A” to A. Connect BL to the hall of A and BR to the hall of B.' },
       { focus: 'board', title: 'Merge the label outputs', body: 'Place a Junction. Connect AL and AR to its A and B inputs, then connect its output to the spent-labels resonator. Every physical port accepts one track.' },
     ],
   },
@@ -279,10 +279,10 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'board', title: 'Arrival order sets the pairs', body: 'The Unison and Tuning Fork are already on the board. With direct tracks, the nearby lead train reaches the Unison first and both pairs are wrong.' },
-      { focus: 'palette', title: 'Add a delay', body: 'A Valve holds a marble train for a selected number of ticks, then releases it unchanged. Route only the nearby lead train through it.' },
-      { focus: 'inspector', title: 'Set the delay', body: 'Start with a one-tick delay and press Run. Increase it until the farther lead train reaches the Unison first.' },
-      { focus: 'board', title: 'Deliver both pairs', body: 'The farther lead train must pair with the first theme. The delayed lead train must then pair with the second. Track length also adds delay.' },
+      { focus: 'board', title: 'Arrival order sets the pairs', body: 'The Unison and Tuning Fork are already on the board. With direct tracks, the nearby lead word reaches the Unison first and both pairs are wrong.' },
+      { focus: 'palette', title: 'Add a delay', body: 'A Valve holds a word marble for a selected number of ticks, then releases it unchanged. Route only the nearby lead word through it.' },
+      { focus: 'inspector', title: 'Set the delay', body: 'Start with a one-tick delay and press Run. Increase it until the farther lead word reaches the Unison first.' },
+      { focus: 'board', title: 'Deliver both pairs', body: 'The farther lead word must pair with the first theme. The delayed lead word must then pair with the second. Track length also adds delay.' },
     ],
   },
 
@@ -359,7 +359,7 @@ export const PUZZLES = [
       ],
     },
     walkthrough: [
-      { focus: 'commission', title: 'Check all three performances', body: 'The lead marble is A or B and selects the target Resonator. Remove that marble and send the remaining train to the selected target.' },
+      { focus: 'commission', title: 'Check all three performances', body: 'The lead note is A or B and selects the target Resonator. Remove that note and send the remaining word marble to the selected target.' },
       { focus: 'palette', title: 'Choose peek or bite', body: 'With peek, place a damper after each fork output. With bite, the A is removed on match (=), so only other (≠) needs a damper for B.' },
       { focus: 'board', title: 'Build either solution', body: 'Both approaches solve the commission. Bite mode needs one damper; peek mode needs one on each route.' },
     ],
