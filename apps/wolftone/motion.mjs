@@ -95,6 +95,34 @@ export function roundedPathPoints(points, radius = 18, curveSteps = 6) {
   return rounded;
 }
 
+// Direction cues sit on the travelling route, but leave the midpoint clear for
+// the track's timing chip. Short routes need no cue; longer routes receive
+// evenly spaced markers whose angle follows the rounded path's local tangent.
+export function pathDirectionMarkers(
+  points,
+  { spacing = 160, minLength = 112, midpointClearance = 28, tangentSample = 3 } = {},
+) {
+  const total = pathLength(points);
+  if (total < minLength) return [];
+  const count = Math.max(1, Math.floor(total / spacing));
+  const markers = [];
+  for (let index = 1; index <= count; index += 1) {
+    let distance = total * index / (count + 1);
+    if (Math.abs(distance - total / 2) < midpointClearance) {
+      if (count > 1) continue;
+      distance = total / 3;
+    }
+    const point = pointAlongPath(points, distance / total);
+    const before = pointAlongPath(points, Math.max(0, distance - tangentSample) / total);
+    const after = pointAlongPath(points, Math.min(total, distance + tangentSample) / total);
+    markers.push({
+      ...point,
+      angle: Math.atan2(after.y - before.y, after.x - before.x) * 180 / Math.PI,
+    });
+  }
+  return markers;
+}
+
 export function transitProgress(from, to, elapsedMs, durationMs, dwellFraction = 0) {
   const rawProgress = durationMs <= 0 ? 1 : Math.max(0, Math.min(1, elapsedMs / durationMs));
   const dwell = Math.max(0, Math.min(0.9, dwellFraction));

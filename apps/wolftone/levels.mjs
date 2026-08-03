@@ -1,69 +1,40 @@
-// Assemble every level source into the player-visible chapter order. Keeping
-// this DOM-free makes the exact catalogue testable without importing the UI.
-import { PUZZLES } from './puzzles.mjs?v=0.9.0-1';
-import { CAMPAIGN } from './campaign.mjs?v=0.9.0-1';
-import { PROMOTED_LEVELS } from './promoted-levels.mjs?v=0.9.0-1';
-import { ADVANCED_LEVELS } from './advanced-levels.mjs?v=0.9.0-1';
-import { CHAPTER_ORDER } from './chapters.mjs?v=0.9.0-1';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.0-1';
+// The complete v0.9 player catalogue. Old generated, promoted, and advanced
+// ladders remain as authoring archives; importing only these two sources keeps
+// linear exercises out of the shipped progression.
 
-// Promoted contracts follow the generated levels in their chapter. This keeps
-// their prerequisite Wolf sequence intact while leaving the authored teaching
-// levels at the beginning of each chapter.
-const SOURCE_LEVELS = [...PUZZLES, ...CAMPAIGN, ...PROMOTED_LEVELS, ...ADVANCED_LEVELS];
-const PUZZLE_IDS = new Set(PUZZLES.map((level) => level.id));
+import { TUTORIAL_LEVELS } from './tutorial-levels.mjs?v=0.9.0-6';
+import { CANDIDATE_LEVELS } from './candidate-levels.mjs?v=0.9.0-6';
+import { CHAPTER_ORDER } from './chapters.mjs?v=0.9.0-6';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.0-6';
 
-// Stable bench families avoid level-to-level scale jitter without shrinking
-// the opening commissions onto the enormous Masterwork grid. Each chapter
-// keeps one physical board, and board growth marks a genuine difficulty tier.
+const SOURCE_LEVELS = [...TUTORIAL_LEVELS, ...CANDIDATE_LEVELS];
+const TUTORIAL_IDS = new Set(TUTORIAL_LEVELS.map((level) => level.id));
+
+// Named families remain useful to camera and presentation tests. Candidate
+// contracts carry one fixed board large enough for every audited witness.
 export const BOARD_PROFILES = Object.freeze({
-  standard: Object.freeze({ cols: 11, rows: 7 }),
-  tall: Object.freeze({ cols: 11, rows: 9 }),
-  journeyman: Object.freeze({ cols: 17, rows: 12 }),
-  masterwork: Object.freeze({ cols: 19, rows: 12 }),
+  tutorial: Object.freeze({ cols: 31, rows: 24 }),
+  campaign: Object.freeze({ cols: 38, rows: 24 }),
 });
 
-const CHAPTER_BOARD_PROFILE = {
-  'I · Études': 'standard',
-  'II · Duets': 'standard',
-  'III · Sight-reading': 'standard',
-  'IV · Wolf notes': 'standard',
-  'V · Entanglements': 'tall',
-  'VI · Tempo': 'tall',
-  'VII · Concerto': 'standard',
-  'VIII · Journeymen': 'journeyman',
-  'IX · Masterworks': 'masterwork',
-};
-
-function mountOnSharedBoard(level) {
-  const profile = CHAPTER_BOARD_PROFILE[level.chapter] ?? 'masterwork';
-  const board = BOARD_PROFILES[profile];
-  const offset = {
-    x: Math.floor((board.cols - level.board.cols) / 2),
-    y: Math.floor((board.rows - level.board.rows) / 2),
-  };
-  const shift = (part) => ({ ...part, x: part.x + offset.x, y: part.y + offset.y });
-  return {
-    ...level,
-    board,
-    boardMount: { profile, source: level.board, offset },
-    fixed: level.fixed.map(shift),
-    reference: { ...level.reference, parts: level.reference.parts.map(shift) },
-  };
+function prepareLevel(level) {
+  // Candidate witnesses already contain reviewed physical parts, crossings,
+  // junctions, and explicit routes on their fixed production board.
+  if (level.spatial?.production) return level;
+  return spatializeReference(level);
 }
 
-export const ALL_LEVELS = SOURCE_LEVELS.map(mountOnSharedBoard).map(spatializeReference);
+export const ALL_LEVELS = SOURCE_LEVELS.map(prepareLevel);
 export const LEVELS = CHAPTER_ORDER.flatMap((chapter) =>
   ALL_LEVELS.filter((level) => level.chapter === chapter));
 
 export function showsWalkthrough(level, { referenceMode = false } = {}) {
   if (referenceMode) return false;
-  return PUZZLE_IDS.has(level.id) || Boolean(level.meta?.tier);
+  return TUTORIAL_IDS.has(level.id) || level.meta?.tier?.endsWith('-contract');
 }
 
 for (const level of ALL_LEVELS) {
   if (!LEVELS.includes(level)) {
-    console.warn(`level ${level.id} names unknown chapter ${level.chapter}: appended out of order`);
-    LEVELS.push(level);
+    throw new Error(`level ${level.id} names unknown chapter ${level.chapter}`);
   }
 }

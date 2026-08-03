@@ -1,15 +1,6 @@
-// The chapter spine: the one place that says what order the catalogue reads
-// in. The opening chapters interleave teaching levels with searched
-// commissions; levels.mjs then appends authored Journeymen and the separated
-// optional Masterworks. Tests prove every level names a chapter in this list.
+// v0.9 has one concise teaching chapter and one campaign of real contracts.
+// Archived ladders remain in source for comparison, but never enter this spine.
 export const CHAPTER_ORDER = [
-  'I · Études',
-  'II · Duets',
-  'III · Sight-reading',
-  'IV · Wolf notes',
-  'V · Entanglements',
-  'VI · Tempo',
-  'VII · Concerto',
-  'VIII · Journeymen',
-  'IX · Masterworks',
+  'I · Tutorial',
+  'II · Campaign',
 ];

@@ -27,6 +27,7 @@ export const PUZZLES = [
     walkthrough: [
       { focus: 'commission', title: 'Sound enters the Quill', body: 'The Commission gives the Quill an input sound phrase, shown as coloured lettered marbles. Input sounds can change between performances, but your machine stays the same.' },
       { focus: 'board', title: 'Sound becomes marbles', body: 'At tick 1, the Quill transcribes each sound phrase into a train of lettered marbles. Inside the machine, A·B is always an A marble followed by a B marble: one marble train.' },
+      { focus: 'board', title: 'Read from the lead', body: 'The first marble stays physically in front as its train follows the track. A·B travelling east can therefore look like B·A from left to right. Follow the track chevrons and the brass ring around the lead marble; the train itself has not reversed.' },
       { focus: 'board', title: 'Marbles become sound', body: 'The Resonator turns a matching target train into sound waves. A different train sounds sour and fails the performance.' },
       { focus: 'palette', title: 'Pick up Track', body: 'Select Track ∞ at the top of the tray. It stays armed so you can lay as many routes as the machine needs.' },
       { focus: 'transport', title: 'Connect and run', body: 'With Track armed, drag from the quill’s output socket to the resonator’s input socket. Then press Run. The number on the track is its travel time in ticks.' },

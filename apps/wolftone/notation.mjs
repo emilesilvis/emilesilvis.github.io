@@ -32,11 +32,18 @@ export function drawWordCard(x, y, word) {
   return notation;
 }
 
-export function drawMarble(note, x, y, { index = null, surfaceRoll = 0 } = {}) {
+export function drawMarble(note, x, y, { index = null, surfaceRoll = 0, lead = false } = {}) {
   const data = index === null ? '' : ` data-marble="${index}"`;
   const tone = note || 'empty';
   const letter = note || '∅';
-  return `<g class="letter-marble"${data} transform="translate(${x} ${y})">` +
+  const leadMarker = lead
+    ? '<circle class="marble-lead-ring" cx="0" cy="0" r="12.2"></circle>' +
+      '<g class="marble-lead-label" transform="translate(0 -26)">' +
+      '<path d="M-3 8L0 12L3 8Z"></path><rect x="-17" y="-7" width="34" height="15" rx="4"></rect>' +
+      '<text x="0" y="3">LEAD</text></g>'
+    : '';
+  return `<g class="letter-marble${lead ? ' lead-marble' : ''}"${data} transform="translate(${x} ${y})">` +
+    leadMarker +
     '<circle class="marble-shadow" cx="1.4" cy="2.3" r="9.1"></circle>' +
     '<circle class="marble-rim" cx="0" cy="0" r="8.8"></circle>' +
     `<circle class="marble-shell note-${tone}" cx="0" cy="0" r="8.2"></circle>` +

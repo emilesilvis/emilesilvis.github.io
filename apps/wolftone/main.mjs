@@ -5,31 +5,32 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.0-1';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.9.0-1';
+} from './engine.mjs?v=0.9.0-6';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.9.0-6';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.0-1';
+} from './progression.mjs?v=0.9.0-6';
 import {
   marbleTrainStates,
+  pathDirectionMarkers,
   pointAlongPath,
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.0-1';
-import { fitCamera } from './board-camera.mjs?v=0.9.0-1';
+} from './motion.mjs?v=0.9.0-6';
+import { fitCamera } from './board-camera.mjs?v=0.9.0-6';
 import {
   movementValidity,
   placementValidity,
   retargetWire as retargetWireEdit,
   spliceWire,
-} from './board-layout.mjs?v=0.9.0-1';
-import { commissionCaseSpec } from './commission.mjs?v=0.9.0-1';
-import { drawMarble, drawMarbleWord, drawWordCard } from './notation.mjs?v=0.9.0-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.0-1';
+} from './board-layout.mjs?v=0.9.0-6';
+import { commissionCaseSpec } from './commission.mjs?v=0.9.0-6';
+import { drawMarble, drawMarbleWord, drawWordCard } from './notation.mjs?v=0.9.0-6';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.0-6';
 import {
   cellKey,
   extendRouteFromPort,
@@ -38,7 +39,7 @@ import {
   wireEndpointOccupied,
   wirePathCells,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.0-1';
+} from './wire-routing.mjs?v=0.9.0-6';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -50,34 +51,34 @@ import {
   portTagWidth,
   portGeometry,
   terminalCardGeometry,
-} from './part-geometry.mjs?v=0.9.0-1';
-import { partArtSelection } from './part-art.mjs?v=0.9.0-1';
+} from './part-geometry.mjs?v=0.9.0-6';
+import { partArtSelection } from './part-art.mjs?v=0.9.0-6';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.0-1';
+} from './audio.mjs?v=0.9.0-6';
 
-// Teaching and advanced levels show player-facing walkthrough decks; searched
-// introductory commissions stay quiet. Reference review loads answers without
-// showing walkthroughs.
+// Tutorials show teaching decks. Campaign contracts show one neutral
+// observation and one optional nudge. Reference review stays quiet.
 
-// The Godot score was written as a progression from workshop craft to the
-// forbidden commission. The web campaign has more levels, so cues belong to
-// chapters and continue playing when adjacent commissions share one.
+// The score progresses from workshop craft into the forbidden commissions.
+// Cues belong to chapters and continue when adjacent commissions share one.
 const CHAPTER_MUSIC = {
-  'I · Études': [
+  'I · Tutorial': [
     '02-seasoning-the-wood.mp3',
     '03-tap-tone.mp3',
     '04-fitting-the-bridge.mp3',
+    '05-sympathetic-strings.mp3',
+    '06-binding.mp3',
+    '08-winding.mp3',
   ],
-  'II · Duets': ['05-sympathetic-strings.mp3'],
-  'III · Sight-reading': ['06-binding.mp3'],
-  'IV · Wolf notes': ['07-the-wolf-tone.mp3'],
-  'V · Entanglements': ['09-bookmatched.mp3'],
-  'VI · Tempo': ['08-winding.mp3'],
-  'VII · Concerto': ['10-larger-inside.mp3'],
-  'VIII · Journeymen': ['11-an-improper-commission.mp3'],
-  'IX · Masterworks': ['12-the-workshop-at-rest.mp3'],
+  'II · Campaign': [
+    '07-the-wolf-tone.mp3',
+    '09-bookmatched.mp3',
+    '10-larger-inside.mp3',
+    '11-an-improper-commission.mp3',
+    '12-the-workshop-at-rest.mp3',
+  ],
 };
 const GRADUATION_TRACK = '13-graduation.mp3';
 
@@ -85,8 +86,9 @@ const CELL = 64;
 const SPEEDS = [600, 270, 150];
 const NOTE_SPACING = [85, 48, 32];  // ms between a word's audible letters, per speed
 const PROCESSING_DWELL = 0.48;       // nearly half a departure tick stays in the part
-// The spatial experiment must not rewrite campaign progress or machines.
-const SAVE_KEY = 'wolftone-spatial-proto-v2';
+// v0.9 deliberately starts a new compact campaign instead of interpreting old
+// 39-level completion as progress through a different sequence.
+const SAVE_KEY = 'wolftone-v0.9-campaign-v1';
 const BOARD_LAYOUT_VERSION = 6;
 const WIRE_TOOL = 'wire';
 const UNLIMITED_KINDS = new Set(['crossing', 'junction']);
@@ -933,6 +935,15 @@ function trackTiesMarkup(points, classes = '') {
   return markup;
 }
 
+function trackDirectionMarkup(points) {
+  return pathDirectionMarkers(points).map(({ x, y, angle }) =>
+    `<g class="track-direction" aria-hidden="true" ` +
+      `transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${angle.toFixed(2)})">` +
+      '<rect class="track-direction-bed" x="-14" y="-9" width="28" height="18" rx="8"></rect>' +
+      '<path class="track-direction-chevron" d="M-8-5L-2 0L-8 5M1-5L7 0L1 5"></path></g>',
+  ).join('');
+}
+
 function svgXY(e) {
   const r = svg.getBoundingClientRect();
   const p = puzzle();
@@ -1189,7 +1200,11 @@ function marbleTrainMarkup(points, progress, word, { motionId = null, processing
   const classes = `transit-word marble-train${processing ? ' processing-word' : ''}`;
   return `<g class="${classes}"${motion}>` + notes.map((note, index) => {
     const state = states[index];
-    return drawMarble(note, state.x, state.y, { index, surfaceRoll: state.surfaceRoll });
+    return drawMarble(note, state.x, state.y, {
+      index,
+      surfaceRoll: state.surfaceRoll,
+      lead: Boolean(word) && index === 0,
+    });
   }).join('') + '</g>';
 }
 
@@ -1325,7 +1340,7 @@ function renderBoardRun(m = machine(), layers = null) {
   const width = p.board.cols * CELL;
   const height = p.board.rows * CELL;
   const { machineLayer, runLayer } = layers ?? ensureBoardLayers(p, width, height);
-  if (!machineLayer.childElementCount) {
+  if (machineLayer.dataset.mounted !== 'true') {
     renderBoard();
     return;
   }
@@ -1498,6 +1513,7 @@ function renderBoard() {
     const ticks = wireTicks(m, w);
     s += `<rect class="wire-chip-box" x="${mid.x - 8}" y="${mid.y - 6}" width="16" height="12" rx="3"></rect>`;
     s += `<text class="wire-chip" x="${mid.x}" y="${mid.y + 3}">${ticks}</text>`;
+    s += trackDirectionMarkup(roundedPts);
     if (selected && editable()) {
       const from = portPos(m, w.from, w);
       const to = portPos(m, w.to, w);
@@ -1571,6 +1587,7 @@ function renderBoard() {
   }
 
   machineLayer.innerHTML = s;
+  machineLayer.dataset.mounted = 'true';
   renderBoardRun(m, { machineLayer, runLayer });
   interactionLayer.innerHTML = wireGestureMarkup(m);
   renderInteractionStatus();
@@ -1597,6 +1614,7 @@ function renderDeck() {
   }
   walkIndex = Math.max(0, Math.min(walkIndex, p.walkthrough.length - 1));
   const step = p.walkthrough[walkIndex];
+  $('deck-label').textContent = p.meta?.tier?.endsWith('-contract') ? 'OPTIONAL NOTES' : 'WALKTHROUGH';
   $('deck-body').hidden = deckHidden;
   $('deck-toggle').textContent = deckHidden ? 'show' : 'hide';
   $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>`;
@@ -1622,13 +1640,18 @@ function renderCases() {
     const cls = status === 'pass' ? 'pass' : status === 'fail' ? 'fail' : '';
     const spec = commissionCaseSpec(p, kase);
     const entries = (items) => items.map(({ label, word }) =>
-      `<span class="case-entry">${label ? `<b>${label}:</b> ` : ''}${marbleWord(word)}</span>`)
-      .join('<span class="case-separator"> · </span>');
+      `<span class="case-entry${label ? '' : ' unlabeled'}">` +
+        `${label ? `<b>${label}</b>` : ''}<span class="case-entry-word">${marbleWord(word)}</span>` +
+      '</span>').join('');
+    const section = (label, items) =>
+      `<span class="case-spec-section"><small>${label}</small>` +
+        `<span class="case-entries">${entries(items)}</span></span>`;
+    const current = i === caseIndex;
     return `<button class="case-tab${i === caseIndex ? ' current' : ''}" data-case="${i}">` +
       `<span class="status ${cls}">${mark}</span><span class="case-spec">` +
-      `<strong class="case-name">${kase.name}</strong>` +
-      `<span class="case-spec-row"><small>SOUND IN</small><span>${entries(spec.inputs)}</span></span>` +
-      `<span class="case-spec-row"><small>SOUND OUT</small><span>${entries(spec.targets)}</span></span>` +
+      `<span class="case-heading"><strong class="case-name">${kase.name}</strong>` +
+        `${current ? '<em>NOW</em>' : ''}</span>` +
+      section('IN', spec.inputs) + section('OUT', spec.targets) +
       `</span></button>`;
   }).join('');
 }
@@ -1645,6 +1668,7 @@ function renderScore() {
   $('best-cost').textContent = best?.cost ?? 'n/a';
   $('best-time').textContent = best?.time ?? 'n/a';
   $('best-area').textContent = best?.area ?? 'n/a';
+  document.querySelector('.personal-best').hidden = !best;
 }
 
 function renderPalette() {
