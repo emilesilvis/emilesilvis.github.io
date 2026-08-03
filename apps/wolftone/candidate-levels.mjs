@@ -4,8 +4,8 @@
 // architectures, mining bounds, and routed score evidence remain attached here
 // for tests and author review.
 
-import { measureScore, runCase } from './engine.mjs?v=0.9.0-6';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.0-6';
+import { measureScore, runCase } from './engine.mjs?v=0.9.1-1';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.1-1';
 
 const CHAPTER = 'II · Campaign';
 const TERMINAL_KINDS = new Set(['quill', 'resonator']);

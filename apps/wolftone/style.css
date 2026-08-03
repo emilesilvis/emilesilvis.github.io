@@ -370,8 +370,7 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.case-entry-word { display: flex; min-width: 0; justify-content: flex-start; }
-.case-entry:not(.unlabeled) .case-entry-word { justify-content: flex-end; }
+.case-entry-word { display: flex; min-width: 0; justify-content: flex-end; }
 .commission-marbles { display: inline-flex; max-width: 100%; align-items: center; flex-wrap: wrap; gap: 3px; }
 .commission-marble {
   position: relative;

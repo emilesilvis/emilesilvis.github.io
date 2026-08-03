@@ -2,8 +2,8 @@
 // this transformation outside main.mjs lets UI copy stay testable without
 // booting the whole player shell.
 
-import { cellKey, occupiedWireCells, routeValidity } from './wire-routing.mjs?v=0.9.0-6';
-import { partFootprintCells } from './part-geometry.mjs?v=0.9.0-6';
+import { cellKey, occupiedWireCells, routeValidity } from './wire-routing.mjs?v=0.9.1-1';
+import { partFootprintCells } from './part-geometry.mjs?v=0.9.1-1';
 
 export function couplingRouteText(targetSide, otherHead, exitSide) {
   const sourceSide = targetSide === 'A' ? 'B' : 'A';

@@ -7,7 +7,7 @@
 // adjacent, facing ports has an empty route and takes one tick, while every
 // detour adds ticks.
 
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.0-6';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-1';
 
 export const cellKey = ({ x, y }) => `${x},${y}`;
 

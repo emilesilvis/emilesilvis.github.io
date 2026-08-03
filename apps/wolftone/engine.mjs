@@ -6,7 +6,7 @@
 // PROTOTYPE: throwaway. It answers "does strings-are-tapes play?", not
 // "how should this be built".
 
-import { machineArea, wireTravelTime } from './wire-routing.mjs?v=0.9.0-6';
+import { machineArea, wireTravelTime } from './wire-routing.mjs?v=0.9.1-1';
 
 export const NOTES = ['A', 'B', 'C', 'D'];
 

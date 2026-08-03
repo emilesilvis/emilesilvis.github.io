@@ -5,14 +5,14 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.0-6';
-import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.9.0-6';
+} from './engine.mjs?v=0.9.1-1';
+import { LEVELS, showsWalkthrough } from './levels.mjs?v=0.9.1-1';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.0-6';
+} from './progression.mjs?v=0.9.1-1';
 import {
   marbleTrainStates,
   pathDirectionMarkers,
@@ -20,17 +20,17 @@ import {
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.0-6';
-import { fitCamera } from './board-camera.mjs?v=0.9.0-6';
+} from './motion.mjs?v=0.9.1-1';
+import { fitCamera } from './board-camera.mjs?v=0.9.1-1';
 import {
   movementValidity,
   placementValidity,
   retargetWire as retargetWireEdit,
   spliceWire,
-} from './board-layout.mjs?v=0.9.0-6';
-import { commissionCaseSpec } from './commission.mjs?v=0.9.0-6';
-import { drawMarble, drawMarbleWord, drawWordCard } from './notation.mjs?v=0.9.0-6';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.0-6';
+} from './board-layout.mjs?v=0.9.1-1';
+import { commissionCaseSpec } from './commission.mjs?v=0.9.1-1';
+import { drawMarble, drawMarbleWord, drawWordCard } from './notation.mjs?v=0.9.1-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.1-1';
 import {
   cellKey,
   extendRouteFromPort,
@@ -39,7 +39,7 @@ import {
   wireEndpointOccupied,
   wirePathCells,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.0-6';
+} from './wire-routing.mjs?v=0.9.1-1';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -51,12 +51,12 @@ import {
   portTagWidth,
   portGeometry,
   terminalCardGeometry,
-} from './part-geometry.mjs?v=0.9.0-6';
-import { partArtSelection } from './part-art.mjs?v=0.9.0-6';
+} from './part-geometry.mjs?v=0.9.1-1';
+import { partArtSelection } from './part-art.mjs?v=0.9.1-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.0-6';
+} from './audio.mjs?v=0.9.1-1';
 
 // Tutorials show teaching decks. Campaign contracts show one neutral
 // observation and one optional nudge. Reference review stays quiet.
@@ -92,6 +92,9 @@ const SAVE_KEY = 'wolftone-v0.9-campaign-v1';
 const BOARD_LAYOUT_VERSION = 6;
 const WIRE_TOOL = 'wire';
 const UNLIMITED_KINDS = new Set(['crossing', 'junction']);
+const TERMINAL_KINDS = new Set(['quill', 'resonator']);
+const TRAY_KIND_ORDER = ['quill', 'resonator', WIRE_TOOL, 'crossing', 'junction'];
+const TRAY_KIND_RANK = new Map(TRAY_KIND_ORDER.map((kind, index) => [kind, index]));
 const CONSTRUCTION_NAMES = { [WIRE_TOOL]: 'Track', ...KIND_NAMES };
 const REDUCED_MOTION = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -252,6 +255,17 @@ const fixedParts = () => contractTerminals().flatMap((part) => {
 const machine = () => ({ parts: [...fixedParts(), ...playerParts], wires: playerWires });
 const currentCase = () => puzzle().cases[caseIndex];
 const editable = () => !run;
+
+function terminalWordForPart(part) {
+  if (part?.kind === 'quill') return currentCase().seeds[part.id] ?? null;
+  if (part?.kind === 'resonator') return currentCase().targets[part.id] ?? null;
+  return null;
+}
+
+function playTerminalWord(part) {
+  const word = terminalWordForPart(part);
+  if (word != null) playWord(word, { spacing: 110, gain: 0.3 });
+}
 
 function saveMachine() {
   save.machines[puzzle().id] = { parts: playerParts, wires: playerWires, terminalPositions };
@@ -585,13 +599,17 @@ function paletteCount(kind) {
   return (puzzle().palette[kind] ?? 0) + suppliedDevices().filter((part) => part.kind === kind).length;
 }
 function paletteKinds() {
-  return [WIRE_TOOL, ...new Set([
+  return [...new Set([
+    WIRE_TOOL,
     ...contractTerminals().map((part) => part.kind),
     ...Object.keys(puzzle().palette),
     ...suppliedDevices().map((part) => part.kind),
     'crossing',
     'junction',
-  ])];
+  ])]
+    .filter((kind) => !TERMINAL_KINDS.has(kind) || remaining(kind) > 0)
+    .sort((left, right) =>
+      (TRAY_KIND_RANK.get(left) ?? Infinity) - (TRAY_KIND_RANK.get(right) ?? Infinity));
 }
 function armedPartKind() { return armedTool && armedTool !== WIRE_TOOL ? armedTool : null; }
 function remaining(kind) { return paletteCount(kind) - placedCount(kind); }
@@ -2274,6 +2292,7 @@ svg.addEventListener('pointerup', (e) => {
     const gesture = partDrag;
     partDrag = null;
     selection = { kind: 'part', id: gesture.id };
+    if (!gesture.moved) playTerminalWord(byId(machine(), gesture.id));
     // Pointer capture retargets the generated click to the SVG root. Suppress
     // that click so a stationary press selects instead of immediately clearing.
     suppressPartClick = true;
