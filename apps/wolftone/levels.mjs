@@ -2,10 +2,10 @@
 // ladders remain as authoring archives; importing only these two sources keeps
 // linear exercises out of the shipped progression.
 
-import { TUTORIAL_LEVELS } from './tutorial-levels.mjs?v=0.9.1-7';
-import { CANDIDATE_LEVELS } from './candidate-levels.mjs?v=0.9.1-7';
-import { CHAPTER_ORDER } from './chapters.mjs?v=0.9.1-7';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.1-7';
+import { TUTORIAL_LEVELS } from './tutorial-levels.mjs?v=0.9.1-8';
+import { CANDIDATE_LEVELS } from './candidate-levels.mjs?v=0.9.1-8';
+import { CHAPTER_ORDER } from './chapters.mjs?v=0.9.1-8';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.1-8';
 
 const SOURCE_LEVELS = [...TUTORIAL_LEVELS, ...CANDIDATE_LEVELS];
 const TUTORIAL_IDS = new Set(TUTORIAL_LEVELS.map((level) => level.id));
