@@ -2,7 +2,7 @@
 // introduce construction and each player-facing mechanism once; the campaign
 // that follows is made only of open-ended contracts.
 
-import { PUZZLES } from './puzzles.mjs?v=0.9.1-8';
+import { PUZZLES } from './puzzles.mjs?v=0.9.2-1';
 
 const CHAPTER = 'I · Tutorial';
 const authoredById = new Map(PUZZLES.map((level) => [level.id, level]));
@@ -124,4 +124,6 @@ export const TUTORIAL_LEVELS = [
   crossingTutorial,
   junctionTutorial,
   tutorial('the-wolfs-bite', ['fork']),
+  tutorial('the-coupling', ['coupling']),
+  tutorial('valve-race', ['valve']),
 ];

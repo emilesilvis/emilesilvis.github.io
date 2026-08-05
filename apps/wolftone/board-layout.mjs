@@ -10,9 +10,9 @@ import {
   sameCell,
   wirePathCells,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.1-8';
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-8';
-import { PORTS } from './engine.mjs?v=0.9.1-8';
+} from './wire-routing.mjs?v=0.9.2-1';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.2-1';
+import { PORTS } from './engine.mjs?v=0.9.2-1';
 
 // Multi-port mechanisms expose player-facing courses for drop-to-splice. A
 // Crossing can use either isolated channel in either direction; other parts
@@ -37,10 +37,12 @@ export function couplingRouteText(targetSide, otherHead, exitSide) {
 }
 
 // Placement preview and placement commit share this test so the ghost never
-// promises a cell that the click will reject. The canvas is unbounded, so
-// only occupancy can refuse a cell.
-export function placementValidity(parts, candidate, wires = []) {
+// promises a cell that the click will reject.
+export function placementValidity(parts, board, candidate, wires = []) {
   const footprint = partFootprintCells(candidate);
+  if (footprint.some(({ x, y }) => x < 0 || y < 0 || x >= board.cols || y >= board.rows)) {
+    return { valid: false, reason: 'Outside the board' };
+  }
   const occupiedParts = new Set(parts.flatMap(partFootprintCells).map(cellKey));
   if (footprint.some((cell) => occupiedParts.has(cellKey(cell)))) {
     return { valid: false, reason: 'Cell occupied' };
@@ -142,7 +144,7 @@ function crossingForPaths(cell, existingPrevious, existingNext, newPrevious, new
 // Every perpendicular straight-through overlap becomes a one-cell Crossing;
 // bends and parallel overlaps remain illegal. The requested wire ID stays on
 // its first leg, while all additional legs receive collision-free IDs.
-export function routeWireWithCrossings(machine, wire) {
+export function routeWireWithCrossings(machine, board, wire) {
   const parts = structuredClone(machine.parts);
   let wires = structuredClone(machine.wires.filter((candidate) => candidate.id !== wire.id));
   const logicalWire = structuredClone(wire);
@@ -217,24 +219,24 @@ export function routeWireWithCrossings(machine, wire) {
 
   const prospective = { parts, wires };
   const invalid = wires
-    .map((candidate) => routeValidity(prospective, candidate))
+    .map((candidate) => routeValidity(prospective, board, candidate))
     .find((validity) => !validity.valid);
   return invalid
     ? { ...invalid, parts: machine.parts, wires: machine.wires, crossings: [] }
     : { valid: true, reason: null, parts, wires, crossings: crossings.map(({ crossing }) => crossing) };
 }
 
-function resolveMovedWires(parts, stationaryWires, preferredWires) {
+function resolveMovedWires(parts, board, stationaryWires, preferredWires) {
   const resolved = new Map(stationaryWires.map((wire) => [wire.id, wire]));
   for (const preferred of preferredWires) {
     let nextWire = preferred;
     let nextMachine = { parts, wires: [...resolved.values(), nextWire] };
-    if (!routeValidity(nextMachine, nextWire).valid) {
-      const route = findWireRoute(nextMachine, nextWire);
+    if (!routeValidity(nextMachine, board, nextWire).valid) {
+      const route = findWireRoute(nextMachine, board, nextWire);
       if (route === null) return null;
       nextWire = { ...nextWire, route };
       nextMachine = { parts, wires: [...resolved.values(), nextWire] };
-      if (!routeValidity(nextMachine, nextWire).valid) return null;
+      if (!routeValidity(nextMachine, board, nextWire).valid) return null;
     }
     resolved.set(nextWire.id, nextWire);
   }
@@ -245,7 +247,7 @@ function resolveMovedWires(parts, stationaryWires, preferredWires) {
 // selection keep their exact geometry and timing by translating with it;
 // tracks crossing the selection edge stay anchored outside and reroute. No
 // prospective state escapes when any footprint or route is illegal.
-export function groupMovementEdit(parts, partIds, { dx, dy }, wires = []) {
+export function groupMovementEdit(parts, board, partIds, { dx, dy }, wires = []) {
   const selectedIds = new Set(partIds);
   if (!selectedIds.size || [...selectedIds].some((id) => !parts.some((part) => part.id === id))) {
     return { valid: false, reason: 'Missing part', parts, wires };
@@ -261,7 +263,7 @@ export function groupMovementEdit(parts, partIds, { dx, dy }, wires = []) {
 
   const placed = [...stationaryParts];
   for (const candidate of movedParts) {
-    const placement = placementValidity(placed, candidate, stationaryWires);
+    const placement = placementValidity(placed, board, candidate, stationaryWires);
     if (!placement.valid) return { ...placement, parts, wires };
     placed.push(candidate);
   }
@@ -287,13 +289,13 @@ export function groupMovementEdit(parts, partIds, { dx, dy }, wires = []) {
       parts: nextParts,
       wires: [...internalResult.values(), internalWire],
     };
-    if (!routeValidity(nextMachine, internalWire).valid) {
+    if (!routeValidity(nextMachine, board, internalWire).valid) {
       return { valid: false, reason: 'Would break a routed track', parts, wires };
     }
     internalResult.set(internalWire.id, internalWire);
   }
   const resolved = resolveMovedWires(
-    nextParts, [...internalResult.values()], edgeWires,
+    nextParts, board, [...internalResult.values()], edgeWires,
   );
   if (!resolved) {
     return { valid: false, reason: 'Would break a routed track', parts, wires };
@@ -309,11 +311,11 @@ export function groupMovementEdit(parts, partIds, { dx, dy }, wires = []) {
 // Return the prospective machine for a part move. Position-only changes use
 // the group interface so one-part and many-part drags cannot disagree. A
 // rotation keeps the same connected-track preservation rules at this seam.
-export function partMovementEdit(parts, partId, change, wires = []) {
+export function partMovementEdit(parts, board, partId, change, wires = []) {
   const current = parts.find((part) => part.id === partId);
   if (!current) return { valid: false, reason: 'Missing part', parts, wires };
   if (change.orientation === undefined) {
-    return groupMovementEdit(parts, [partId], {
+    return groupMovementEdit(parts, board, [partId], {
       dx: (change.x ?? current.x) - current.x,
       dy: (change.y ?? current.y) - current.y,
     }, wires);
@@ -325,13 +327,13 @@ export function partMovementEdit(parts, partId, change, wires = []) {
     .map((wire) => wire.id));
   const stationaryWires = wires.filter((wire) => !connectedIds.has(wire.id));
   const placement = placementValidity(
-    parts.filter((part) => part.id !== partId), candidate, stationaryWires,
+    parts.filter((part) => part.id !== partId), board, candidate, stationaryWires,
   );
   if (!placement.valid) return { ...placement, parts, wires };
 
   const nextParts = parts.map((part) => part.id === partId ? candidate : part);
   const preferredWires = wires.filter((wire) => connectedIds.has(wire.id));
-  const resolved = resolveMovedWires(nextParts, stationaryWires, preferredWires);
+  const resolved = resolveMovedWires(nextParts, board, stationaryWires, preferredWires);
   return resolved
     ? {
       valid: true,
@@ -342,8 +344,8 @@ export function partMovementEdit(parts, partId, change, wires = []) {
     : { valid: false, reason: 'Would break a routed track', parts, wires };
 }
 
-export function movementValidity(parts, partId, change, wires = []) {
-  const { valid, reason } = partMovementEdit(parts, partId, change, wires);
+export function movementValidity(parts, board, partId, change, wires = []) {
+  const { valid, reason } = partMovementEdit(parts, board, partId, change, wires);
   return { valid, reason };
 }
 

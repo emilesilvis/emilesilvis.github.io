@@ -36,7 +36,7 @@ body {
   display: grid;
   height: 100dvh;
   min-height: 100vh;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   overflow: hidden;
   color: var(--ink);
   background:
@@ -184,12 +184,9 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 /* ── verdict banner ──────────────────────────────────── */
 
 .banner[hidden] { display: none; }
-/* Overlays the play area (same grid row) so showing it never reflows the board. */
 .banner {
-  grid-area: 2 / 1;
-  z-index: 15;
+  grid-row: 2;
   display: flex;
-  align-self: start;
   align-items: center;
   gap: 12px;
   margin: 10px 18px 0;
@@ -228,7 +225,7 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 /* ── primary layout ──────────────────────────────────── */
 
 .app-shell {
-  grid-area: 2 / 1;
+  grid-row: 3;
   display: grid;
   grid-template-columns: clamp(286px, 21vw, 330px) minmax(0, 1fr) clamp(220px, 17vw, 300px);
   gap: 10px;
@@ -685,6 +682,7 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 .grid-line { stroke: #100a06; stroke-width: 1; opacity: 0.55; }
 .grid-pin-shadow { fill: #0a0603; opacity: 0.7; }
 .grid-pin { fill: #a8843e; stroke: #d4af61; stroke-width: 0.45; }
+.board-binding { fill: none; stroke: #b8934c; stroke-width: 2.5; }
 
 .part-box { fill: transparent; stroke: transparent; }
 .movable-part { cursor: move; }

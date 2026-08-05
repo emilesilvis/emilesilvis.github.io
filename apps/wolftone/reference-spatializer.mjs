@@ -3,10 +3,10 @@
 // router: the returned machines contain concrete orientations, footprints,
 // Junctions, Crossings, and explicit route arrays before the UI can load them.
 
-import { spliceWire } from './board-layout.mjs?v=0.9.1-8';
-import { runCase } from './engine.mjs?v=0.9.1-8';
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.1-8';
-import { cellKey, routeValidity, wirePathCells } from './wire-routing.mjs?v=0.9.1-8';
+import { spliceWire } from './board-layout.mjs?v=0.9.2-1';
+import { runCase } from './engine.mjs?v=0.9.2-1';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.2-1';
+import { cellKey, routeValidity, wirePathCells } from './wire-routing.mjs?v=0.9.2-1';
 
 const DIRECTIONS = [
   { name: 'east', x: 1, y: 0 },
@@ -514,33 +514,9 @@ function installWire(machine, board, logicalWire, path, ids) {
   });
 
   for (const wire of machine.wires) {
-    const validity = routeValidity(machine, wire);
+    const validity = routeValidity(machine, board, wire);
     if (!validity.valid) throw new Error(`${wire.id}: ${validity.reason}`);
   }
-}
-
-function legibilityRank(machine) {
-  const crossings = machine.parts.filter((part) => part.kind === 'crossing').length;
-  let bends = 0;
-  let routeCells = 0;
-  for (const wire of machine.wires) {
-    const path = wirePathCells(machine, wire);
-    routeCells += wire.route.length;
-    let previousDirection = null;
-    for (let index = 1; index < path.length; index += 1) {
-      const direction = directionBetween(path[index - 1], path[index]);
-      if (previousDirection && direction && direction !== previousDirection) bends += 1;
-      previousDirection = direction;
-    }
-  }
-  return [crossings, bends, routeCells];
-}
-
-function rankBefore(left, right) {
-  if (!right) return true;
-  return left.some((value, index) =>
-    value < right[index] && left.slice(0, index).every((earlier, earlierIndex) =>
-      earlier === right[earlierIndex]));
 }
 
 function spatializeReferenceAtSpacing(level, spacing) {
@@ -563,27 +539,6 @@ function spatializeReferenceAtSpacing(level, spacing) {
     rows: (rows - 1) * spacing + margin * 2 + 2,
   };
   const placement = placeParts(originalParts, logicalWires, board, margin);
-  for (const detour of original.referenceRouting?.detours ?? []) {
-    const routedWire = logicalWires.find((wire) =>
-      wire.from.part === detour.fromPart
-      && (!detour.fromPort || wire.from.port === detour.fromPort));
-    if (!routedWire) {
-      throw new Error(`${level.id}: detour source ${detour.fromPart}.${detour.fromPort ?? '*'} is missing`);
-    }
-    const corners = {
-      northwest: { x: 1, y: 1 },
-      northeast: { x: board.cols - 2, y: 1 },
-      southwest: { x: 1, y: board.rows - 2 },
-      southeast: { x: board.cols - 2, y: board.rows - 2 },
-    };
-    const sourcePart = placement.parts.find((part) => part.id === routedWire.from.part);
-    const sourcePort = portGeometry(sourcePart, routedWire.from.port);
-    const northDistance = /^north-(\d+)$/.exec(detour.via)?.[1];
-    routedWire.waypoint = northDistance
-      ? { x: sourcePort.neighbor.x + 1, y: sourcePort.neighbor.y - Number(northDistance) }
-      : corners[detour.via];
-    if (!routedWire.waypoint) throw new Error(`${level.id}: unknown detour ${detour.via}`);
-  }
   if (level.id === 'the-valve') {
     const delayedTail = logicalWires.find((wire) => wire.from.part === 'q4');
     if (delayedTail) delayedTail.waypoint = { x: 1, y: board.rows - 2 };
@@ -607,15 +562,9 @@ function spatializeReferenceAtSpacing(level, spacing) {
     { x: 1, y: board.rows - 2 },
     { x: board.cols - 2, y: board.rows - 2 },
   ] : [null];
-  const selectForLegibility = original.referenceRouting?.selection === 'legibility';
   let machine = null;
-  let selectedRank = null;
   let routeError = null;
-  for (
-    let attempt = 0;
-    attempt < 64 * sharedWaypoints.length && (!machine || selectForLegibility);
-    attempt += 1
-  ) {
+  for (let attempt = 0; attempt < 64 * sharedWaypoints.length && !machine; attempt += 1) {
     const routingAttempt = attempt % 64;
     if (delayedSharedVoice) {
       delayedSharedVoice.waypoint = sharedWaypoints[Math.floor(attempt / 64)];
@@ -646,11 +595,7 @@ function spatializeReferenceAtSpacing(level, spacing) {
         .map((kase) => runCase(candidateMachine, kase, 1000))
         .find((run) => run.verdict !== 'resonant');
       if (failedRun) throw new Error(`reference timing failed: ${failedRun.detail}`);
-      const candidateRank = legibilityRank(candidateMachine);
-      if (!machine || !selectForLegibility || rankBefore(candidateRank, selectedRank)) {
-        machine = candidateMachine;
-        selectedRank = candidateRank;
-      }
+      machine = candidateMachine;
     } catch (error) {
       routeError = error;
     }
@@ -661,7 +606,7 @@ function spatializeReferenceAtSpacing(level, spacing) {
 
   for (const wire of machine.wires) {
     try {
-      const validity = routeValidity(machine, wire);
+      const validity = routeValidity(machine, board, wire);
       if (!validity.valid) throw new Error(`${wire.id}: ${validity.reason}`);
     } catch (error) {
       throw new Error(`${level.id}: ${error.message}`, { cause: error });
@@ -693,8 +638,6 @@ function spatializeReferenceAtSpacing(level, spacing) {
       junctions: referenceParts.filter((part) => part.kind === 'junction').length,
       crossings: referenceParts.filter((part) => part.kind === 'crossing').length,
       spacing,
-      selection: selectForLegibility ? 'legibility' : 'first-valid',
-      legibilityRank: selectedRank,
     },
   };
 }
