@@ -10,9 +10,9 @@ import {
   sameCell,
   wirePathCells,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.2-3';
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.2-3';
-import { PORTS } from './engine.mjs?v=0.9.2-3';
+} from './wire-routing.mjs?v=0.9.3-1';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.3-1';
+import { PORTS } from './engine.mjs?v=0.9.3-1';
 
 // Multi-port mechanisms expose player-facing courses for drop-to-splice. A
 // Crossing can use either isolated channel in either direction; other parts

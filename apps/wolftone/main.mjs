@@ -5,14 +5,14 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.2-3';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.2-3';
+} from './engine.mjs?v=0.9.3-1';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.3-1';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.2-3';
+} from './progression.mjs?v=0.9.3-1';
 import {
   wordMarbleState,
   pathDirectionMarkers,
@@ -20,8 +20,8 @@ import {
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.2-3';
-import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.2-3';
+} from './motion.mjs?v=0.9.3-1';
+import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.3-1';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -30,10 +30,10 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.2-3';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.2-3';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.2-3';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.2-3';
+} from './board-layout.mjs?v=0.9.3-1';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.3-1';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.3-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.3-1';
 import {
   cellKey,
   extendRouteFromPort,
@@ -41,7 +41,7 @@ import {
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.2-3';
+} from './wire-routing.mjs?v=0.9.3-1';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -54,12 +54,12 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.2-3';
-import { partArtSelection } from './part-art.mjs?v=0.9.2-3';
+} from './part-geometry.mjs?v=0.9.3-1';
+import { partArtSelection } from './part-art.mjs?v=0.9.3-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.2-3';
+} from './audio.mjs?v=0.9.3-1';
 
 // Tutorials show teaching decks. Campaign contracts show one neutral
 // observation and one optional nudge. Reference review stays quiet.
@@ -596,7 +596,7 @@ function doTick() {
           if (caseStatuses[candidate] !== 'pass') { nextCase = candidate; break; }
         }
         showBanner('resonant', `${currentCase().name} rang true`,
-          'Continue with the next performance, or Run to hear the recital.',
+          'Continue with the next performance, or Run this one again.',
           nextCase === null ? null : { kind: 'case', index: nextCase });
       }
     } else if (run.verdict === 'sour') {
@@ -623,9 +623,13 @@ function onRunButton() {
     renderBoard(); renderTransport();
     return;
   }
-  recital ??= makeRecital(caseIndex);
-  recital.paused = false;
-  recital.failed = false;
+  if (!recital && caseStatuses.every((status) => status === 'pass')) {
+    recital = makeRecital(caseIndex);
+  }
+  if (recital) {
+    recital.paused = false;
+    recital.failed = false;
+  }
   discreteFrames = false;
   if (!run || run.verdict) {
     run = makeRun();
