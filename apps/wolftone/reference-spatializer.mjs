@@ -3,10 +3,10 @@
 // router: the returned machines contain concrete orientations, footprints,
 // Junctions, Crossings, and explicit route arrays before the UI can load them.
 
-import { spliceWire } from './board-layout.mjs?v=0.9.3-1';
-import { runCase } from './engine.mjs?v=0.9.3-1';
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.3-1';
-import { cellKey, routeValidity, wirePathCells } from './wire-routing.mjs?v=0.9.3-1';
+import { spliceWire } from './board-layout.mjs?v=0.9.4-1';
+import { runCase } from './engine.mjs?v=0.9.4-1';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.4-1';
+import { cellKey, routeValidity, wirePathCells } from './wire-routing.mjs?v=0.9.4-1';
 
 const DIRECTIONS = [
   { name: 'east', x: 1, y: 0 },

@@ -5,14 +5,14 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.3-1';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.3-1';
+} from './engine.mjs?v=0.9.4-1';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.4-1';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.3-1';
+} from './progression.mjs?v=0.9.4-1';
 import {
   wordMarbleState,
   pathDirectionMarkers,
@@ -20,8 +20,8 @@ import {
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.3-1';
-import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.3-1';
+} from './motion.mjs?v=0.9.4-1';
+import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.4-1';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -30,10 +30,10 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.3-1';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.3-1';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.3-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.3-1';
+} from './board-layout.mjs?v=0.9.4-1';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.4-1';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.4-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.4-1';
 import {
   cellKey,
   extendRouteFromPort,
@@ -41,7 +41,7 @@ import {
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.3-1';
+} from './wire-routing.mjs?v=0.9.4-1';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -54,15 +54,14 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.3-1';
-import { partArtSelection } from './part-art.mjs?v=0.9.3-1';
+} from './part-geometry.mjs?v=0.9.4-1';
+import { partArtSelection } from './part-art.mjs?v=0.9.4-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.3-1';
+} from './audio.mjs?v=0.9.4-1';
 
-// Tutorials show teaching decks. Campaign contracts show one neutral
-// observation and one optional nudge. Reference review stays quiet.
+// Tutorials show teaching decks. Campaign contracts stay case-only.
 
 // The score progresses from workshop craft into the forbidden commissions.
 // Cues belong to chapters and continue when adjacent commissions share one.
@@ -1789,8 +1788,8 @@ function renderCommissionTitle() {
   select.value = String(currentReferenceArchitectureIndex());
 }
 
-// Walkthroughs are player-facing teaching and hint material. Reference review
-// reuses the same panel to explain the selected architecture and its trade-off.
+// Walkthroughs are player-facing tutorial material. Reference review reuses the
+// same panel to explain the selected architecture and its trade-off.
 const deckShown = () => showsWalkthrough(puzzle(), { referenceMode: REFERENCE_MODE });
 
 function renderDeck() {
@@ -1844,7 +1843,7 @@ function renderDeck() {
 
   walkIndex = Math.max(0, Math.min(walkIndex, p.walkthrough.length - 1));
   const step = p.walkthrough[walkIndex];
-  $('deck-label').textContent = p.meta?.tier?.endsWith('-contract') ? 'OPTIONAL NOTES' : 'WALKTHROUGH';
+  $('deck-label').textContent = 'WALKTHROUGH';
   $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>`;
   $('deck-counter').textContent = `${walkIndex + 1} / ${p.walkthrough.length}`;
   $('deck-prev').disabled = walkIndex === 0;
