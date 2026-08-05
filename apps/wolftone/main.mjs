@@ -5,14 +5,14 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.2-2';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.2-2';
+} from './engine.mjs?v=0.9.2-3';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.2-3';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.2-2';
+} from './progression.mjs?v=0.9.2-3';
 import {
   wordMarbleState,
   pathDirectionMarkers,
@@ -20,8 +20,8 @@ import {
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.2-2';
-import { boardSurface, fitCamera } from './board-camera.mjs?v=0.9.2-2';
+} from './motion.mjs?v=0.9.2-3';
+import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.2-3';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -30,10 +30,10 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.2-2';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.2-2';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.2-2';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.2-2';
+} from './board-layout.mjs?v=0.9.2-3';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.2-3';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.2-3';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.2-3';
 import {
   cellKey,
   extendRouteFromPort,
@@ -41,7 +41,7 @@ import {
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.2-2';
+} from './wire-routing.mjs?v=0.9.2-3';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -54,15 +54,15 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.2-2';
-import { partArtSelection } from './part-art.mjs?v=0.9.2-2';
+} from './part-geometry.mjs?v=0.9.2-3';
+import { partArtSelection } from './part-art.mjs?v=0.9.2-3';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.2-2';
+} from './audio.mjs?v=0.9.2-3';
 
-// Tutorials show teaching decks. Campaign contracts stand on the Commission's
-// performances alone. Reference review stays quiet during normal play.
+// Tutorials show teaching decks. Campaign contracts show one neutral
+// observation and one optional nudge. Reference review stays quiet.
 
 // The score progresses from workshop craft into the forbidden commissions.
 // Cues belong to chapters and continue when adjacent commissions share one.
@@ -86,6 +86,7 @@ const CHAPTER_MUSIC = {
 const GRADUATION_TRACK = '13-graduation.mp3';
 
 const CELL = 64;
+const DEFAULT_ZOOM = 0.8;
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 3;
 const SPEEDS = [600, 270, 150];
@@ -127,7 +128,7 @@ if (REFERENCE_MODE) {
   sessionModeLabel.hidden = false;
   sessionModeLabel.textContent = 'PLAYTEST NAVIGATION · ANSWERS HIDDEN';
 }
-let zoom = 1;
+let zoom = DEFAULT_ZOOM;
 let transitAnimationFrame = null;
 let discreteFrames = false;  // Step shows exact tick snapshots; Run restores tweening
 let boardRenderFrame = null;
@@ -183,6 +184,17 @@ function setZoom(next) {
   boardScroll.scrollTop = (centerY - surface.minY * CELL) * zoom - boardScroll.clientHeight / 2;
 }
 
+function centerBoardOnBounds(bounds) {
+  const centerX = (bounds.minX + bounds.maxX + 1) / 2 * CELL;
+  const centerY = (bounds.minY + bounds.maxY + 1) / 2 * CELL;
+  boardScroll.scrollLeft = (centerX - surface.minX * CELL) * zoom - boardScroll.clientWidth / 2;
+  boardScroll.scrollTop = (centerY - surface.minY * CELL) * zoom - boardScroll.clientHeight / 2;
+}
+
+function centerBoardOnContent() {
+  centerBoardOnBounds(machineContentBounds(machine(), puzzle().board, 1));
+}
+
 function fitBoardToContent() {
   const camera = fitCamera(machine(), puzzle().board, {
     width: boardScroll.clientWidth,
@@ -190,10 +202,7 @@ function fitBoardToContent() {
   }, { cellSize: CELL, minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, padding: 1 });
   zoom = camera.zoom;
   sizeBoard();
-  const centerX = (camera.bounds.minX + camera.bounds.maxX + 1) / 2 * CELL;
-  const centerY = (camera.bounds.minY + camera.bounds.maxY + 1) / 2 * CELL;
-  boardScroll.scrollLeft = (centerX - surface.minX * CELL) * zoom - boardScroll.clientWidth / 2;
-  boardScroll.scrollTop = (centerY - surface.minY * CELL) * zoom - boardScroll.clientHeight / 2;
+  centerBoardOnBounds(camera.bounds);
 }
 
 // ── persistent state ─────────────────────────────────────
@@ -464,7 +473,7 @@ function loadLevel(i) {
   armedTool = null;
   interactionNotice = '';
   placementHover = null;
-  zoom = 1;
+  zoom = DEFAULT_ZOOM;
   walkIndex = 0;
   caseStatuses = puzzle().cases.map(() => null);
   verifiedRuns = null;
@@ -476,7 +485,7 @@ function loadLevel(i) {
   setSoundtrack(soundtrackForLevel(levelIndex));
   if (playerWires.length) verifyAll({ quiet: true });
   renderAll();
-  fitBoardToContent();
+  centerBoardOnContent();
   return true;
 }
 
@@ -1776,8 +1785,8 @@ function renderCommissionTitle() {
   select.value = String(currentReferenceArchitectureIndex());
 }
 
-// Walkthroughs are tutorial teaching material. Reference review reuses the same
-// panel to explain the selected architecture and its trade-off.
+// Walkthroughs are player-facing teaching and hint material. Reference review
+// reuses the same panel to explain the selected architecture and its trade-off.
 const deckShown = () => showsWalkthrough(puzzle(), { referenceMode: REFERENCE_MODE });
 
 function renderDeck() {
@@ -1831,7 +1840,7 @@ function renderDeck() {
 
   walkIndex = Math.max(0, Math.min(walkIndex, p.walkthrough.length - 1));
   const step = p.walkthrough[walkIndex];
-  $('deck-label').textContent = 'WALKTHROUGH';
+  $('deck-label').textContent = p.meta?.tier?.endsWith('-contract') ? 'OPTIONAL NOTES' : 'WALKTHROUGH';
   $('deck-step').innerHTML = `<strong>${step.title}</strong><p>${step.body}</p>`;
   $('deck-counter').textContent = `${walkIndex + 1} / ${p.walkthrough.length}`;
   $('deck-prev').disabled = walkIndex === 0;

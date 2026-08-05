@@ -4,8 +4,8 @@
 // architectures, mining bounds, and routed score evidence remain attached here
 // for tests and author review.
 
-import { measureScore, runCase } from './engine.mjs?v=0.9.2-2';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.2-2';
+import { measureScore, runCase } from './engine.mjs?v=0.9.2-3';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.2-3';
 
 const CHAPTER = 'II · Campaign';
 const TERMINAL_KINDS = new Set(['quill', 'resonator']);
@@ -58,6 +58,21 @@ const crossedPairsBench = () => [
   { id: 'rB', kind: 'resonator', x: 9, y: 2, label: 'hall of B', commissionOrder: 2 },
   { id: 'rA', kind: 'resonator', x: 9, y: 4, label: 'hall of A', commissionOrder: 1 },
 ];
+
+function optionalDeck(observation, nudge) {
+  return [
+    {
+      focus: 'commission',
+      title: 'Compare every performance',
+      body: observation,
+    },
+    {
+      focus: 'board',
+      title: 'Optional nudge',
+      body: nudge,
+    },
+  ];
+}
 
 function cloneMachine(machine) {
   return {
@@ -122,6 +137,8 @@ function dominates(left, right) {
 
 function promotedContract({
   architectures,
+  observation,
+  nudge,
   evidence,
   difficulty,
   foundation = false,
@@ -201,6 +218,7 @@ function promotedContract({
       sourceCandidate: evidence.sourceCandidate,
       promotion: evidence,
     },
+    walkthrough: optionalDeck(observation, nudge),
   };
 }
 
@@ -646,6 +664,8 @@ const AUTHORED_CANDIDATES = [
       foundationReason: 'one conditional composition after single-part tutorials',
       spatialCompetition: 'the two operation-order builds share the frontier; the separate reader-and-cutter build is a deliberately dominated high-contrast foundation witness',
     },
+    observation: 'Every result ends in A. Compare what changes when the input begins with A and when it begins with another note.',
+    nudge: 'One part can add the final A. Another can remove a matching lead A while preserving every other lead note.',
   }),
 
   promotedContract({
@@ -673,6 +693,8 @@ const AUTHORED_CANDIDATES = [
       foundationReason: 'two-part multi-input composition before the three-part merger',
       spatialCompetition: 'direct and biting-feedback routes retain a Cost/Time versus Area frontier; peek-and-damp is a dominated third strategy',
     },
+    observation: 'The tail voice is always last. Compare what happens to a leading C in the lead voice before the two voices join.',
+    nudge: 'Normalize the lead voice first, then place it in the lead seat of a Unison.',
   }),
 
   promotedContract({
@@ -700,6 +722,8 @@ const AUTHORED_CANDIDATES = [
       foundationReason: 'a split-and-recombine composition before larger campaign graphs',
       spatialCompetition: 'direct turn dominates the expanded and case-specific rebuilds; both remain high-contrast foundation witnesses',
     },
+    observation: 'The same lead note moves from the beginning to the end in every performance; the middle keeps its order.',
+    nudge: 'The two phrases from one cut can take opposite seats when they rejoin.',
   }),
 
   promotedContract({
@@ -724,6 +748,8 @@ const AUTHORED_CANDIDATES = [
       extendedAgreement: '21/21',
       logicalArchitectures: 3,
     },
+    observation: 'Compare what each hall receives when only the first note changes. The long performance follows the same contract.',
+    nudge: 'One operation can separate the lead note from the entire remaining phrase before the two word marbles take different routes.',
   }),
 
   promotedContract({
@@ -748,6 +774,8 @@ const AUTHORED_CANDIDATES = [
       extendedAgreement: '20000/20000 correlated four-voice performances through length two',
       logicalArchitectures: 3,
     },
+    observation: 'Compare which lead voice joins which tail voice, then which complete phrase visits each hall. The notes change, but the pairing rule does not.',
+    nudge: 'You can schedule both pairs through one shared workshop, or build each pair on an independent lane.',
   }),
 
   promotedContract({
@@ -772,6 +800,8 @@ const AUTHORED_CANDIDATES = [
       extendedAgreement: 'selected commission cases',
       logicalArchitectures: 2,
     },
+    observation: 'Compare where each input first stops following the same alternating opening. Everything from that point onward survives.',
+    nudge: 'A route can remember which lead note should come next, then return a shortened phrase to an earlier test.',
   }),
 
   promotedContract({
@@ -797,6 +827,8 @@ const AUTHORED_CANDIDATES = [
       extendedAgreement: '5461/5461',
       logicalArchitectures: 2,
     },
+    observation: 'Several performances begin alike, but the surviving phrase starts at a different point. Compare the complete opening carefully.',
+    nudge: 'Three successive expectations can form a reusable cycle; a mismatch can leave that cycle without consuming its lead note.',
   }),
 
   promotedContract({
@@ -822,6 +854,8 @@ const AUTHORED_CANDIDATES = [
       extendedAgreement: '5461/5461',
       logicalArchitectures: 2,
     },
+    observation: 'The surviving suffix changes halls as well as length. Compare which expected position each performance first breaks.',
+    nudge: 'A mismatch can exit directly from the test that noticed it, while a match advances to the next expectation.',
   }),
 ];
 
