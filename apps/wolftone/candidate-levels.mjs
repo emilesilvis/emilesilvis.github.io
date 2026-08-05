@@ -1,14 +1,15 @@
-// Nine v0.9 campaign contracts: four compositional foundations followed by
-// five deep contracts promoted from the behavior repertoire. The player sees
+// Eight v0.9 campaign contracts: three compositional foundations followed by
+// five audited deep contracts. The player sees
 // only performances and a broad-enough palette. Logical laws, alternate
 // architectures, mining bounds, and routed score evidence remain attached here
 // for tests and author review.
 
-import { measureScore, runCase } from './engine.mjs?v=0.9.2-1';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.2-1';
+import { measureScore, runCase } from './engine.mjs?v=0.9.2-2';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.2-2';
 
 const CHAPTER = 'II · Campaign';
 const TERMINAL_KINDS = new Set(['quill', 'resonator']);
+const MIN_PRODUCTION_BOARD = Object.freeze({ cols: 38, rows: 24 });
 
 const wire = (fromPart, fromPort, toPart, toPort) => ({
   from: { part: fromPart, port: fromPort },
@@ -39,17 +40,23 @@ const fanoutBench = () => [
   { id: 'rB', kind: 'resonator', x: 9, y: 2, label: 'upper ledger', commissionOrder: 1 },
 ];
 
-const mergerBench = () => [
-  { id: 'qA', kind: 'quill', x: 1, y: 0, label: 'first voice' },
-  { id: 'qB', kind: 'quill', x: 1, y: 1, label: 'second voice' },
-  { id: 'r1', kind: 'resonator', x: 9, y: 2 },
-];
-
 const phaseBench = () => [
   { id: 'q1', kind: 'quill', x: 1, y: 0 },
   { id: 'rA', kind: 'resonator', x: 9, y: 1, label: 'hall A' },
   { id: 'rC', kind: 'resonator', x: 9, y: 3, label: 'hall C' },
   { id: 'rB', kind: 'resonator', x: 9, y: 4, label: 'hall B' },
+];
+
+const crossedPairsBench = () => [
+  // The production order is part of the spatial contract. A complete 4! × 2
+  // terminal-order audit included the obvious two-pair/one-reader hybrid.
+  // Timed sharing now uses Track distance rather than a dedicated delay part.
+  { id: 'q3', kind: 'quill', x: 1, y: 0, label: 'first tail', commissionOrder: 3 },
+  { id: 'q1', kind: 'quill', x: 1, y: 2, label: 'first lead', commissionOrder: 1 },
+  { id: 'q2', kind: 'quill', x: 1, y: 4, label: 'second lead', commissionOrder: 2 },
+  { id: 'q4', kind: 'quill', x: 1, y: 6, label: 'second tail', commissionOrder: 4 },
+  { id: 'rB', kind: 'resonator', x: 9, y: 2, label: 'hall of B', commissionOrder: 2 },
+  { id: 'rA', kind: 'resonator', x: 9, y: 4, label: 'hall of A', commissionOrder: 1 },
 ];
 
 function cloneMachine(machine) {
@@ -75,6 +82,7 @@ function routeWitness(level, witness) {
   const routed = spatializeReference({
     ...level,
     id: `${level.id}--${witness.id}`,
+    referenceRouting: witness.referenceRouting,
     reference: witness.build,
   });
   const machine = {
@@ -97,7 +105,11 @@ function routeWitness(level, witness) {
       spacing: routed.spatial.spacing,
       crossings: routed.spatial.crossings,
       junctions: routed.spatial.junctions,
-      method: 'deterministic placement; up to 64 route orders per spacing',
+      selection: routed.spatial.selection,
+      legibilityRank: routed.spatial.legibilityRank,
+      method: routed.spatial.selection === 'legibility'
+        ? 'deterministic placement; 64 route orders ranked by Crossings, bends, and routed cells'
+        : 'deterministic placement; up to 64 route orders per spacing',
     },
   };
 }
@@ -117,8 +129,10 @@ function promotedContract({
 }) {
   const routed = architectures.map((architecture) => routeWitness(contract, architecture));
   const board = {
-    cols: Math.max(...routed.map((architecture) => architecture.board.cols)),
-    rows: Math.max(...routed.map((architecture) => architecture.board.rows)),
+    cols: Math.max(MIN_PRODUCTION_BOARD.cols,
+      ...routed.map((architecture) => architecture.board.cols)),
+    rows: Math.max(MIN_PRODUCTION_BOARD.rows,
+      ...routed.map((architecture) => architecture.board.rows)),
   };
   const fixedIds = new Set(contract.fixed.map((part) => part.id));
   const padded = routed.map((architecture) => {
@@ -235,16 +249,32 @@ const leadingTestAppend = {
   },
 };
 
+const leadingPeekDamper = {
+  id: 'leading-peek-damper',
+  title: 'Peek, then damp',
+  graphClass: 'separate-reader-and-cutter',
+  explanation: 'A peeking A test leaves the phrase intact. Only its matching route visits a Damper; both routes then share one Mould that restores A at the tail.',
+  optimization: 'A mechanically explicit interpretation that separates inspection from deletion. It spends one extra part to avoid hiding both jobs inside a biting Tuning Fork.',
+  build: {
+    parts: [
+      { id: 'mA', kind: 'mould', x: 3, y: 1, config: { note: 'A' } },
+      { id: 'fPeek', kind: 'fork', x: 5, y: 4, config: { note: 'A', mode: 'peek' } },
+      { id: 'd1', kind: 'damper', x: 7, y: 4 },
+    ],
+    wires: [
+      wire('q1', 'out', 'fPeek', 'in'),
+      wire('fPeek', 'left', 'd1', 'in'),
+      wire('d1', 'out', 'mA', 'in'),
+      wire('fPeek', 'right', 'mA', 'in'),
+      wire('mA', 'out', 'r1', 'in'),
+    ],
+  },
+};
+
 const firstVoicesBench = () => [
   { id: 'qB', kind: 'quill', x: 1, y: 0, label: 'lead voice', commissionOrder: 1 },
   { id: 'r1', kind: 'resonator', x: 9, y: 2 },
   { id: 'qA', kind: 'quill', x: 1, y: 3, label: 'tail voice', commissionOrder: 2 },
-];
-
-const twinCadencesBench = () => [
-  { id: 'q1', kind: 'quill', x: 1, y: 0 },
-  { id: 'rA', kind: 'resonator', x: 9, y: 1, label: 'first cadence' },
-  { id: 'rB', kind: 'resonator', x: 9, y: 3, label: 'following cadence' },
 ];
 
 const firstVoicesDirect = {
@@ -272,6 +302,7 @@ const firstVoicesFeedback = {
   id: 'first-voices-feedback',
   title: 'Feedback normalizer',
   graphClass: 'feedback-normalizer',
+  referenceRouting: { selection: 'legibility' },
   explanation: 'A matching C returns to the same biting Tuning Fork, so the route can remove every leading C before releasing the remainder into the Unison.',
   optimization: 'Generality through logical reuse. The loop handles any run of leading C notes, rather than minimizing the routed scores.',
   build: {
@@ -283,6 +314,29 @@ const firstVoicesFeedback = {
       wire('qA', 'out', 'u1', 'tail'),
       wire('qB', 'out', 'fC', 'in'),
       wire('fC', 'left', 'fC', 'in'),
+      wire('fC', 'right', 'u1', 'lead'),
+      wire('u1', 'out', 'r1', 'in'),
+    ],
+  },
+};
+
+const firstVoicesDamper = {
+  id: 'first-voices-damper',
+  title: 'Peek and damp',
+  graphClass: 'peek-damper-normalizer',
+  explanation: 'A peeking C test preserves the lead voice, and a Damper removes one matching C before returning the shortened phrase for another look. The first non-C lead then joins the untouched tail voice.',
+  optimization: 'A mechanically explicit normalizer. It replaces the biting feedback shortcut with separate inspection and deletion parts, making a third complete strategy visible.',
+  build: {
+    parts: [
+      { id: 'u1', kind: 'unison', x: 7, y: 1 },
+      { id: 'fC', kind: 'fork', x: 3, y: 4, config: { note: 'C', mode: 'peek' } },
+      { id: 'd1', kind: 'damper', x: 5, y: 5 },
+    ],
+    wires: [
+      wire('qA', 'out', 'u1', 'tail'),
+      wire('qB', 'out', 'fC', 'in'),
+      wire('fC', 'left', 'd1', 'in'),
+      wire('d1', 'out', 'fC', 'in'),
       wire('fC', 'right', 'u1', 'lead'),
       wire('u1', 'out', 'r1', 'in'),
     ],
@@ -334,42 +388,86 @@ const turningPhraseExpanded = {
   },
 };
 
-const twinCadencesSplitFirst = {
-  id: 'twin-cadences-split-first',
-  title: 'Split, then append',
-  graphClass: 'split-then-append',
-  explanation: 'The Splitter sends the one-note head straight to the first hall. Only the remaining phrase visits the Mould, which appends A before it reaches the second hall.',
-  optimization: 'A visibly separate route for each result. It exposes the split-first structure rather than minimizing a routed score.',
+// The displayed commission uses A- and D-led phrases. This case-specific
+// construction deliberately does not pretend to implement the more general
+// four-note rotation law: it classifies those two observed heads, removes the
+// head, and rebuilds it at the tail. That makes the contract open to a truly
+// different solution family while the compact Splitter/Unison machine remains
+// the obvious general solution.
+const turningPhraseRebuild = {
+  id: 'turning-phrase-rebuild',
+  title: 'Classify and rebuild',
+  graphClass: 'conditional-rebuild',
+  explanation: 'A biting A test handles every displayed A-led phrase. Its other route handles the displayed D-led phrase with a Damper, and separate Moulds restore the removed note at the tail.',
+  optimization: 'A commission-specific conditional program. It uses more parts and space, but reaches the same four targets without splitting and recombining phrase chunks.',
   build: {
     parts: [
-      { id: 's1', kind: 'splitter', x: 3, y: 2, config: { k: 1 } },
-      { id: 'mA', kind: 'mould', x: 6, y: 4, config: { note: 'A' } },
+      { id: 'fA', kind: 'fork', x: 3, y: 2, config: { note: 'A', mode: 'consume' } },
+      { id: 'mA', kind: 'mould', x: 5, y: 1, config: { note: 'A' } },
+      { id: 'd1', kind: 'damper', x: 5, y: 4 },
+      { id: 'mD', kind: 'mould', x: 7, y: 4, config: { note: 'D' } },
     ],
     wires: [
-      wire('q1', 'out', 's1', 'in'),
-      wire('s1', 'head', 'rA', 'in'),
-      wire('s1', 'rest', 'mA', 'in'),
-      wire('mA', 'out', 'rB', 'in'),
+      wire('q1', 'out', 'fA', 'in'),
+      wire('fA', 'left', 'mA', 'in'),
+      wire('mA', 'out', 'r1', 'in'),
+      wire('fA', 'right', 'd1', 'in'),
+      wire('d1', 'out', 'mD', 'in'),
+      wire('mD', 'out', 'r1', 'in'),
     ],
   },
 };
 
-const twinCadencesAppendFirst = {
-  id: 'twin-cadences-append-first',
-  title: 'Append, then split',
-  graphClass: 'append-then-split',
-  explanation: 'The Mould appends A to the complete phrase first. The Splitter then sends the original lead note to the first hall and the full remainder, including that new A, to the second.',
-  optimization: 'Time and Area. One compact shared prefix keeps both routed outputs short, while Cost stays tied.',
+const crossedPairsScheduled = {
+  id: 'crossed-pairs-scheduled',
+  title: 'Long-track shared merger',
+  graphClass: 'temporal-multiplexing',
+  referenceRouting: {
+    detours: [{ fromPart: 'q1', fromPort: 'out', via: 'north-6' }],
+  },
+  explanation: 'Both lead voices share one Unison seat and both tails share the other. The first lead takes a long Track so the second lead and first tail pair before the remaining two voices arrive; one Tuning Fork then routes both completed phrases.',
+  optimization: 'Cost. One deliberately long route schedules reuse of a single Unison and Tuning Fork instead of building two complete pair-and-classify lanes.',
   build: {
     parts: [
-      { id: 'mA', kind: 'mould', x: 3, y: 2, config: { note: 'A' } },
-      { id: 's1', kind: 'splitter', x: 6, y: 2, config: { k: 1 } },
+      { id: 'u1', kind: 'unison', x: 5, y: 3 },
+      { id: 'f1', kind: 'fork', x: 7, y: 3, config: { note: 'B', mode: 'peek' } },
     ],
     wires: [
-      wire('q1', 'out', 'mA', 'in'),
-      wire('mA', 'out', 's1', 'in'),
-      wire('s1', 'head', 'rA', 'in'),
-      wire('s1', 'rest', 'rB', 'in'),
+      wire('q2', 'out', 'u1', 'lead'),
+      wire('q3', 'out', 'u1', 'tail'),
+      wire('q4', 'out', 'u1', 'tail'),
+      wire('u1', 'out', 'f1', 'in'),
+      wire('f1', 'left', 'rB', 'in'),
+      wire('f1', 'right', 'rA', 'in'),
+      wire('q1', 'out', 'u1', 'lead'),
+    ],
+  },
+};
+
+const crossedPairsParallel = {
+  id: 'crossed-pairs-parallel',
+  title: 'Fully parallel lanes',
+  graphClass: 'fully-parallel-pair-and-classify',
+  explanation: 'Two independent lanes each build one intended pair and classify it with its own Tuning Fork. Neither pair formation nor routing waits for shared machinery.',
+  optimization: 'Time. Duplicating the complete pair-and-classify lane removes temporal scheduling and lets both completed phrases travel toward their halls simultaneously.',
+  build: {
+    parts: [
+      { id: 'u1', kind: 'unison', x: 5, y: 1 },
+      { id: 'f1', kind: 'fork', x: 7, y: 1, config: { note: 'B', mode: 'peek' } },
+      { id: 'u2', kind: 'unison', x: 5, y: 5 },
+      { id: 'f2', kind: 'fork', x: 7, y: 5, config: { note: 'B', mode: 'peek' } },
+    ],
+    wires: [
+      wire('q1', 'out', 'u1', 'lead'),
+      wire('q4', 'out', 'u1', 'tail'),
+      wire('q2', 'out', 'u2', 'lead'),
+      wire('q3', 'out', 'u2', 'tail'),
+      wire('u1', 'out', 'f1', 'in'),
+      wire('f1', 'left', 'rB', 'in'),
+      wire('f1', 'right', 'rA', 'in'),
+      wire('u2', 'out', 'f2', 'in'),
+      wire('f2', 'left', 'rB', 'in'),
+      wire('f2', 'right', 'rA', 'in'),
     ],
   },
 };
@@ -416,52 +514,6 @@ const fanoutFeedback = {
       wire('fB', 'left', 'fB', 'in'),
       wire('fB', 'right', 'mB', 'in'),
       wire('mB', 'out', 'rB', 'in'),
-    ],
-  },
-};
-
-const mergerBranch = {
-  id: 'counterpoint-branch',
-  title: 'Conditional tail',
-  graphClass: 'branch-and-merge',
-  explanation: 'A peeking C test normalizes the tail voice without consuming it: matching phrases join directly, while every other phrase gains C first. The second voice leads both routes through the Unison.',
-  optimization: 'Cost and Time. Forward-only branches avoid the extra crossings and repeated travel of feedback.',
-  build: {
-    parts: [
-      { id: 'u1', kind: 'unison', x: 7, y: 5 },
-      { id: 'fC', kind: 'fork', x: 3, y: 3, config: { note: 'C', mode: 'peek' } },
-      { id: 'mC', kind: 'mould', x: 5, y: 4, config: { note: 'C' } },
-    ],
-    wires: [
-      wire('qA', 'out', 'fC', 'in'),
-      wire('qB', 'out', 'u1', 'lead'),
-      wire('fC', 'left', 'u1', 'tail'),
-      wire('fC', 'right', 'mC', 'in'),
-      wire('mC', 'out', 'u1', 'tail'),
-      wire('u1', 'out', 'r1', 'in'),
-    ],
-  },
-};
-
-const mergerFeedback = {
-  id: 'counterpoint-feedback',
-  title: 'Feedback normalizer',
-  graphClass: 'feedback-normalizer',
-  explanation: 'The tail voice loops through a biting C test until its lead no longer matches. It then joins behind the second voice, and one shared Mould appends the final C after the merge.',
-  optimization: 'Area and generality. A reusable loop normalizes any run of leading C notes in a narrower routed footprint.',
-  build: {
-    parts: [
-      { id: 'u1', kind: 'unison', x: 7, y: 3 },
-      { id: 'fC', kind: 'fork', x: 3, y: 5, config: { note: 'C', mode: 'consume' } },
-      { id: 'mC', kind: 'mould', x: 8, y: 4, config: { note: 'C' } },
-    ],
-    wires: [
-      wire('qA', 'out', 'fC', 'in'),
-      wire('fC', 'left', 'fC', 'in'),
-      wire('fC', 'right', 'u1', 'tail'),
-      wire('qB', 'out', 'u1', 'lead'),
-      wire('u1', 'out', 'mC', 'in'),
-      wire('mC', 'out', 'r1', 'in'),
     ],
   },
 };
@@ -568,20 +620,20 @@ function refrainLine({ routed = false } = {}) {
   };
 }
 
-export const CANDIDATE_LEVELS = [
+const AUTHORED_CANDIDATES = [
   promotedContract({
     id: 'campaign-leading-change',
     title: 'Leading Change',
     board: { cols: 11, rows: 7 },
     fixed: leadingBench(),
-    palette: { fork: 1, mould: 1 },
+    palette: { fork: 1, mould: 1, damper: 1 },
     cases: [
       { name: 'Aria', seeds: { q1: 'AA' }, targets: { r1: 'AA' } },
       { name: 'Canon', seeds: { q1: 'AB' }, targets: { r1: 'BA' } },
       { name: 'Fugue', seeds: { q1: 'BBA' }, targets: { r1: 'BBAA' } },
       { name: 'Cadenza', seeds: { q1: 'AAAB' }, targets: { r1: 'AABA' } },
     ],
-    architectures: [leadingTestAppend, leadingAppendTest],
+    architectures: [leadingTestAppend, leadingAppendTest, leadingPeekDamper],
     difficulty: 1,
     foundation: true,
     evidence: {
@@ -590,9 +642,9 @@ export const CANDIDATE_LEVELS = [
       minimumParts: 2,
       minimumEvidence: 'bounded exhaustive search; no truncated configuration slice',
       extendedAgreement: '126/126',
-      logicalArchitectures: 2,
+      logicalArchitectures: 3,
       foundationReason: 'one conditional composition after single-part tutorials',
-      spatialCompetition: 'left-to-right routing produces an exact score tie; foundation exception recorded',
+      spatialCompetition: 'the two operation-order builds share the frontier; the separate reader-and-cutter build is a deliberately dominated high-contrast foundation witness',
     },
   }),
 
@@ -608,8 +660,8 @@ export const CANDIDATE_LEVELS = [
       { name: 'Fugue', seeds: { qA: 'ABCD', qB: 'DC' }, targets: { r1: 'DCABCD' } },
       { name: 'Cadenza', seeds: { qA: 'DC', qB: 'ABCD' }, targets: { r1: 'ABCDDC' } },
     ],
-    architectures: [firstVoicesDirect, firstVoicesFeedback],
-    difficulty: 2,
+    architectures: [firstVoicesDirect, firstVoicesFeedback, firstVoicesDamper],
+    difficulty: 3,
     foundation: true,
     evidence: {
       sourceCandidate: 'R19',
@@ -619,7 +671,7 @@ export const CANDIDATE_LEVELS = [
       extendedAgreement: '15/15',
       logicalArchitectures: 6,
       foundationReason: 'two-part multi-input composition before the three-part merger',
-      spatialCompetition: 'left-to-right routing keeps a Cost/Time versus Area frontier; foundation exception recorded',
+      spatialCompetition: 'direct and biting-feedback routes retain a Cost/Time versus Area frontier; peek-and-damp is a dominated third strategy',
     },
   }),
 
@@ -628,52 +680,25 @@ export const CANDIDATE_LEVELS = [
     title: 'Turning Phrase',
     board: { cols: 11, rows: 7 },
     fixed: leadingBench(),
-    palette: { splitter: 2, unison: 2 },
+    palette: { splitter: 2, unison: 2, fork: 1, mould: 2, damper: 1 },
     cases: [
       { name: 'Aria', seeds: { q1: 'AB' }, targets: { r1: 'BA' } },
       { name: 'Canon', seeds: { q1: 'ABC' }, targets: { r1: 'BCA' } },
       { name: 'Fugue', seeds: { q1: 'DABC' }, targets: { r1: 'ABCD' } },
       { name: 'Cadenza', seeds: { q1: 'AABC' }, targets: { r1: 'ABCA' } },
     ],
-    architectures: [turningPhraseDirect, turningPhraseExpanded],
-    difficulty: 3,
+    architectures: [turningPhraseDirect, turningPhraseExpanded, turningPhraseRebuild],
+    difficulty: 2,
     foundation: true,
     evidence: {
       sourceCandidate: 'R23-derived',
       sourceProfile: 'structured-phrase-arrangements',
       minimumParts: 2,
       minimumEvidence: 'constructive two-chunk composition; no global minimum claim',
-      extendedAgreement: '5456/5456',
-      logicalArchitectures: 2,
+      extendedAgreement: 'two chunk builds 5456/5456; conditional rebuild 4/4 displayed cases',
+      logicalArchitectures: 3,
       foundationReason: 'a split-and-recombine composition before larger campaign graphs',
-      spatialCompetition: 'direct turn dominates the expanded decomposition; foundation exception recorded',
-    },
-  }),
-
-  promotedContract({
-    id: 'campaign-twin-cadences',
-    title: 'Twin Cadences',
-    board: { cols: 11, rows: 7 },
-    fixed: twinCadencesBench(),
-    palette: { splitter: 1, mould: 1 },
-    cases: [
-      { name: 'Aria', seeds: { q1: 'A' }, targets: { rA: 'A', rB: 'A' } },
-      { name: 'Canon', seeds: { q1: 'BA' }, targets: { rA: 'B', rB: 'AA' } },
-      { name: 'Fugue', seeds: { q1: 'CAB' }, targets: { rA: 'C', rB: 'ABA' } },
-      { name: 'Cadenza', seeds: { q1: 'ABCD' }, targets: { rA: 'A', rB: 'BCDA' } },
-    ],
-    architectures: [twinCadencesSplitFirst, twinCadencesAppendFirst],
-    difficulty: 4,
-    foundation: true,
-    evidence: {
-      sourceCandidate: 'R15-derived',
-      sourceProfile: 'fanout-workshops',
-      minimumParts: 2,
-      minimumEvidence: 'derived split-workshop construction; no global minimum claim',
-      extendedAgreement: '5460/5460',
-      logicalArchitectures: 2,
-      foundationReason: 'a transparent multi-output composition before Two Ledgers',
-      spatialCompetition: 'append-first dominates after left-to-right routing; foundation exception recorded',
+      spatialCompetition: 'direct turn dominates the expanded and case-specific rebuilds; both remain high-contrast foundation witnesses',
     },
   }),
 
@@ -702,25 +727,25 @@ export const CANDIDATE_LEVELS = [
   }),
 
   promotedContract({
-    id: 'campaign-counterpoint',
-    title: 'Counterpoint',
+    id: 'campaign-crossed-pairs',
+    title: 'Crossed Pairs',
     board: { cols: 11, rows: 7 },
-    fixed: mergerBench(),
-    palette: { unison: 2, fork: 1, mould: 1, damper: 1, valve: 1 },
+    fixed: crossedPairsBench(),
+    palette: { unison: 2, fork: 2 },
     cases: [
-      { name: 'Aria', seeds: { qA: 'A', qB: 'B' }, targets: { r1: 'BAC' } },
-      { name: 'Canon', seeds: { qA: 'B', qB: 'A' }, targets: { r1: 'ABC' } },
-      { name: 'Fugue', seeds: { qA: 'C', qB: 'B' }, targets: { r1: 'BC' } },
-      { name: 'Cadenza', seeds: { qA: 'DC', qB: 'ABCD' }, targets: { r1: 'ABCDDCC' } },
+      { name: 'Aria', seeds: { q1: 'A', q2: 'B', q3: 'C', q4: 'D' }, targets: { rA: 'AD', rB: 'BC' } },
+      { name: 'Canon', seeds: { q1: 'B', q2: 'A', q3: 'D', q4: 'C' }, targets: { rA: 'AD', rB: 'BC' } },
+      { name: 'Fugue', seeds: { q1: 'AB', q2: 'BA', q3: 'CD', q4: 'DC' }, targets: { rA: 'ABDC', rB: 'BACD' } },
+      { name: 'Cadenza', seeds: { q1: 'BABA', q2: 'AB', q3: 'DC', q4: 'CD' }, targets: { rA: 'ABDC', rB: 'BABACD' } },
     ],
-    architectures: [mergerFeedback, mergerBranch],
+    architectures: [crossedPairsScheduled, crossedPairsParallel],
     difficulty: 6,
     evidence: {
-      sourceCandidate: 'R20',
-      sourceProfile: 'voice-mergers',
-      minimumParts: 3,
-      minimumEvidence: 'bounded exhaustive search; no truncated configuration slice',
-      extendedAgreement: '15/15',
+      sourceCandidate: 'track-scheduling-derived',
+      sourceProfile: 'temporal-multiplexing',
+      minimumParts: 2,
+      minimumEvidence: 'constructive temporal-versus-parallel comparison; no global minimum claim',
+      extendedAgreement: '20000/20000 correlated four-voice performances through length two',
       logicalArchitectures: 3,
     },
   }),
@@ -738,7 +763,7 @@ export const CANDIDATE_LEVELS = [
       { name: 'Cadenza', seeds: { q1: 'BB' }, targets: { r1: 'B' } },
     ],
     architectures: [alternatingLoop, alternatingLine],
-    difficulty: 7,
+    difficulty: 4,
     evidence: {
       sourceCandidate: 'mined-alternating-prefix',
       sourceProfile: 'long-prefix-automata',
@@ -763,7 +788,7 @@ export const CANDIDATE_LEVELS = [
       { name: 'Encore', seeds: { q1: 'DABC' }, targets: { r1: 'DABC' } },
     ],
     architectures: [refrainLoop(), refrainLine()],
-    difficulty: 8,
+    difficulty: 7,
     evidence: {
       sourceCandidate: 'R26',
       sourceProfile: 'repeated-melodies',
@@ -788,7 +813,7 @@ export const CANDIDATE_LEVELS = [
       { name: 'Encore', seeds: { q1: 'ABCABD' }, targets: { rC: 'D' } },
     ],
     architectures: [refrainLoop({ routed: true }), refrainLine({ routed: true })],
-    difficulty: 9,
+    difficulty: 8,
     evidence: {
       sourceCandidate: 'R28',
       sourceProfile: 'repeated-melodies',
@@ -799,3 +824,6 @@ export const CANDIDATE_LEVELS = [
     },
   }),
 ];
+
+export const CANDIDATE_LEVELS = [...AUTHORED_CANDIDATES]
+  .sort((left, right) => left.meta.difficulty - right.meta.difficulty);

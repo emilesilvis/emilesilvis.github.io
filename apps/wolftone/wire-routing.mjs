@@ -7,7 +7,7 @@
 // adjacent, facing ports has an empty route and takes one tick, while every
 // detour adds ticks.
 
-import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.2-1';
+import { partFootprintCells, portGeometry } from './part-geometry.mjs?v=0.9.2-2';
 
 export const cellKey = ({ x, y }) => `${x},${y}`;
 
@@ -102,7 +102,7 @@ export function wireEndpointOccupied(wires, ref, dir, { exceptWireId = null } = 
     wire[end].part === ref.part && wire[end].port === ref.port);
 }
 
-export function routeValidity(machine, board, wire, { exceptWireId = wire.id } = {}) {
+export function routeValidity(machine, wire, { exceptWireId = wire.id } = {}) {
   const from = partById(machine, wire.from.part);
   const to = partById(machine, wire.to.part);
   if (!from || !to) return { valid: false, reason: 'Missing endpoint' };
@@ -120,9 +120,6 @@ export function routeValidity(machine, board, wire, { exceptWireId = wire.id } =
   const occupied = occupiedWireCells(machine, { exceptWireId });
   const seen = new Set();
   for (const cell of wire.route) {
-    if (cell.x < 0 || cell.y < 0 || cell.x >= board.cols || cell.y >= board.rows) {
-      return { valid: false, reason: 'Route leaves the board' };
-    }
     const key = cellKey(cell);
     if (partCells.has(key)) return { valid: false, reason: 'Route crosses a part' };
     if (occupied.has(key)) return { valid: false, reason: 'Track overlaps another track' };
@@ -155,7 +152,29 @@ const CARDINAL_STEPS = [
 // cost; among equally conservative routes, fewer bends and a shorter path win.
 // That preserves deliberate timing detours whenever the new endpoint can still
 // reach them.
-export function findWireRoute(machine, board, wire) {
+//
+// The canvas is unbounded, so the search runs inside a finite window around
+// the machine and both endpoints. Any route a player would accept stays near
+// the machine; the window keeps a failed search from walking forever.
+const REROUTE_WINDOW_MARGIN = 8;
+
+function searchWindow(machine, extraCells) {
+  const cells = [
+    ...machine.parts.flatMap(partFootprintCells),
+    ...machine.wires.flatMap((wire) => wireRouteCells(machine, wire)),
+    ...extraCells,
+  ];
+  const xs = cells.map((cell) => cell.x);
+  const ys = cells.map((cell) => cell.y);
+  return {
+    minX: Math.min(...xs) - REROUTE_WINDOW_MARGIN,
+    minY: Math.min(...ys) - REROUTE_WINDOW_MARGIN,
+    maxX: Math.max(...xs) + REROUTE_WINDOW_MARGIN,
+    maxY: Math.max(...ys) + REROUTE_WINDOW_MARGIN,
+  };
+}
+
+export function findWireRoute(machine, wire) {
   const from = partById(machine, wire.from.part);
   const to = partById(machine, wire.to.part);
   if (!from || !to) return null;
@@ -171,8 +190,9 @@ export function findWireRoute(machine, board, wire) {
 
   const start = fromPort.neighbor;
   const goal = toPort.neighbor;
-  const onBoard = (cell) => cell.x >= 0 && cell.y >= 0 && cell.x < board.cols && cell.y < board.rows;
-  if (!onBoard(start) || !onBoard(goal)) return null;
+  const window = searchWindow(machine, [start, goal]);
+  const onBoard = (cell) => cell.x >= window.minX && cell.y >= window.minY &&
+    cell.x <= window.maxX && cell.y <= window.maxY;
 
   const blocked = new Set(machine.parts.flatMap(partFootprintCells).map(cellKey));
   for (const candidate of machine.wires) {

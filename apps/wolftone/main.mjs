@@ -5,14 +5,14 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.2-1';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.2-1';
+} from './engine.mjs?v=0.9.2-2';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.2-2';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.2-1';
+} from './progression.mjs?v=0.9.2-2';
 import {
   wordMarbleState,
   pathDirectionMarkers,
@@ -20,8 +20,8 @@ import {
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.2-1';
-import { fitCamera } from './board-camera.mjs?v=0.9.2-1';
+} from './motion.mjs?v=0.9.2-2';
+import { boardSurface, fitCamera } from './board-camera.mjs?v=0.9.2-2';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -30,10 +30,10 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.2-1';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.2-1';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.2-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.2-1';
+} from './board-layout.mjs?v=0.9.2-2';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.2-2';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.2-2';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.2-2';
 import {
   cellKey,
   extendRouteFromPort,
@@ -41,7 +41,7 @@ import {
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.2-1';
+} from './wire-routing.mjs?v=0.9.2-2';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -54,12 +54,12 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.2-1';
-import { partArtSelection } from './part-art.mjs?v=0.9.2-1';
+} from './part-geometry.mjs?v=0.9.2-2';
+import { partArtSelection } from './part-art.mjs?v=0.9.2-2';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.2-1';
+} from './audio.mjs?v=0.9.2-2';
 
 // Tutorials show teaching decks. Campaign contracts stand on the Commission's
 // performances alone. Reference review stays quiet during normal play.
@@ -86,12 +86,14 @@ const CHAPTER_MUSIC = {
 const GRADUATION_TRACK = '13-graduation.mp3';
 
 const CELL = 64;
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 3;
 const SPEEDS = [600, 270, 150];
 const NOTE_SPACING = [85, 48, 32];  // ms between a word's audible letters, per speed
 const PROCESSING_DWELL = 0.48;       // nearly half a departure tick stays in the part
 // v0.9 deliberately starts a new compact campaign instead of interpreting old
 // 39-level completion as progress through a different sequence.
-const SAVE_KEY = 'wolftone-v0.9-campaign-v1';
+const SAVE_KEY = 'wolftone-v0.9-campaign-v2';
 const BOARD_LAYOUT_VERSION = 6;
 const WIRE_TOOL = 'wire';
 const UNLIMITED_KINDS = new Set(['crossing', 'junction']);
@@ -131,41 +133,67 @@ let discreteFrames = false;  // Step shows exact tick snapshots; Run restores tw
 let boardRenderFrame = null;
 let boardInteractionFrame = null;
 let boardBackdropKey = null;
+let surface = null;
 
-// Zoom preserves square cells and uses the board's own scroll container, so
-// the surrounding bench never changes size. Fit can choose a higher zoom to
-// frame only the occupied machine content.
+// The canvas is unbounded: the rendered surface is the authored frame plus
+// all placed content plus a margin that always keeps at least one viewport of
+// open canvas scrollable beyond the outermost part. Zoom is absolute: 1
+// means a cell renders at CELL pixels, so the scale never shifts as the
+// surface grows.
+function surfaceMargin() {
+  const viewportCells = Math.ceil(
+    Math.max(boardScroll.clientWidth, boardScroll.clientHeight) / (CELL * zoom));
+  return Math.min(64, Math.max(12, viewportCells + 2));
+}
+
+// Recompute the surface and keep the view anchored: when the origin moves,
+// the same world point must stay under the viewport, so the scroll shifts by
+// the origin delta. CSS size updates first so the scroll target exists.
+function syncSurface() {
+  const previous = surface;
+  surface = boardSurface(machine(), puzzle().board, surfaceMargin());
+  svg.style.width = `${surface.cols * CELL * zoom}px`;
+  svg.style.height = `${surface.rows * CELL * zoom}px`;
+  if (previous && (previous.minX !== surface.minX || previous.minY !== surface.minY)) {
+    boardScroll.scrollLeft += (previous.minX - surface.minX) * CELL * zoom;
+    boardScroll.scrollTop += (previous.minY - surface.minY) * CELL * zoom;
+  }
+  return surface;
+}
+
 function sizeBoard() {
-  const p = puzzle();
-  const W = p.board.cols * CELL, H = p.board.rows * CELL;
-  const fit = Math.min(boardScroll.clientWidth / W, boardScroll.clientHeight / H);
-  svg.style.width = `${W * fit * zoom}px`;
-  svg.style.height = `${H * fit * zoom}px`;
+  const previousKey = surface && `${surface.minX},${surface.minY},${surface.cols}x${surface.rows}`;
+  syncSurface();
+  const key = `${surface.minX},${surface.minY},${surface.cols}x${surface.rows}`;
+  if (previousKey !== key) scheduleBoardRender();
   $('zoom-label').textContent = `${Math.round(zoom * 100)}%`;
-  boardScroll.classList.toggle('can-pan', zoom > 1);
+  boardScroll.classList.add('can-pan');
   requestAnimationFrame(positionContextEditor);
 }
 
 function setZoom(next) {
-  next = Math.max(1, Math.min(3, next));
-  const factor = next / zoom;
-  const cx = boardScroll.scrollLeft + boardScroll.clientWidth / 2;
-  const cy = boardScroll.scrollTop + boardScroll.clientHeight / 2;
+  next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, next));
+  if (!surface || next === zoom) { zoom = next; sizeBoard(); return; }
+  // Keep the world point at the viewport centre fixed through the zoom.
+  const centerX = (boardScroll.scrollLeft + boardScroll.clientWidth / 2) / zoom + surface.minX * CELL;
+  const centerY = (boardScroll.scrollTop + boardScroll.clientHeight / 2) / zoom + surface.minY * CELL;
   zoom = next;
   sizeBoard();
-  boardScroll.scrollLeft = cx * factor - boardScroll.clientWidth / 2;
-  boardScroll.scrollTop = cy * factor - boardScroll.clientHeight / 2;
+  boardScroll.scrollLeft = (centerX - surface.minX * CELL) * zoom - boardScroll.clientWidth / 2;
+  boardScroll.scrollTop = (centerY - surface.minY * CELL) * zoom - boardScroll.clientHeight / 2;
 }
 
 function fitBoardToContent() {
   const camera = fitCamera(machine(), puzzle().board, {
     width: boardScroll.clientWidth,
     height: boardScroll.clientHeight,
-  }, { cellSize: CELL, maxZoom: 3, padding: 1 });
+  }, { cellSize: CELL, minZoom: MIN_ZOOM, maxZoom: MAX_ZOOM, padding: 1 });
   zoom = camera.zoom;
   sizeBoard();
-  boardScroll.scrollLeft = camera.scrollLeft;
-  boardScroll.scrollTop = camera.scrollTop;
+  const centerX = (camera.bounds.minX + camera.bounds.maxX + 1) / 2 * CELL;
+  const centerY = (camera.bounds.minY + camera.bounds.maxY + 1) / 2 * CELL;
+  boardScroll.scrollLeft = (centerX - surface.minX * CELL) * zoom - boardScroll.clientWidth / 2;
+  boardScroll.scrollTop = (centerY - surface.minY * CELL) * zoom - boardScroll.clientHeight / 2;
 }
 
 // ── persistent state ─────────────────────────────────────
@@ -737,7 +765,7 @@ function placePart(kind, x, y, splice = null) {
 function moveParts(ids, dx, dy, primaryId = ids.at(-1)) {
   if (!ids.length || (dx === 0 && dy === 0)) return false;
   const edit = groupMovementEdit(
-    machine().parts, puzzle().board, ids, { dx, dy }, playerWires,
+    machine().parts, ids, { dx, dy }, playerWires,
   );
   if (!edit.valid) return false;
   return applyEdit(() => {
@@ -769,7 +797,7 @@ function rotatePart(id) {
   if (!part) return false;
   const orientation = ((part.orientation ?? 0) + 1) % 4;
   const edit = partMovementEdit(
-    machine().parts, puzzle().board, id, { orientation }, playerWires,
+    machine().parts, id, { orientation }, playerWires,
   );
   if (!edit.valid) {
     interactionNotice = `Cannot rotate: ${edit.reason}`;
@@ -825,7 +853,7 @@ function addWire(from, to, route) {
     return false;
   }
   const candidate = { id: nextWireId(), from, to, route: structuredClone(route) };
-  const edit = routeWireWithCrossings(machine(), puzzle().board, candidate);
+  const edit = routeWireWithCrossings(machine(), candidate);
   if (!edit.valid) {
     interactionNotice = `Cannot route: ${edit.reason}`;
     return false;
@@ -853,7 +881,7 @@ function retargetWire(wireId, end, nextRef, route) {
   if (current?.part === nextRef.part && current?.port === nextRef.port &&
       JSON.stringify(currentWire.route ?? null) === JSON.stringify(storedRoute)) return false;
   const candidate = next.find((wire) => wire.id === wireId);
-  const edit = routeWireWithCrossings(machine(), puzzle().board, candidate);
+  const edit = routeWireWithCrossings(machine(), candidate);
   if (!edit.valid) {
     interactionNotice = `Cannot route: ${edit.reason}`;
     return false;
@@ -927,7 +955,6 @@ function pointCell(point) {
 
 function paintRouteGesture(gesture, point) {
   const m = machine();
-  const board = puzzle().board;
   const anchorPart = byId(m, gesture.anchor.part);
   const anchorPort = portGeometry(anchorPart, gesture.anchor.port);
   const destination = pointCell(point);
@@ -950,9 +977,6 @@ function paintRouteGesture(gesture, point) {
       gesture.blockedReason = reason;
       return false;
     };
-    if (cell.x < 0 || cell.y < 0 || cell.x >= board.cols || cell.y >= board.rows) {
-      return block('Board edge');
-    }
     // Reaching the cell beneath the pointer may mean the player is dropping on
     // that part's compatible port. Stop before the footprint and let pointerup
     // validate the endpoint without flashing a false obstacle first.
@@ -1045,12 +1069,14 @@ function trackDirectionMarkup(points) {
 }
 
 function svgXY(e) {
+  if (!surface) syncSurface();
   const r = svg.getBoundingClientRect();
-  const p = puzzle();
-  const W = p.board.cols * CELL, H = p.board.rows * CELL;
+  const W = surface.cols * CELL, H = surface.rows * CELL;
   const scale = Math.min(r.width / W, r.height / H);
-  const ox = (r.width - W * scale) / 2, oy = (r.height - H * scale) / 2;
-  return { x: (e.clientX - r.left - ox) / scale, y: (e.clientY - r.top - oy) / scale };
+  return {
+    x: (e.clientX - r.left) / scale + surface.minX * CELL,
+    y: (e.clientY - r.top) / scale + surface.minY * CELL,
+  };
 }
 
 // ── board rendering ──────────────────────────────────────
@@ -1361,7 +1387,15 @@ function footprintPreviewClasses(part) {
   ].filter(Boolean);
 }
 
-function boardBackdropMarkup(p, width, height) {
+// The backdrop covers the whole rendered surface. Grid lines and pins tile
+// through one user-space pattern so their cost stays flat as the surface
+// grows; the pattern's corner pins are quartered by tiling and recompose into
+// full pins at every intersection. Nothing marks the authored frame: it only
+// stages supplied terminals and seeds the camera.
+function boardBackdropMarkup(p, surface) {
+  const x = surface.minX * CELL, y = surface.minY * CELL;
+  const width = surface.cols * CELL, height = surface.rows * CELL;
+  const gridCorners = [[0, 0], [CELL, 0], [0, CELL], [CELL, CELL]];
   let markup = `<defs>
     <linearGradient id="board-walnut" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#392719"></stop><stop offset="0.48" stop-color="#2c1c11"></stop><stop offset="1" stop-color="#1d120b"></stop>
@@ -1369,38 +1403,33 @@ function boardBackdropMarkup(p, width, height) {
     <radialGradient id="board-lamp" cx="48%" cy="38%" r="68%">
       <stop offset="0" stop-color="#8d6330" stop-opacity=".17"></stop><stop offset="1" stop-color="#0c0906" stop-opacity=".2"></stop>
     </radialGradient>
+    <pattern id="board-grid" width="${CELL}" height="${CELL}" patternUnits="userSpaceOnUse">
+      <line class="grid-line" x1="0" y1="0" x2="0" y2="${CELL}"></line>
+      <line class="grid-line" x1="0" y1="0" x2="${CELL}" y2="0"></line>
+      ${gridCorners.map(([cx, cy]) =>
+        `<circle class="grid-pin-shadow" cx="${cx}" cy="${cy + 1}" r="2.4"></circle>` +
+        `<circle class="grid-pin" cx="${cx}" cy="${cy}" r="1.8"></circle>`).join('')}
+    </pattern>
   </defs><g data-board-layer="backdrop">`;
-  markup += `<rect class="board-wood" width="${width}" height="${height}" rx="3"></rect>`;
-  markup += `<rect class="board-lamplight" width="${width}" height="${height}" rx="3"></rect>`;
-  for (let gy = 12; gy < height; gy += 23) {
-    const bend = ((gy / 23) % 3 - 1) * 5;
-    markup += `<path class="board-grain" d="M0 ${gy} Q${width * 0.32} ${gy + bend} ${width * 0.57} ${gy - bend} T${width} ${gy + bend * 0.4}"></path>`;
+  markup += `<rect class="board-wood" x="${x}" y="${y}" width="${width}" height="${height}"></rect>`;
+  markup += `<rect class="board-lamplight" x="${x}" y="${y}" width="${width}" height="${height}"></rect>`;
+  for (let gy = y + 12; gy < y + height; gy += 23) {
+    const bend = (Math.round((gy - y) / 23) % 3 - 1) * 5;
+    markup += `<path class="board-grain" d="M${x} ${gy} Q${x + width * 0.32} ${gy + bend} ${x + width * 0.57} ${gy - bend} T${x + width} ${gy + bend * 0.4}"></path>`;
   }
-  for (let gx = 1; gx < p.board.cols; gx += 1) {
-    markup += `<line class="grid-line" x1="${gx * CELL}" y1="0" x2="${gx * CELL}" y2="${height}"></line>`;
-  }
-  for (let gy = 1; gy < p.board.rows; gy += 1) {
-    markup += `<line class="grid-line" x1="0" y1="${gy * CELL}" x2="${width}" y2="${gy * CELL}"></line>`;
-  }
-  for (let gx = 0; gx <= p.board.cols; gx += 1) {
-    for (let gy = 0; gy <= p.board.rows; gy += 1) {
-      markup += `<circle class="grid-pin-shadow" cx="${gx * CELL}" cy="${gy * CELL + 1}" r="2.4"></circle>`;
-      markup += `<circle class="grid-pin" cx="${gx * CELL}" cy="${gy * CELL}" r="1.8"></circle>`;
-    }
-  }
-  markup += `<rect class="board-binding" x="4" y="4" width="${width - 8}" height="${height - 8}" rx="2"></rect>`;
+  markup += `<rect class="board-grid-fill" fill="url(#board-grid)" x="${x}" y="${y}" width="${width}" height="${height}"></rect>`;
   return `${markup}</g>`;
 }
 
-function ensureBoardLayers(p, width, height) {
-  const key = `${p.board.cols}x${p.board.rows}`;
+function ensureBoardLayers(p, surface) {
+  const key = `${surface.minX},${surface.minY},${surface.cols}x${surface.rows}`;
   let machineLayer = svg.querySelector('[data-board-layer="machine"]');
   let runLayer = svg.querySelector('[data-board-layer="run"]');
   let interactionLayer = svg.querySelector('[data-board-layer="interaction"]');
   if (boardBackdropKey === key && machineLayer && runLayer && interactionLayer) {
     return { machineLayer, runLayer, interactionLayer };
   }
-  svg.innerHTML = `${boardBackdropMarkup(p, width, height)}` +
+  svg.innerHTML = `${boardBackdropMarkup(p, surface)}` +
     '<g data-board-layer="machine"></g><g data-board-layer="run"></g>' +
     '<g data-board-layer="interaction"></g>';
   boardBackdropKey = key;
@@ -1451,9 +1480,7 @@ function boardInteractionMarkup(m) {
 
 function renderBoardInteraction() {
   const p = puzzle();
-  const width = p.board.cols * CELL;
-  const height = p.board.rows * CELL;
-  const { interactionLayer } = ensureBoardLayers(p, width, height);
+  const { interactionLayer } = ensureBoardLayers(p, surface ?? syncSurface());
   interactionLayer.innerHTML = boardInteractionMarkup(machine());
   renderInteractionStatus();
 }
@@ -1471,9 +1498,7 @@ function scheduleBoardInteractionRender() {
 // compact overlay for travelling marbles and resonator rings.
 function renderBoardRun(m = machine(), layers = null) {
   const p = puzzle();
-  const width = p.board.cols * CELL;
-  const height = p.board.rows * CELL;
-  const { machineLayer, runLayer } = layers ?? ensureBoardLayers(p, width, height);
+  const { machineLayer, runLayer } = layers ?? ensureBoardLayers(p, surface ?? syncSurface());
   if (machineLayer.dataset.mounted !== 'true') {
     renderBoard();
     return;
@@ -1583,7 +1608,6 @@ function partDragEdit(baseMachine = machine()) {
   if (!partDrag?.moved) return null;
   return groupMovementEdit(
     baseMachine.parts,
-    puzzle().board,
     partDrag.ids,
     { dx: partDrag.x - partDrag.originX, dy: partDrag.y - partDrag.originY },
     baseMachine.wires,
@@ -1612,9 +1636,10 @@ function renderBoard() {
       )
     : null;
   const kase = currentCase();
-  const W = p.board.cols * CELL, H = p.board.rows * CELL;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const { machineLayer, runLayer, interactionLayer } = ensureBoardLayers(p, W, H);
+  syncSurface();
+  svg.setAttribute('viewBox', `${surface.minX * CELL} ${surface.minY * CELL} ` +
+    `${surface.cols * CELL} ${surface.rows * CELL}`);
+  const { machineLayer, runLayer, interactionLayer } = ensureBoardLayers(p, surface);
   svg.classList.toggle('discrete', discreteFrames);
   svg.classList.toggle('running', Boolean(timer) && !discreteFrames && !REDUCED_MOTION);
   const routingActive = editable() && (armedTool === WIRE_TOOL || Boolean(drag));
@@ -1712,7 +1737,7 @@ function renderBoard() {
       orientation: placementOrientation,
       config: levelDefaultConfig(partTool),
     };
-    const validity = placementValidity(m.parts, p.board, preview, m.wires);
+    const validity = placementValidity(m.parts, preview, m.wires);
     const canPlace = validity.valid || Boolean(splicePreview);
     s += `<g class="placement-ghost ${canPlace ? 'valid' : 'blocked'}${splicePreview ? ' splice' : ''}" ` +
       `data-placement-valid="${canPlace}" aria-label="${splicePreview ? 'Insert into track' : validity.reason ?? 'Valid placement'}">`;
@@ -2431,7 +2456,7 @@ svg.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     return;
   }
-  const canGrab = zoom > 1 && (e.button === 1 || (!interactive && !armedTool && e.button === 0));
+  const canGrab = e.button === 1 || (!interactive && !armedTool && e.button === 0);
   if (canGrab) {
     boardPan = {
       pointerId: e.pointerId,
@@ -2706,7 +2731,7 @@ svg.addEventListener('click', (e) => {
       id: '__placement__', kind: partTool, x: gx, y: gy,
       orientation: placementOrientation,
     };
-    const validity = placementValidity(machine().parts, p.board, candidate, playerWires);
+    const validity = placementValidity(machine().parts, candidate, playerWires);
     if ((validity.valid || splice) && remaining(partTool) > 0) {
       interactionNotice = '';
       placementHover = null;
