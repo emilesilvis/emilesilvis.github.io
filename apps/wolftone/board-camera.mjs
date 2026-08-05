@@ -1,5 +1,5 @@
-import { partFootprintCells } from './part-geometry.mjs?v=0.9.4-1';
-import { wireRouteCells } from './wire-routing.mjs?v=0.9.4-1';
+import { partFootprintCells } from './part-geometry.mjs?v=0.9.5-1';
+import { wireRouteCells } from './wire-routing.mjs?v=0.9.5-1';
 
 // The canvas is unbounded. A level's authored `board` rect is only its frame:
 // the staging area at the origin where supplied terminals sit and where the

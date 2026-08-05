@@ -5,14 +5,14 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.4-1';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.4-1';
+} from './engine.mjs?v=0.9.5-1';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.5-1';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.4-1';
+} from './progression.mjs?v=0.9.5-1';
 import {
   wordMarbleState,
   pathDirectionMarkers,
@@ -20,8 +20,8 @@ import {
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.4-1';
-import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.4-1';
+} from './motion.mjs?v=0.9.5-1';
+import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.5-1';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -30,18 +30,19 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.4-1';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.4-1';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.4-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.4-1';
+} from './board-layout.mjs?v=0.9.5-1';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.5-1';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.5-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.5-1';
 import {
   cellKey,
   extendRouteFromPort,
+  findWireRoute,
   occupiedWireCells,
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.4-1';
+} from './wire-routing.mjs?v=0.9.5-1';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -54,12 +55,12 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.4-1';
-import { partArtSelection } from './part-art.mjs?v=0.9.4-1';
+} from './part-geometry.mjs?v=0.9.5-1';
+import { partArtSelection } from './part-art.mjs?v=0.9.5-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.4-1';
+} from './audio.mjs?v=0.9.5-1';
 
 // Tutorials show teaching decks. Campaign contracts stay case-only.
 
@@ -88,8 +89,8 @@ const CELL = 64;
 const DEFAULT_ZOOM = 0.8;
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 3;
-const SPEEDS = [600, 270, 150];
-const NOTE_SPACING = [85, 48, 32];  // ms between a word's audible letters, per speed
+const SPEEDS = [600, 270, 75];
+const NOTE_SPACING = [85, 48, 18];  // ms between a word's audible letters, per speed
 const PROCESSING_DWELL = 0.48;       // nearly half a departure tick stays in the part
 // v0.9 deliberately starts a new compact campaign instead of interpreting old
 // 39-level completion as progress through a different sequence.
@@ -259,13 +260,14 @@ let caseIndex = 0;
 let run = null;
 let recital = null;
 let timer = null;
-let speedIdx = 0;
+let speedIdx = 1;
 let selection = null;       // { kind: 'parts', ids, primaryId } | wire | tool
 let hoverInspection = null; // temporary Inspector preview; click selection persists
 let armedTool = null;       // construction kind from the tray, including Track
 let placementOrientation = 0; // quarter turns for the armed placement ghost
 let placementHover = null;  // grid cell under an armed part ghost
 let drag = null;            // new wire or endpoint retarget gesture
+let pendingWire = null;     // first endpoint of a two-click automatic connection
 let justWired = false;
 let partDrag = null;        // movable part gesture with an uncommitted grid preview
 let marquee = null;         // Shift-drag selection rectangle on empty board
@@ -396,6 +398,7 @@ function restoreSnapshot(snapshot) {
   placementOrientation = 0;
   placementHover = null;
   drag = null;
+  pendingWire = null;
   partDrag = null;
   marquee = null;
 }
@@ -470,6 +473,7 @@ function loadLevel(i) {
   selection = null;
   hoverInspection = null;
   armedTool = null;
+  pendingWire = null;
   interactionNotice = '';
   placementHover = null;
   zoom = DEFAULT_ZOOM;
@@ -633,6 +637,7 @@ function onRunButton() {
   if (!run || run.verdict) {
     run = makeRun();
     armedTool = null;
+    pendingWire = null;
     placementHover = null;
     hideBanner();
     renderLog();
@@ -648,7 +653,7 @@ function onStepButton() {
     recital.paused = true;
     recital.failed = false;
   }
-  if (!run || run.verdict) { run = makeRun(); armedTool = null; placementHover = null; hideBanner(); }
+  if (!run || run.verdict) { run = makeRun(); armedTool = null; pendingWire = null; placementHover = null; hideBanner(); }
   doTick();
   renderPalette(); renderTransport(); renderInspector();
 }
@@ -875,6 +880,16 @@ function addWire(from, to, route) {
     playerWires = edit.wires;
     selection = { kind: 'wire', id: candidate.id };
   });
+}
+
+function addAutomaticWire(from, to) {
+  const candidate = { id: '__automatic__', from, to, route: [] };
+  const route = findWireRoute(machine(), candidate);
+  if (route === null) {
+    interactionNotice = 'Cannot route: no clear path connects those ports';
+    return false;
+  }
+  return addWire(from, to, route);
 }
 
 function retargetWire(wireId, end, nextRef, route) {
@@ -1477,6 +1492,13 @@ function wireGestureMarkup(m) {
     `<path class="temp-track-rail" d="${path}"></path>`;
 }
 
+function pendingWireMarkup(m) {
+  if (!pendingWire) return '';
+  const point = portPos(m, pendingWire.anchor);
+  return `<circle class="pending-wire-anchor" cx="${point.x}" cy="${point.y}" r="12">` +
+    '<title>Track start set; choose the other endpoint</title></circle>';
+}
+
 function marqueeMarkup() {
   if (!marquee?.moved) return '';
   const x = Math.min(marquee.startX, marquee.x);
@@ -1487,7 +1509,7 @@ function marqueeMarkup() {
 }
 
 function boardInteractionMarkup(m) {
-  return wireGestureMarkup(m) + marqueeMarkup();
+  return pendingWireMarkup(m) + wireGestureMarkup(m) + marqueeMarkup();
 }
 
 function renderBoardInteraction() {
@@ -1654,10 +1676,13 @@ function renderBoard() {
   const { machineLayer, runLayer, interactionLayer } = ensureBoardLayers(p, surface);
   svg.classList.toggle('discrete', discreteFrames);
   svg.classList.toggle('running', Boolean(timer) && !discreteFrames && !REDUCED_MOTION);
-  const routingActive = editable() && (armedTool === WIRE_TOOL || Boolean(drag));
+  const routingActive = editable() &&
+    (armedTool === WIRE_TOOL || Boolean(drag) || Boolean(pendingWire));
   const wantedPortDir = drag
     ? drag.end === 'from' ? 'out' : drag.end === 'to' ? 'in' : null
-    : null;
+    : pendingWire
+      ? pendingWire.end === 'from' ? 'out' : pendingWire.end === 'to' ? 'in' : null
+      : null;
   svg.classList.toggle('wire-mode', routingActive);
   svg.style.setProperty('--tick-ms', `${SPEEDS[speedIdx]}ms`);
   let s = '';
@@ -1926,7 +1951,7 @@ function renderPalette() {
       ? 'recital playing · Pause or Reset to edit'
       : 'the machine is frozen while a run is live'
     : armedTool === WIRE_TOOL
-      ? 'track armed · drag from any free port and lay to a compatible port · right-click or Esc cancels'
+      ? 'track armed · click two ports for the shortest clear route, or drag to paint · right-click or Esc cancels'
       : armedTool
         ? 'ghost follows the board · R rotates · click places · right-click or Esc cancels'
       : 'Shift-click or Shift-drag selects parts · drag a selection to move · R rotates one part · Del removes';
@@ -1968,7 +1993,7 @@ function noteChips(chosen, onAttr) {
 const CONSTRUCTION_HELP = {
   wire: {
     rule: 'port → routed cells → port',
-    body: 'Lays an orthogonal marble track. Drag straight through another track at a right angle to add a Crossing automatically. Track length changes Time and Area; each Crossing adds Cost.',
+    body: 'Click one free port and then another to lay the shortest clear track. Drag from a port to paint a deliberate route; skipped cells fill automatically, and a right-angle pass through another straight track adds a Crossing.',
   },
   quill: {
     rule: 'sound phrase → word marble',
@@ -2190,7 +2215,8 @@ function renderInspector() {
     const fromPart = byId(m, w.from.part);
     const toPart = byId(m, w.to.part);
     box.innerHTML = `<p class="prose">${partReference(fromPart)}.${playerPortName(fromPart?.kind, w.from.port)} → ` +
-      `${partReference(toPart)}.${playerPortName(toPart?.kind, w.to.port)} · travel time: ${wireTicks(m, w)} ticks</p>`;
+      `${partReference(toPart)}.${playerPortName(toPart?.kind, w.to.port)} · travel time: ${wireTicks(m, w)} ticks</p>` +
+      '<p class="tool-hint">Drag either glowing endpoint to reconnect this track without deleting it.</p>';
     return;
   }
   if (inspection.kind === 'parts' && inspection.ids.length > 1) {
@@ -2303,9 +2329,11 @@ function renderInteractionStatus() {
   else if (drag?.kind === 'retarget') text = `Laying track to a new ${drag.end === 'from' ? 'source' : 'destination'} · cross straight tracks at right angles · Esc cancels`;
   else if (drag?.end === 'either') text = 'Laying track from a Crossing · finish at any compatible free port · right-angle crossings are automatic';
   else if (drag) text = `Laying orthogonal track · release on an ${drag.end === 'from' ? 'output' : 'input'} · right-angle crossings are automatic`;
+  else if (pendingWire) text = `Track start set · click a compatible ${pendingWire.end === 'from' ? 'output' : 'input'} for the shortest clear route · drag from a port to paint instead · Esc cancels`;
   else if (interactionNotice) text = interactionNotice;
-  else if (armedTool === WIRE_TOOL) text = 'Track armed · drag from any free port to lay a route · right-click or Esc cancels';
+  else if (armedTool === WIRE_TOOL) text = 'Track armed · click two ports for the shortest clear route, or drag from a port to paint · right-click or Esc cancels';
   else if (armedTool) text = `Placing ${KIND_NAMES[armedTool]} · R rotates · right-click or Esc cancels`;
+  else if (selection?.kind === 'wire') text = 'Track selected · drag either glowing endpoint to reconnect · Delete removes';
   else if (selection?.kind === 'parts') {
     const count = selection.ids.length;
     text = count === 1
@@ -2331,6 +2359,7 @@ function cancelBoardInteraction({ clearSelection = true } = {}) {
   placementHover = null;
   hoverInspection = null;
   drag = null;
+  pendingWire = null;
   partDrag = null;
   if (marquee && !clearSelection) {
     selection = partSelection(marquee.baseIds, marquee.basePrimaryId);
@@ -2399,6 +2428,32 @@ svg.addEventListener('pointerdown', (e) => {
     }
   }
   const port = e.target.closest('[data-port-part]');
+  if (pendingWire && port && editable() && e.button === 0 &&
+      (!armedTool || armedTool === WIRE_TOOL)) {
+    const target = { part: port.dataset.portPart, port: port.dataset.portName };
+    const targetDir = port.dataset.portDir;
+    const wantedDir = pendingWire.end === 'from' ? 'out' : 'in';
+    const sameEndpoint = target.part === pendingWire.anchor.part &&
+      target.port === pendingWire.anchor.port;
+    const compatible = targetDir === wantedDir || targetDir === 'both';
+    const start = pendingWire;
+    pendingWire = null;
+    if (sameEndpoint) {
+      interactionNotice = 'Track start cleared';
+    } else if (!compatible) {
+      interactionNotice = `Cannot route: choose a free ${wantedDir === 'out' ? 'output' : 'input'} port`;
+    } else {
+      const changed = start.end === 'to'
+        ? addAutomaticWire(start.anchor, target)
+        : addAutomaticWire(target, start.anchor);
+      if (changed) justWired = true;
+    }
+    renderPalette();
+    renderBoard();
+    renderInspector();
+    e.preventDefault();
+    return;
+  }
   if (port && editable() && e.button === 0 && (!armedTool || armedTool === WIRE_TOOL)) {
     const anchor = { part: port.dataset.portPart, port: port.dataset.portName };
     const dir = port.dataset.portDir;
@@ -2409,7 +2464,7 @@ svg.addEventListener('pointerdown', (e) => {
         kind: 'new',
         end: dir === 'out' ? 'to' : dir === 'in' ? 'from' : 'either',
         anchor,
-        route: [],
+        route: [], startX: x, startY: y,
         x,
         y,
         pointerId: e.pointerId,
@@ -2673,6 +2728,22 @@ svg.addEventListener('pointerup', (e) => {
       targetDir = wantedDir;
     }
   }
+  const simpleEndpointClick = gesture.kind === 'new' && gesture.end !== 'either' &&
+    gesture.route.length === 0 &&
+    Math.hypot(pt.x - gesture.startX, pt.y - gesture.startY) <= 5;
+  if (simpleEndpointClick) {
+    drag = null;
+    pendingWire = { anchor: structuredClone(gesture.anchor), end: gesture.end };
+    selection = null;
+    interactionNotice = '';
+    justWired = true;
+    if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+    renderPalette();
+    renderBoard();
+    renderInspector();
+    e.preventDefault();
+    return;
+  }
   drag = null;
   if (svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
   let changed = false;
@@ -2770,6 +2841,7 @@ $('palette').addEventListener('click', (e) => {
   if (discreteFrames && run && available) onResetRun();
   const canPlace = editable() && available;
   armedTool = canPlace && armedTool !== kind ? kind : null;
+  pendingWire = null;
   interactionNotice = '';
   placementOrientation = 0;
   placementHover = null;
@@ -2866,6 +2938,7 @@ document.querySelectorAll('[data-speed]').forEach((b) => {
   b.addEventListener('click', () => {
     speedIdx = Number(b.dataset.speed);
     if (timer) { stopTimer(); timer = setInterval(doTick, SPEEDS[speedIdx]); }
+    svg.style.setProperty('--tick-ms', `${SPEEDS[speedIdx]}ms`);
     renderTransport();
   });
 });

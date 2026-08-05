@@ -30,7 +30,7 @@ export const PUZZLES = [
       { focus: 'board', title: 'Read every direction', body: 'The sound bar always reads A·B from left to right, whether its marble travels east, west, north, or south. Track chevrons show where the word is moving.' },
       { focus: 'board', title: 'The marble becomes sound', body: 'The Resonator turns a matching word marble into sound waves. A different word sounds sour and fails the performance.' },
       { focus: 'palette', title: 'Pick up Track', body: 'Select Track ∞ at the top of the tray. It stays armed so you can lay as many routes as the machine needs.' },
-      { focus: 'transport', title: 'Connect and run', body: 'With Track armed, drag from the quill’s output socket to the resonator’s input socket. Then press Run. The number on the track is its travel time in ticks.' },
+      { focus: 'transport', title: 'Connect and run', body: 'With Track armed, click the Quill’s output socket, then click the Resonator’s input socket. The shortest clear Track appears. Press Run; the number on the Track is its travel time in ticks.' },
     ],
   },
 
@@ -115,6 +115,7 @@ export const PUZZLES = [
     walkthrough: [
       { focus: 'palette', title: 'Join two words', body: 'A Unison waits for one word marble in each input, then joins the lead word followed by the tail word into one marble.' },
       { focus: 'board', title: 'Input order matters', body: 'Connect the top Quill to the lead input and the bottom Quill to the tail input. Swapping them reverses the order of the two words.' },
+      { focus: 'board', title: 'Correct the first connection', body: 'Connect the top Quill first. If its Track reaches the wrong Unison input, select that Track and drag its glowing endpoint to the free input instead of deleting it. Then connect the bottom Quill.' },
     ],
   },
 

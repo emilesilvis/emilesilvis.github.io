@@ -2,7 +2,7 @@
 // introduce construction and each player-facing mechanism once; the campaign
 // that follows is made only of open-ended contracts.
 
-import { PUZZLES } from './puzzles.mjs?v=0.9.4-1';
+import { PUZZLES } from './puzzles.mjs?v=0.9.5-1';
 
 const CHAPTER = 'I · Tutorial';
 const authoredById = new Map(PUZZLES.map((level) => [level.id, level]));
@@ -61,8 +61,8 @@ const crossingTutorial = {
   walkthrough: [
     {
       focus: 'board',
-      title: 'Let two tracks cross',
-      body: 'Lay the first track, then drag the second straight through it at a right angle. A Crossing appears automatically and keeps the horizontal and vertical routes separate.',
+      title: 'Paint through another track',
+      body: 'Ordinary connections can use two clicks. Here, drag the second Track straight through the first at a right angle. A Crossing appears automatically and keeps the horizontal and vertical routes separate.',
     },
     {
       focus: 'board',

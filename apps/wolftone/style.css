@@ -1200,8 +1200,16 @@ button.danger:not(:disabled):hover { color: #ff917a; border-color: var(--bad); }
 .track-bed.splice-target { stroke: #6faf91; }
 .track-hit { fill: none; stroke: transparent; stroke-width: 16; cursor: pointer; }
 .wire-handle-hit { fill: transparent; stroke: none; cursor: grab; }
-.wire-handle { fill: none; stroke: #e6d6ae; stroke-width: 1.8; cursor: grab; filter: drop-shadow(0 0 3px rgb(255 196 107 / 55%)); }
-.wire-handle.to { fill: none; stroke: var(--accent-hot); stroke-width: 2.2; stroke-dasharray: 2.5 1.5; }
+.wire-handle { fill: #160e07; stroke: #fff0c4; stroke-width: 2.6; cursor: grab; filter: drop-shadow(0 0 5px rgb(255 196 107 / 80%)); }
+.wire-handle.to { fill: #160e07; stroke: var(--accent-hot); stroke-width: 3; stroke-dasharray: 2.5 1.5; }
+.pending-wire-anchor {
+  fill: rgb(255 196 107 / 18%);
+  stroke: var(--accent-hot);
+  stroke-width: 3;
+  stroke-dasharray: 3 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgb(255 196 107 / 75%));
+}
 .wire-chip-box { fill: #160e07; stroke: #8a6c3e; stroke-width: 0.8; opacity: 0.22; }
 .wire-chip { fill: #d8c9a3; font: 7.5px/1 var(--mono); text-anchor: middle; opacity: 0.22; }
 .temp-track-bed,

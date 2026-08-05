@@ -4,8 +4,8 @@
 // architectures, mining bounds, and routed score evidence remain attached here
 // for tests and author review.
 
-import { measureScore, runCase } from './engine.mjs?v=0.9.4-1';
-import { spatializeReference } from './reference-spatializer.mjs?v=0.9.4-1';
+import { measureScore, runCase } from './engine.mjs?v=0.9.5-1';
+import { spatializeReference } from './reference-spatializer.mjs?v=0.9.5-1';
 
 const CHAPTER = 'II · Campaign';
 const TERMINAL_KINDS = new Set(['quill', 'resonator']);
@@ -734,8 +734,6 @@ const AUTHORED_CANDIDATES = [
     palette: { unison: 2, fork: 2 },
     cases: [
       { name: 'Aria', seeds: { q1: 'A', q2: 'B', q3: 'C', q4: 'D' }, targets: { rA: 'AD', rB: 'BC' } },
-      { name: 'Canon', seeds: { q1: 'B', q2: 'A', q3: 'D', q4: 'C' }, targets: { rA: 'AD', rB: 'BC' } },
-      { name: 'Fugue', seeds: { q1: 'AB', q2: 'BA', q3: 'CD', q4: 'DC' }, targets: { rA: 'ABDC', rB: 'BACD' } },
       { name: 'Cadenza', seeds: { q1: 'BABA', q2: 'AB', q3: 'DC', q4: 'CD' }, targets: { rA: 'ABDC', rB: 'BABACD' } },
     ],
     architectures: [crossedPairsScheduled, crossedPairsParallel],
@@ -825,5 +823,9 @@ const AUTHORED_CANDIDATES = [
   }),
 ];
 
-export const CANDIDATE_LEVELS = [...AUTHORED_CANDIDATES]
+export const RETIRED_CANDIDATE_LEVELS = AUTHORED_CANDIDATES
+  .filter((level) => level.id === 'campaign-three-doors');
+
+export const CANDIDATE_LEVELS = AUTHORED_CANDIDATES
+  .filter((level) => level.id !== 'campaign-three-doors')
   .sort((left, right) => left.meta.difficulty - right.meta.difficulty);
