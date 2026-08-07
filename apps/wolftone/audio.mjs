@@ -11,9 +11,16 @@ const FREQ = { A: 440, B: 493.88, C: 523.25, D: 587.33 };
 let ctx = null;
 let master = null;
 let muted = false;
+let machineVolume = 0.4;
 let music = null;
 let musicOn = true;
+let musicVolume = 0.13;
 let musicFile = null;
+
+function normalizedVolume(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.min(1, number)) : fallback;
+}
 
 function ensure() {
   if (!ctx) {
@@ -21,7 +28,7 @@ function ensure() {
     if (!AC) return null;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = 0.4;
+    master.gain.value = machineVolume;
     master.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') ctx.resume();
@@ -38,6 +45,11 @@ for (const evt of ['pointerdown', 'keydown']) {
 
 export function setMuted(m) { muted = m; }
 export function isMuted() { return muted; }
+export function setMachineVolume(value) {
+  machineVolume = normalizedVolume(value, machineVolume);
+  if (master) master.gain.value = machineVolume;
+}
+export function getMachineVolume() { return machineVolume; }
 
 // The Godot OST lives on its own bus. HTMLAudioElement is the browser's
 // streaming path, so the 44 MB soundtrack is loaded one selected track at a
@@ -48,7 +60,7 @@ function musicPlayer() {
     music = new Audio();
     music.loop = true;
     music.preload = 'auto';
-    music.volume = 0.13; // Godot's Music bus sat about 18 dB below master.
+    music.volume = musicVolume;
   }
   return music;
 }
@@ -79,6 +91,11 @@ export function setMusicOn(on) {
 }
 
 export function isMusicOn() { return musicOn; }
+export function setMusicVolume(value) {
+  musicVolume = normalizedVolume(value, musicVolume);
+  if (music) music.volume = musicVolume;
+}
+export function getMusicVolume() { return musicVolume; }
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) music?.pause();

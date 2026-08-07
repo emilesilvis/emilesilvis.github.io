@@ -25,12 +25,12 @@ export const PUZZLES = [
       wires: [{ from: { part: 'q1', port: 'out' }, to: { part: 'r1', port: 'in' } }],
     },
     walkthrough: [
-      { focus: 'commission', title: 'Sound enters the Quill', body: 'The Commission gives the Quill an input sound phrase, shown as coloured notes. Input sounds can change between performances, but your machine stays the same.' },
+      { focus: 'palette', title: 'Place the Quill', body: 'The Commission shows the input sound phrase for QI. Select Quill ×1 in the tray, then place it on the left side of the board.' },
+      { focus: 'palette', title: 'Place the Resonator', body: 'The Commission shows the sound that RI must receive. Select Resonator ×1 in the tray, then place it on the right side of the board.' },
+      { focus: 'palette', title: 'Connect them', body: 'Select Track ∞. Click the Quill’s output socket, then click the Resonator’s input socket. The shortest clear Track appears.' },
       { focus: 'board', title: 'Sound becomes one marble', body: 'At tick 1, the Quill transcribes each sound phrase into one word marble. The glass swirls together every note colour, while its sound bar preserves the exact order.' },
       { focus: 'board', title: 'Read every direction', body: 'The sound bar always reads A·B from left to right, whether its marble travels east, west, north, or south. Track chevrons show where the word is moving.' },
-      { focus: 'board', title: 'The marble becomes sound', body: 'The Resonator turns a matching word marble into sound waves. A different word sounds sour and fails the performance.' },
-      { focus: 'palette', title: 'Pick up Track', body: 'Select Track ∞ at the top of the tray. It stays armed so you can lay as many routes as the machine needs.' },
-      { focus: 'transport', title: 'Connect and run', body: 'With Track armed, click the Quill’s output socket, then click the Resonator’s input socket. The shortest clear Track appears. Press Run; the number on the Track is its travel time in ticks.' },
+      { focus: 'transport', title: 'Run and listen', body: 'Press Run. The Resonator turns a matching word marble into sound waves. A different word sounds sour and fails the performance. Select the Track afterwards to read its travel time in the Inspector.' },
     ],
   },
 

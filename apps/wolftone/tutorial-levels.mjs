@@ -2,7 +2,7 @@
 // introduce construction and each player-facing mechanism once; the campaign
 // that follows is made only of open-ended contracts.
 
-import { PUZZLES } from './puzzles.mjs?v=0.9.5-1';
+import { PUZZLES } from './puzzles.mjs?v=0.9.6-2';
 
 const CHAPTER = 'I · Tutorial';
 const authoredById = new Map(PUZZLES.map((level) => [level.id, level]));

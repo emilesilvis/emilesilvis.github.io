@@ -5,23 +5,22 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.5-1';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.5-1';
+} from './engine.mjs?v=0.9.6-2';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.6-2';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.5-1';
+} from './progression.mjs?v=0.9.6-2';
 import {
   wordMarbleState,
   pathDirectionMarkers,
-  pointAlongPath,
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.5-1';
-import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.5-1';
+} from './motion.mjs?v=0.9.6-2';
+import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.6-2';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -30,10 +29,10 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.5-1';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.5-1';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.5-1';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.5-1';
+} from './board-layout.mjs?v=0.9.6-2';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.6-2';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.6-2';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.6-2';
 import {
   cellKey,
   extendRouteFromPort,
@@ -42,7 +41,7 @@ import {
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.5-1';
+} from './wire-routing.mjs?v=0.9.6-2';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -55,12 +54,13 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.5-1';
-import { partArtSelection } from './part-art.mjs?v=0.9.5-1';
+} from './part-geometry.mjs?v=0.9.6-2';
+import { partArtSelection } from './part-art.mjs?v=0.9.6-2';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
-  setSoundtrack, setMusicOn, isMusicOn,
-} from './audio.mjs?v=0.9.5-1';
+  setMachineVolume, getMachineVolume,
+  setSoundtrack, setMusicOn, isMusicOn, setMusicVolume, getMusicVolume,
+} from './audio.mjs?v=0.9.6-2';
 
 // Tutorials show teaching decks. Campaign contracts stay case-only.
 
@@ -216,7 +216,7 @@ function loadSave() {
 // regenerates or reorders. Old saves carried a numeric `level`; it is
 // ignored and those players resume at their first unsolved level instead.
 const save = {
-  solved: [], machines: {}, bests: {},
+  solved: [], machines: {}, machineSlots: {}, activeMachineSlots: {}, bests: {},
   ...loadSave(),
 };
 function persist() {
@@ -231,6 +231,8 @@ function migrateSavedBoardLayout() {
   const previousVersion = save.boardLayoutVersion ?? 0;
   if (previousVersion >= BOARD_LAYOUT_VERSION) return;
   save.machines = {};
+  save.machineSlots = {};
+  save.activeMachineSlots = {};
   save.boardLayoutVersion = BOARD_LAYOUT_VERSION;
   persist();
 }
@@ -262,6 +264,7 @@ let recital = null;
 let timer = null;
 let speedIdx = 1;
 let selection = null;       // { kind: 'parts', ids, primaryId } | wire | tool
+let contextEditorPartId = null; // opens after a stationary click, never after a drag
 let hoverInspection = null; // temporary Inspector preview; click selection persists
 let armedTool = null;       // construction kind from the tray, including Track
 let placementOrientation = 0; // quarter turns for the armed placement ghost
@@ -279,7 +282,7 @@ let walkIndex = 0;
 let deckHidden = false;
 let caseStatuses = [];      // 'pass' | 'fail' | null per case
 let verifiedRuns = null;    // exact successful runCase results from verifyAll
-let bannerAction = null;    // { kind: 'case'|'level', index }
+let bannerAction = null;    // { kind: 'level', index }
 let undoStack = [];
 let redoStack = [];
 const referenceArchitectureIndexes = new Map();
@@ -354,6 +357,7 @@ function togglePartSelection(id) {
   selection = ids.includes(id)
     ? partSelection(ids.filter((candidate) => candidate !== id))
     : partSelection([...ids, id], id);
+  contextEditorPartId = null;
 }
 
 function selectAllParts() {
@@ -361,6 +365,7 @@ function selectAllParts() {
   const ids = machine().parts.map((part) => part.id);
   if (!ids.length) return false;
   selection = partSelection(ids, ids.at(-1));
+  contextEditorPartId = null;
   interactionNotice = '';
   renderBoard();
   renderInspector();
@@ -378,10 +383,69 @@ function playTerminalWord(part) {
   if (word != null) playWord(word, { spacing: 110, gain: 0.3 });
 }
 
+function machineSnapshot() {
+  return structuredClone({ parts: playerParts, wires: playerWires, terminalPositions });
+}
+
+function ensureLevelMachineSlots(levelId, fallbackMachine = null) {
+  save.machineSlots ??= {};
+  save.activeMachineSlots ??= {};
+  let slots = save.machineSlots[levelId];
+  if (!Array.isArray(slots) || !slots.length) {
+    const firstMachine = save.machines?.[levelId] ?? fallbackMachine ?? {
+      parts: [], wires: [], terminalPositions: {},
+    };
+    slots = [{ id: 'solution-1', name: 'Solution 1', machine: structuredClone(firstMachine) }];
+    save.machineSlots[levelId] = slots;
+  }
+  if (!slots.some((slot) => slot.id === save.activeMachineSlots[levelId])) {
+    save.activeMachineSlots[levelId] = slots[0].id;
+  }
+  return slots;
+}
+
+function activeMachineSlot(levelId = puzzle().id, fallbackMachine = null) {
+  const slots = ensureLevelMachineSlots(levelId, fallbackMachine);
+  return slots.find((slot) => slot.id === save.activeMachineSlots[levelId]) ?? slots[0];
+}
+
 function saveMachine() {
-  save.machines[puzzle().id] = { parts: playerParts, wires: playerWires, terminalPositions };
-  save.levelId = puzzle().id;
+  const levelId = puzzle().id;
+  const snapshot = machineSnapshot();
+  const slot = activeMachineSlot(levelId);
+  slot.machine = snapshot;
+  // Keep the legacy field current so older deployed builds can still read the
+  // most recently edited solution if a player returns to them.
+  save.machines[levelId] = structuredClone(snapshot);
+  save.levelId = levelId;
   persist();
+}
+
+function duplicateCurrentSolution() {
+  if (REFERENCE_MODE || !editable()) return false;
+  saveMachine();
+  const levelId = puzzle().id;
+  const slots = ensureLevelMachineSlots(levelId);
+  let number = 1;
+  const ids = new Set(slots.map((slot) => slot.id));
+  while (ids.has(`solution-${number}`)) number += 1;
+  const slotId = `solution-${number}`;
+  slots.push({ id: slotId, name: `Solution ${number}`, machine: machineSnapshot() });
+  save.activeMachineSlots[puzzle().id] = slotId;
+  persist();
+  loadLevel(levelIndex);
+  return true;
+}
+
+function switchSolution(slotId) {
+  if (REFERENCE_MODE || !editable()) return false;
+  const slots = ensureLevelMachineSlots(puzzle().id);
+  if (!slots.some((slot) => slot.id === slotId)) return false;
+  saveMachine();
+  save.activeMachineSlots[puzzle().id] = slotId;
+  persist();
+  loadLevel(levelIndex);
+  return true;
 }
 
 function editSnapshot() {
@@ -394,6 +458,7 @@ function restoreSnapshot(snapshot) {
   playerWires = restored.wires;
   terminalPositions = restored.terminalPositions ?? {};
   selection = normalizeSelection(restored.selection);
+  contextEditorPartId = null;
   armedTool = null;
   placementOrientation = 0;
   placementHover = null;
@@ -461,7 +526,10 @@ function loadLevel(i) {
         orientation: part.orientation ?? 0,
       }]));
   } else {
-    const stored = save.machines[puzzle().id];
+    const fallbackMachine = {
+      parts: suppliedDevices(), wires: [], terminalPositions: {},
+    };
+    const stored = activeMachineSlot(puzzle().id, fallbackMachine).machine ?? fallbackMachine;
     playerParts = structuredClone(stored?.parts ?? suppliedDevices())
       .map((part) => ({ orientation: 0, config: defaultConfig(part.kind), ...part }));
     playerWires = structuredClone(stored?.wires ?? []);
@@ -471,6 +539,7 @@ function loadLevel(i) {
   run = null;
   recital = null;
   selection = null;
+  contextEditorPartId = null;
   hoverInspection = null;
   armedTool = null;
   pendingWire = null;
@@ -571,36 +640,21 @@ function doTick() {
         caseStatuses[caseIndex] = 'pass';
         const { nextCase, filledNow } = recordRecitalPass(recital, caseIndex, puzzle().cases.length);
         if (filledNow) {
+          recital.paused = true;
           const result = verifyAll({ quiet: true });
           showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
             levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
             result);
-        } else {
-          playResolve();
+          renderCases(); renderPalette(); renderBoardRun(); renderTransport(); renderInspector(); renderLog();
+          return;
         }
+        playResolve();
         caseIndex = nextCase;
         run = makeRun();
         discreteFrames = recital.paused;
         if (!recital.paused) startTimer();
         renderCases(); renderPalette(); renderBoard(); renderTransport(); renderInspector(); renderLog();
         return;
-      }
-      caseStatuses[caseIndex] = 'pass';
-      const filled = caseStatuses.every((status) => status === 'pass');
-      if (filled) {
-        const result = verifyAll({ quiet: true });
-        showBanner('resonant', 'The commission is filled', 'Every performance rang true.',
-          levelIndex < LEVELS.length - 1 ? { kind: 'level', index: levelIndex + 1 } : null,
-          result);
-      } else {
-        let nextCase = null;
-        for (let offset = 1; offset < puzzle().cases.length; offset += 1) {
-          const candidate = (caseIndex + offset) % puzzle().cases.length;
-          if (caseStatuses[candidate] !== 'pass') { nextCase = candidate; break; }
-        }
-        showBanner('resonant', `${currentCase().name} rang true`,
-          'Continue with the next performance, or Run this one again.',
-          nextCase === null ? null : { kind: 'case', index: nextCase });
       }
     } else if (run.verdict === 'sour') {
       if (recital) { recital.paused = true; recital.failed = true; }
@@ -626,9 +680,7 @@ function onRunButton() {
     renderBoard(); renderTransport();
     return;
   }
-  if (!recital && caseStatuses.every((status) => status === 'pass')) {
-    recital = makeRecital(caseIndex);
-  }
+  if (!recital || (recital.filled && run?.verdict)) recital = makeRecital(caseIndex);
   if (recital) {
     recital.paused = false;
     recital.failed = false;
@@ -649,10 +701,9 @@ function onRunButton() {
 function onStepButton() {
   stopTimer();
   discreteFrames = true;
-  if (recital) {
-    recital.paused = true;
-    recital.failed = false;
-  }
+  if (!recital || (recital.filled && run?.verdict)) recital = makeRecital(caseIndex);
+  recital.paused = true;
+  recital.failed = false;
   if (!run || run.verdict) { run = makeRun(); armedTool = null; pendingWire = null; placementHover = null; hideBanner(); }
   doTick();
   renderPalette(); renderTransport(); renderInspector();
@@ -694,11 +745,16 @@ function showBanner(kind, title, detail, nextAction = null, result = null) {
   bannerAction = nextAction;
   const next = $('banner-next');
   next.hidden = !bannerAction;
-  next.textContent = bannerAction?.kind === 'case' ? 'Next performance →' : 'Next commission →';
+  next.textContent = 'Next level →';
 }
 function hideBanner() {
   $('banner').hidden = true;
   bannerAction = null;
+}
+
+function dismissBannerToEdit() {
+  hideBanner();
+  if (run?.verdict) onResetRun();
 }
 
 // ── editing ──────────────────────────────────────────────
@@ -776,6 +832,7 @@ function placePart(kind, x, y, splice = null) {
     armedTool = null;
     placementOrientation = 0;
     selection = null;
+    contextEditorPartId = null;
   });
 }
 
@@ -845,6 +902,7 @@ function deleteSelection() {
       playerWires = playerWires.filter((wire) =>
         !ids.has(wire.from.part) && !ids.has(wire.to.part));
       selection = null;
+      contextEditorPartId = null;
     });
     return;
   }
@@ -853,6 +911,7 @@ function deleteSelection() {
   applyEdit(() => {
     playerWires = playerWires.filter((w) => w.id !== id);
     selection = null;
+    contextEditorPartId = null;
   });
 }
 
@@ -1519,6 +1578,23 @@ function renderBoardInteraction() {
   renderInteractionStatus();
 }
 
+// Inspection during playback must not rebuild the machine or restart marble
+// interpolation. Update only the selection classes that can change on click.
+function renderSelectionState() {
+  const machineLayer = svg.querySelector('[data-board-layer="machine"]');
+  if (!machineLayer) return;
+  machineLayer.querySelectorAll('[data-part]').forEach((node) => {
+    node.querySelector('.part-box')?.classList.toggle('selected', isPartSelected(node.dataset.part));
+  });
+  const selectedWireId = selection?.kind === 'wire' ? selection.id : null;
+  machineLayer.querySelectorAll('[data-wire]').forEach((node) => {
+    node.classList.toggle('selected', node.dataset.wire === selectedWireId);
+  });
+  machineLayer.querySelectorAll('[data-wire-cell]').forEach((node) => {
+    node.classList.toggle('selected', node.dataset.wireCell === selectedWireId);
+  });
+}
+
 function scheduleBoardInteractionRender() {
   if (boardInteractionFrame !== null) return;
   boardInteractionFrame = requestAnimationFrame(() => {
@@ -1529,7 +1605,8 @@ function scheduleBoardInteractionRender() {
 
 // A running machine changes only a small fraction of the board each tick.
 // Keep the routed machine mounted and update its stateful classes plus a
-// compact overlay for travelling marbles and resonator rings.
+// compact overlay for travelling marbles while state classes drive one-shot
+// feedback on the already-mounted parts.
 function renderBoardRun(m = machine(), layers = null) {
   const p = puzzle();
   const { machineLayer, runLayer } = layers ?? ensureBoardLayers(p, surface ?? syncSurface());
@@ -1585,11 +1662,6 @@ function renderBoardRun(m = machine(), layers = null) {
       });
     }
 
-    if (part.kind === 'resonator' && run?.satisfied[part.id] !== undefined) {
-      const cx = part.x * CELL + CELL / 2;
-      const cy = part.y * CELL + CELL / 2;
-      markup += `<circle class="satisfied-ring" cx="${cx}" cy="${cy}" r="27"></circle>`;
-    }
   }
 
   const transitMotions = [];
@@ -1705,10 +1777,6 @@ function renderBoard() {
     s += `<path class="track-groove${sel}${spliceTarget}" d="${d}"></path>`;
     s += `<path class="track-rail${sel}${spliceTarget}" data-wire="${w.id}" d="${d}"></path>`;
     s += `<path class="track-hit" data-wire="${w.id}" d="${d}"></path>`;
-    const mid = pointAlongPath(roundedPts, 0.5);
-    const ticks = wireTicks(m, w);
-    s += `<rect class="wire-chip-box" x="${mid.x - 8}" y="${mid.y - 6}" width="16" height="12" rx="3"></rect>`;
-    s += `<text class="wire-chip" x="${mid.x}" y="${mid.y + 3}">${ticks}</text>`;
     s += trackDirectionMarkup(roundedPts);
     if (selected && editable()) {
       const from = portPos(m, w.from, w);
@@ -1947,26 +2015,54 @@ function renderPalette() {
       }).join('')
     : '<span class="count">no parts available</span>';
   $('construction-help').textContent = run
-    ? recital
-      ? 'recital playing · Pause or Reset to edit'
+    ? recital?.filled && run.verdict
+      ? 'performance cycle complete · close the verdict to edit'
+      : recital
+        ? 'performances running · Pause or Reset to edit'
       : 'the machine is frozen while a run is live'
     : armedTool === WIRE_TOOL
       ? 'track armed · click two ports for the shortest clear route, or drag to paint · right-click or Esc cancels'
       : armedTool
         ? 'ghost follows the board · R rotates · click places · right-click or Esc cancels'
-      : 'Shift-click or Shift-drag selects parts · drag a selection to move · R rotates one part · Del removes';
+      : 'Select a part or Track to inspect it · ? Help lists selection gestures and shortcuts';
+}
+
+function renderSolutionSwitcher() {
+  const wrapper = $('solution-switcher');
+  wrapper.hidden = REFERENCE_MODE;
+  if (REFERENCE_MODE) return;
+  const slots = ensureLevelMachineSlots(puzzle().id);
+  const select = $('solution-slot-select');
+  select.replaceChildren(...slots.map((slot) => {
+    const option = document.createElement('option');
+    option.value = slot.id;
+    option.textContent = slot.name;
+    return option;
+  }));
+  select.value = save.activeMachineSlots[puzzle().id];
+  select.disabled = !editable();
+  $('duplicate-solution').disabled = !editable();
+}
+
+function renderSelectionControls() {
+  $('delete-selection').disabled = !editable() ||
+    !selection || selection.kind === 'tool';
 }
 
 function renderTransport() {
   $('tick-output').textContent = run ? run.tick : '–';
   $('run-status').textContent = !run ? 'READY'
+    : recital?.filled && run.verdict ? 'COMPLETE'
     : recital?.failed ? run.verdict.toUpperCase()
-    : recital ? timer ? `RECITAL${recital.filled ? ' ✓' : ''}` : 'PAUSED'
+    : recital ? timer ? `RUNNING${recital.filled ? ' ✓' : ''}` : 'PAUSED'
     : run.verdict ? run.verdict.toUpperCase()
     : timer ? 'PLAYING' : 'PAUSED';
   $('run-button').textContent = recital
-    ? timer ? '❚❚ Pause' : recital.failed ? '▶ Retry' : '▶ Continue'
-    : run?.verdict ? '▶ Again' : '▶ Run';
+    ? timer ? '❚❚ Pause'
+      : recital.failed ? '▶ Retry'
+        : recital.filled && run?.verdict ? `▶ ${puzzle().cases.length > 1 ? 'Run all again' : 'Run again'}`
+          : '▶ Continue'
+    : `▶ ${puzzle().cases.length > 1 ? 'Run all' : 'Run'}`;
   document.querySelectorAll('[data-speed]').forEach((b) => {
     b.classList.toggle('active', Number(b.dataset.speed) === speedIdx);
   });
@@ -1974,6 +2070,8 @@ function renderTransport() {
   $('redo-edit').disabled = !editable() || !redoStack.length;
   $('clear-machine').disabled = !editable() ||
     (!playerParts.length && !playerWires.length && !placedTerminalCount());
+  renderSolutionSwitcher();
+  renderSelectionControls();
 }
 
 function renderLog() {
@@ -2166,7 +2264,8 @@ function positionContextEditor() {
 
 function renderContextEditor() {
   const box = $('context-editor');
-  if (!editable() || selectedPartIds().length !== 1) {
+  if (!editable() || selectedPartIds().length !== 1 ||
+      contextEditorPartId !== selection.primaryId) {
     box.hidden = true;
     box.innerHTML = '';
     return;
@@ -2191,6 +2290,7 @@ function renderContextEditor() {
 
 function renderInspector() {
   renderContextEditor();
+  renderSelectionControls();
   const box = $('inspector');
   const inspection = hoverInspection ?? selection;
   if (!inspection) {
@@ -2223,7 +2323,7 @@ function renderInspector() {
     $('selection-kind').textContent = `${inspection.ids.length} PARTS SELECTED`;
     box.innerHTML = '<p class="prose">Drag any selected part to move the collection. ' +
       'Internal tracks keep their shape; tracks leaving the selection reconnect where possible.</p>' +
-      '<p class="tool-hint">Shift-click adjusts the selection · Delete returns every selected part to the tray · select one part to rotate or configure it</p>';
+      '<p class="tool-hint">Delete returns every selected part to the tray. Select one part to rotate or configure it.</p>';
     return;
   }
   const partId = inspection.kind === 'parts' ? inspection.primaryId : inspection.id;
@@ -2267,7 +2367,7 @@ function renderInspector() {
   const help = CONSTRUCTION_HELP[part.kind];
   box.innerHTML = `<div class="${classes}">` +
     `<svg viewBox="${partFaceViewBox(part)}" aria-hidden="true">` +
-    `${partPreviewMarkup(part, partVisualState(part, machine()))}</svg>` +
+    `${partPreviewMarkup(part)}</svg>` +
     `<div><strong>${part.label ?? KIND_NAMES[part.kind]}</strong><code>${help.rule}</code>${html}</div></div>`;
 }
 
@@ -2337,11 +2437,11 @@ function renderInteractionStatus() {
   else if (selection?.kind === 'parts') {
     const count = selection.ids.length;
     text = count === 1
-      ? '1 part selected · drag to move · Shift-click adds or removes · R rotates · Esc clears'
-      : `${count} parts selected · drag any selected part to move · Shift-click adjusts · Esc clears`;
+      ? '1 part selected · drag to move · R rotates · Delete removes · Esc clears'
+      : `${count} parts selected · drag any selected part to move · Delete removes · Esc clears`;
   }
   else if (editable() && machine().parts.length) {
-    text = 'Shift-drag empty space to box-select · Shift-click to add or remove · Select all uses ⌘/Ctrl+A';
+    text = 'Drag a part to move it · ? Help shows selection gestures and keyboard controls';
   }
   status.hidden = !text;
   status.textContent = text;
@@ -2368,7 +2468,10 @@ function cancelBoardInteraction({ clearSelection = true } = {}) {
   interactionNotice = '';
   boardPan = null;
   boardScroll.classList.remove('panning');
-  if (clearSelection) selection = null;
+  if (clearSelection) {
+    selection = null;
+    contextEditorPartId = null;
+  }
   renderPalette();
   renderBoard();
   renderInspector();
@@ -2502,7 +2605,10 @@ svg.addEventListener('pointerdown', (e) => {
       y: placed.y,
       moved: false,
     };
+    selection = partSelection(ids, placed.id);
+    contextEditorPartId = null;
     svg.setPointerCapture(e.pointerId);
+    renderBoard(); renderInspector();
     e.preventDefault();
     return;
   }
@@ -2657,7 +2763,8 @@ svg.addEventListener('pointerup', (e) => {
     const gesture = partDrag;
     const movement = partDragEdit();
     partDrag = null;
-    selection = partSelection(gesture.moved ? gesture.ids : [gesture.id], gesture.primaryId);
+    if (!gesture.moved) selection = partSelection([gesture.id], gesture.id);
+    contextEditorPartId = gesture.moved ? null : gesture.id;
     if (!gesture.moved) {
       playTerminalWord(byId(machine(), gesture.id));
     }
@@ -2825,12 +2932,17 @@ svg.addEventListener('click', (e) => {
   } else if (partEl) {
     if (e.shiftKey && editable()) togglePartSelection(partEl.dataset.part);
     else selection = partSelection([partEl.dataset.part], partEl.dataset.part);
+    contextEditorPartId = editable() ? partEl.dataset.part : null;
   } else if (wireEl) {
     selection = { kind: 'wire', id: wireEl.dataset.wire };
+    contextEditorPartId = null;
   } else {
     selection = null;
+    contextEditorPartId = null;
   }
-  renderBoard(); renderInspector();
+  if (run) renderSelectionState();
+  else renderBoard();
+  renderInspector();
 });
 
 $('palette').addEventListener('click', (e) => {
@@ -2846,6 +2958,7 @@ $('palette').addEventListener('click', (e) => {
   placementOrientation = 0;
   placementHover = null;
   selection = armedTool ? { kind: 'tool', toolKind: kind } : null;
+  contextEditorPartId = null;
   renderPalette(); renderBoard(); renderInspector();
 });
 
@@ -2855,9 +2968,81 @@ $('palette').addEventListener('pointerover', (e) => {
 });
 $('palette').addEventListener('pointerleave', () => setHoverInspection(null));
 
+function selectRelativeCase(offset) {
+  if (puzzle().cases.length < 2) return;
+  onResetRun();
+  caseIndex = (caseIndex + offset + puzzle().cases.length) % puzzle().cases.length;
+  renderCases(); renderBoard(); renderInspector();
+}
+
+function finishPartGestureForKeyboard() {
+  if (!partDrag) return;
+  const pointerId = partDrag.pointerId;
+  partDrag = null;
+  if (svg.hasPointerCapture(pointerId)) svg.releasePointerCapture(pointerId);
+  suppressPartClick = true;
+  setTimeout(() => { suppressPartClick = false; }, 0);
+}
+
+function toggleMachineAudio() {
+  setMuted(!isMuted());
+  save.muted = isMuted();
+  persist();
+  renderMute();
+}
+
+function toggleMusicAudio() {
+  setMusicOn(!isMusicOn());
+  save.music = isMusicOn();
+  persist();
+  renderMusic();
+}
+
 document.addEventListener('keydown', (e) => {
   const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  const buttonFocused = document.activeElement?.tagName === 'BUTTON';
   const command = e.metaKey || e.ctrlKey;
+  const helpDialog = $('help-dialog');
+  if (!typing && e.key === '?' && !helpDialog.open) {
+    e.preventDefault();
+    helpDialog.showModal();
+    return;
+  }
+  if (e.key === 'Escape' && helpDialog.open) {
+    e.preventDefault();
+    helpDialog.close();
+    return;
+  }
+  if (!typing && !buttonFocused && !command && e.code === 'Space') {
+    e.preventDefault();
+    onRunButton();
+    return;
+  }
+  if (!typing && !buttonFocused && !command && (e.key === '[' || e.key === ']')) {
+    e.preventDefault();
+    selectRelativeCase(e.key === '[' ? -1 : 1);
+    return;
+  }
+  if (!typing && !buttonFocused && !command && (e.key === '+' || e.key === '=')) {
+    e.preventDefault();
+    setZoom(zoom * 1.25);
+    return;
+  }
+  if (!typing && !buttonFocused && !command && e.key === '-') {
+    e.preventDefault();
+    setZoom(zoom / 1.25);
+    return;
+  }
+  if (!typing && !buttonFocused && !command && e.key === '0') {
+    e.preventDefault();
+    fitBoardToContent();
+    return;
+  }
+  if (!typing && !buttonFocused && !command && e.key.toLowerCase() === 'm') {
+    e.preventDefault();
+    if (e.shiftKey) toggleMusicAudio(); else toggleMachineAudio();
+    return;
+  }
   if (!typing && command && e.key.toLowerCase() === 'z') {
     e.preventDefault();
     if (e.shiftKey) redoEdit(); else undoEdit();
@@ -2884,7 +3069,7 @@ document.addEventListener('keydown', (e) => {
     redoEdit();
     return;
   }
-  if (!typing && !command && !e.shiftKey && e.key === 'Tab') {
+  if (!typing && !buttonFocused && !command && !e.shiftKey && e.key === 'Tab') {
     e.preventDefault();
     onStepButton();
     return;
@@ -2897,6 +3082,7 @@ document.addEventListener('keydown', (e) => {
       renderInspector();
       renderInteractionStatus();
     } else if (selectedPartIds().length === 1) {
+      finishPartGestureForKeyboard();
       rotatePart(selection.primaryId);
     } else if (selectedPartIds().length > 1) {
       interactionNotice = 'Select one part to rotate it';
@@ -2921,6 +3107,11 @@ $('step-button').addEventListener('click', onStepButton);
 $('reset-run').addEventListener('click', onResetRun);
 $('undo-edit').addEventListener('click', undoEdit);
 $('redo-edit').addEventListener('click', redoEdit);
+$('delete-selection').addEventListener('click', deleteSelection);
+$('duplicate-solution').addEventListener('click', duplicateCurrentSolution);
+$('solution-slot-select').addEventListener('change', (event) => {
+  switchSolution(event.currentTarget.value);
+});
 $('clear-machine').addEventListener('click', () => {
   if (!editable() || (!playerParts.length && !playerWires.length && !placedTerminalCount())) return;
   applyEdit(() => {
@@ -2954,17 +3145,22 @@ $('case-tabs').addEventListener('click', (e) => {
 $('deck-prev').addEventListener('click', () => { walkIndex -= 1; renderDeck(); });
 $('deck-next').addEventListener('click', () => { walkIndex += 1; renderDeck(); });
 $('deck-toggle').addEventListener('click', () => { deckHidden = !deckHidden; renderDeck(); });
+$('help-button').addEventListener('click', () => $('help-dialog').showModal());
 setMuted(save.muted ?? false);
+setMachineVolume(save.machineVolume ?? 0.4);
 setMusicOn(save.music ?? !(save.muted ?? false));
+setMusicVolume(save.musicVolume ?? 0.13);
 function renderMute() {
   $('mute-button').textContent = isMuted() ? '♪ off' : '♪ on';
   $('mute-button').classList.toggle('active', !isMuted());
 }
-$('mute-button').addEventListener('click', () => {
-  setMuted(!isMuted());
-  save.muted = isMuted();
+$('mute-button').addEventListener('click', toggleMachineAudio);
+$('machine-volume').value = String(Math.round(getMachineVolume() * 100));
+$('machine-volume').addEventListener('input', (event) => {
+  const value = Number(event.currentTarget.value) / 100;
+  setMachineVolume(value);
+  save.machineVolume = value;
   persist();
-  renderMute();
 });
 renderMute();
 
@@ -2972,11 +3168,13 @@ function renderMusic() {
   $('music-button').textContent = isMusicOn() ? '♫ on' : '♫ off';
   $('music-button').classList.toggle('active', isMusicOn());
 }
-$('music-button').addEventListener('click', () => {
-  setMusicOn(!isMusicOn());
-  save.music = isMusicOn();
+$('music-button').addEventListener('click', toggleMusicAudio);
+$('music-volume').value = String(Math.round(getMusicVolume() * 100));
+$('music-volume').addEventListener('input', (event) => {
+  const value = Number(event.currentTarget.value) / 100;
+  setMusicVolume(value);
+  save.musicVolume = value;
   persist();
-  renderMusic();
 });
 renderMusic();
 
@@ -2999,16 +3197,9 @@ $('level-menu-backdrop').addEventListener('click', () => setLevelMenu(false));
 $('banner-next').addEventListener('click', () => {
   if (bannerAction?.kind === 'level') {
     loadLevel(bannerAction.index);
-    return;
-  }
-  if (bannerAction?.kind === 'case') {
-    const nextCase = bannerAction.index;
-    onResetRun();
-    caseIndex = nextCase;
-    renderCases(); renderBoard(); renderInspector();
   }
 });
-$('banner-close').addEventListener('click', hideBanner);
+$('banner-close').addEventListener('click', dismissBannerToEdit);
 $('level-nav').addEventListener('click', (e) => {
   const dot = e.target.closest('[data-level]');
   if (dot?.getAttribute('aria-disabled') !== 'true') loadLevel(Number(dot.dataset.level));

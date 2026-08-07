@@ -287,7 +287,9 @@ export function terminalCardGeometry(part, cellSize = 64) {
   const scale = cellSize / 64;
   return {
     x: (part.x + 1) * cellSize,
-    y: part.y * cellSize + 110 * scale,
+    // The terminal art occupies the complete two-cell chassis after a
+    // quarter turn. Keep the 52px notation card wholly below that square.
+    y: part.y * cellSize + 160 * scale,
     side: 'south',
   };
 }
@@ -296,7 +298,7 @@ export function terminalNameGeometry(part, cellSize = 64) {
   const scale = cellSize / 64;
   return {
     x: (part.x + 1) * cellSize,
-    y: part.y * cellSize + 10 * scale,
+    y: part.y * cellSize - 8 * scale,
     side: 'north',
   };
 }

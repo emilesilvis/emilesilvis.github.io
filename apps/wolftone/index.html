@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Wolf Tone is a musical marble-machine puzzle: Quills turn sound into word marbles, mechanisms reshape their notes, and Resonators turn them back into sound waves." />
     <title>Wolf Tone: Play</title>
-    <link rel="stylesheet" href="./style.css?v=0.9.5-1" />
+    <link rel="stylesheet" href="./style.css?v=0.9.6-2" />
     <script defer src="https://cloud.umami.is/script.js" data-website-id="e0b952c3-2a28-4575-9603-386229d51c15"></script>
   </head>
   <body>
     <header class="masthead">
       <div class="brand">
         <strong>WOLF TONE</strong>
-        <small>v0.9.5 · prototype</small>
+        <small>v0.9.6 · prototype</small>
         <small id="session-mode-label" class="session-mode-label" hidden></small>
       </div>
       <div class="level-switcher">
@@ -26,11 +26,40 @@
         </div>
         <button id="next-level" class="level-arrow" type="button" aria-label="Next level">›</button>
       </div>
-      <div class="masthead-actions" aria-label="Audio controls">
-        <button id="mute-button" type="button" aria-label="Toggle machine sounds">♪ on</button>
-        <button id="music-button" type="button" aria-label="Toggle soundtrack">♫ on</button>
+      <div class="masthead-actions">
+        <button id="help-button" type="button" aria-controls="help-dialog" aria-label="Show controls and shortcuts">? Help</button>
+        <div class="audio-control" aria-label="Machine sound controls">
+          <button id="mute-button" type="button" aria-label="Toggle machine sounds" title="Toggle machine sounds (M)">♪ on</button>
+          <input id="machine-volume" type="range" min="0" max="100" step="1" aria-label="Machine sound volume" />
+        </div>
+        <div class="audio-control" aria-label="Music controls">
+          <button id="music-button" type="button" aria-label="Toggle soundtrack" title="Toggle soundtrack (Shift+M)">♫ on</button>
+          <input id="music-volume" type="range" min="0" max="100" step="1" aria-label="Music volume" />
+        </div>
       </div>
     </header>
+
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <form method="dialog" class="help-sheet">
+        <div class="help-heading">
+          <h2 id="help-title">Controls</h2>
+          <button type="submit" aria-label="Close controls">×</button>
+        </div>
+        <dl class="shortcut-list">
+          <div><dt>Space</dt><dd>Run all / pause</dd></div>
+          <div><dt>Tab</dt><dd>Step one tick</dd></div>
+          <div><dt>[ / ]</dt><dd>Previous / next performance</dd></div>
+          <div><dt>R</dt><dd>Rotate selected part or placement</dd></div>
+          <div><dt>Delete</dt><dd>Remove selected parts or Track</dd></div>
+          <div><dt>Shift-click / Shift-drag</dt><dd>Add parts to selection / box-select</dd></div>
+          <div><dt>Ctrl/Cmd+A</dt><dd>Select all parts</dd></div>
+          <div><dt>Z / Shift+Z</dt><dd>Undo / redo</dd></div>
+          <div><dt>+ / − / 0</dt><dd>Zoom in / out / fit</dd></div>
+          <div><dt>M / Shift+M</dt><dd>Toggle machine sound / music</dd></div>
+          <div><dt>Escape</dt><dd>Stop a run or cancel the current gesture</dd></div>
+        </dl>
+      </form>
+    </dialog>
 
     <div id="banner" class="banner" hidden role="status" aria-live="polite">
       <span id="banner-icon" class="banner-icon"></span>
@@ -44,7 +73,7 @@
           <span class="banner-score-measure"><small>AREA</small><output id="banner-score-area"></output><em id="banner-best-area" hidden>◆ NEW BEST</em></span>
         </div>
       </div>
-      <button id="banner-next" type="button" hidden>Next →</button>
+      <button id="banner-next" type="button" hidden>Next level →</button>
       <button id="banner-close" type="button" aria-label="Close">×</button>
     </div>
 
@@ -96,6 +125,11 @@
             <div class="board-history" aria-label="Edit history">
               <button id="undo-edit" type="button" title="Undo edit (Z or Ctrl/Cmd+Z)" aria-label="Undo edit">↶ <span>Undo</span></button>
               <button id="redo-edit" type="button" title="Redo edit (Shift+Z, Y, or Ctrl/Cmd+Shift+Z)" aria-label="Redo edit">↷ <span>Redo</span></button>
+              <button id="delete-selection" class="danger" type="button" title="Delete selected object" aria-label="Delete selected object">Delete</button>
+            </div>
+            <div id="solution-switcher" class="solution-switcher" aria-label="Saved solutions">
+              <label><span>Solution</span><select id="solution-slot-select" aria-label="Current solution"></select></label>
+              <button id="duplicate-solution" type="button" title="Duplicate current solution" aria-label="Duplicate current solution">Duplicate</button>
             </div>
             <div class="board-zoom" aria-label="Board zoom controls">
               <button id="zoom-out" type="button" aria-label="Zoom out">−</button>
@@ -151,6 +185,6 @@
       </aside>
     </main>
 
-    <script type="module" src="./main.mjs?v=0.9.5-1"></script>
+    <script type="module" src="./main.mjs?v=0.9.6-2"></script>
   </body>
 </html>
