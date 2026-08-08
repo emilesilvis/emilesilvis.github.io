@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="version" content="1.0.0">
 <title>A · Design-element catalog · How to Design a Zachlike</title>
 <script>
 (function () {
@@ -153,6 +154,12 @@ html {
   font-size: 1.05rem;
 }
 
+.guide-version {
+  margin: -0.25rem 0 1.25rem;
+  color: var(--text-muted);
+  font: 0.72rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 .eyebrow {
   margin: 0;
   color: var(--text-muted);
@@ -300,18 +307,24 @@ table.reg tr:target td:first-child {
 <a class="back" href="guide.html#registers">← Back to the guide</a>
 <main id="content">
 <h2 id="reg-m">A · Design-element catalog <span class="regcount">100 rows · M001–M135</span></h2>
-<p>A design vocabulary around <a href="guide.html#mechanics">§2</a>, grouped into nine families. It is broader than the chapter's strict definition of a mechanic. Rows play three roles: <strong>construction rules</strong> the player learns, <strong>systemic phenomena</strong> produced by interacting rules, and <strong>puzzle or product devices</strong> that specify, reveal, measure, or frame construction.</p>
-<p>A construction-rule row exists only when a rule changes decisions, prediction, failure, feedback, or optimization. That grain is finer than §2's mechanic count: one mechanic a player learns as a unit often spans several rows, which is why a shipped game draws on dozens of rows while teaching a handful of mechanics. Phenomenon and support rows are consequences to confront or capabilities to provide, not parts to add to the palette.</p>
-<p>IDs are stable across curation: culled rows keep their numbers vacant, so ranges such as M011–M029 contain gaps. <a href="#m017">M017</a>, <a href="#m072">M072</a>, and <a href="#m073">M073</a> are examples of systemic phenomena; families A, H, and I contain many puzzle and product devices, with family I at the guide's scope boundary.</p>
-<p>Ratings and game examples are editorial prompts, not measurements or proof of attribution. HRM is Human Resource Machine; ONI is Oxygen Not Included. Examples mix specification-driven puzzle games with open automation games — Factorio, Satisfactory, Mindustry, ONI — which answer to a throughput economy rather than a puzzle specification, so rows cited mostly from them port less directly. Inspect the cited game before borrowing a row, then test any construction rule against the five questions in <a href="guide.html#mechanics">§2</a>.</p>
-<p>A <em>combines with</em> entry is a curated lead, not a symmetric index; a link in either direction is the same prompt to test the pair.</p>
+<p class="guide-version">Version 1.0.0 · <time datetime="2026-08-08">2026-08-08</time></p>
+<p>This catalog is a source of ideas, not a checklist. It contains three kinds of entries:</p>
+<ul>
+<li><strong>Rules</strong> the player uses to build.</li>
+<li><strong>Effects</strong> that can emerge when rules interact.</li>
+<li><strong>Tools</strong> for specifying, explaining, testing, or scoring a machine.</li>
+</ul>
+<p>One mechanic in <a href="guide.html#mechanics">§2</a> may use several rows here. Choose only the entries that strengthen the game's central pressure and each other.</p>
+<p>IDs never change. When a row is removed, its number stays unused, so gaps such as those in M011–M029 are intentional.</p>
+<p>Ratings and game examples are prompts, not measurements. Some examples come from open factory games rather than specification-driven puzzles, so their ideas may not transfer directly. Inspect a game before borrowing from it, then test any rule against the five questions in <a href="guide.html#mechanics">§2</a>.</p>
+<p>The <em>combines with</em> column suggests pairs worth testing. A pair may be listed in only one of its two rows.</p>
 <div class="note">
-<p><strong>Emergence scale.</strong> <em>Low</em> — outcomes follow directly from authored actions. <em>Medium</em> — several rules compose into interactions that require simulation or planning. <em>High</em> — global behaviour or failure modes arise from local rules, shared state, capacity, concurrency, topology, or feedback.</p>
+<p><strong>Emergence scale.</strong> <em>Low</em> — results follow directly from an action. <em>Medium</em> — several rules must be considered together. <em>High</em> — local rules can create surprising system-wide behaviour or failures.</p>
 </div>
 <h3 id="mfam-a">A · Specification &amp; verification <span class="regcount">M001–M010</span></h3>
 <p class="note">Can the player infer a fair spec and test against it? M103 and M113 belong here by subject; they sit in G and H by number.</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m001"><td class="mname"><strong>M001</strong><br>Specification-driven I/O target</td><td>A level defines valid input-output behavior rather than a prescribed construction.</td><td>Infer the transformation and build any system that satisfies it.</td><td>Exact semantics; hidden or generated cases may apply</td><td>Correctness; robustness; simplicity</td><td>Low</td><td>SpaceChem, TIS-100, SHENZHEN I/O, EXAPUNKS, Manufactoria, HRM</td><td class="mono"><a href="#m002">M002</a>, <a href="#m003">M003</a>, <a href="#m008">M008</a>, <a href="#m105">M105</a></td></tr>
 <tr id="m002"><td class="mname"><strong>M002</strong><br>Multiple or adversarial test cases</td><td>A solution is replayed against varied inputs to prevent hard-coded answers.</td><td>Generalize logic and test edge cases.</td><td>Unknown future cases; one failure invalidates the program</td><td>Robustness; cycles across worst case; code size</td><td>Medium</td><td>TIS-100, SHENZHEN I/O, EXAPUNKS, Manufactoria, HRM</td><td class="mono"><a href="#m001">M001</a>, <a href="#m009">M009</a>, <a href="#m113">M113</a>, <a href="#m126">M126</a></td></tr>
 <tr id="m003"><td class="mname"><strong>M003</strong><br>Exact structural output matching</td><td>The produced object must match a target topology, orientation, ordering, or constrained graph.</td><td>Assemble, transform, and orient components precisely.</td><td>No extra parts; orientation and connectivity matter</td><td>Parts; area; cycles; damage</td><td>Low</td><td>Opus Magnum, SpaceChem, Infinifactory, shapez</td><td class="mono"><a href="#m035">M035</a>, <a href="#m036">M036</a>, <a href="#m045">M045</a>, <a href="#m060">M060</a></td></tr>
@@ -325,7 +338,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-b">B · Flow &amp; capacity networks <span class="regcount">M011–M029</span></h3>
 <p class="note">How do topology, capacity, and timing make movement a design problem?</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m011"><td class="mname"><strong>M011</strong><br>Directed channel transport</td><td>Discrete entities move automatically along player-defined directed channels.</td><td>Place and orient channels between sources, processors, buffers, and sinks.</td><td>Direction, speed, occupancy, corners</td><td>Length; throughput; area; crossings</td><td>Medium</td><td>Factorio, shapez, Satisfactory, Infinifactory, Mindustry</td><td class="mono"><a href="#m013">M013</a>, <a href="#m017">M017</a></td></tr>
 <tr id="m013"><td class="mname"><strong>M013</strong><br>Split, merge, and balance flows</td><td>Junctions divide or combine streams, often with ratios or priority.</td><td>Place splitters, mergers, balancers, or junction logic.</td><td>Finite throughput; fairness or priority semantics</td><td>Balance; throughput; footprint</td><td>High</td><td>Factorio, shapez, Satisfactory</td><td class="mono"><a href="#m018">M018</a></td></tr>
 <tr id="m014"><td class="mname"><strong>M014</strong><br>Filtering and sorting</td><td>A junction routes entities by type, value, attribute, destination, or signal.</td><td>Configure filters or build a classifier.</td><td>Filter slots; unknown types; timing and capacity</td><td>Accuracy; throughput; filter count</td><td>Medium</td><td>Factorio, shapez, Manufactoria, Cosmic Express</td><td class="mono"><a href="#m070">M070</a>, <a href="#m089">M089</a>, <a href="#m103">M103</a></td></tr>
@@ -339,7 +352,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-c">C · Transformation grammars <span class="regcount">M030–M044</span></h3>
 <p class="note">Can a small vocabulary of operations compose into several routes from input to output?</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m030"><td class="mname"><strong>M030</strong><br>Multi-input transformation process</td><td>A process consumes a defined combination of inputs over time and produces one or more outputs.</td><td>Select transformation rules and supply inputs at compatible rates.</td><td>Transformation rule stoichiometry, craft time, system compatibility</td><td>Components; time; energy; yield</td><td>High</td><td>Factorio, Satisfactory, Mindustry, shapez</td><td class="mono"><a href="#m018">M018</a>, <a href="#m118">M118</a></td></tr>
 <tr id="m031"><td class="mname"><strong>M031</strong><br>Cutting or partitioning</td><td>An object is divided into pieces or quadrants that retain identity or position.</td><td>Orient the object and route desired fragments.</td><td>Cut axis; fragment order; waste behavior</td><td>Cutter count; waste; throughput</td><td>Low</td><td>shapez, Infinifactory</td><td class="mono"><a href="#m032">M032</a>, <a href="#m033">M033</a>, <a href="#m039">M039</a></td></tr>
 <tr id="m032"><td class="mname"><strong>M032</strong><br>Rotation and orientation</td><td>Components or outputs are rotated to align interfaces or target orientation.</td><td>Place rotators, program manipulator turns, or manually orient parts.</td><td>Discrete angles; handedness; collision envelope</td><td>Rotator count; cycles; space</td><td>Low</td><td>shapez, Opus Magnum, Factorio, Infinifactory</td><td class="mono"><a href="#m003">M003</a>, <a href="#m047">M047</a>, <a href="#m049">M049</a>, <a href="#m060">M060</a></td></tr>
@@ -354,7 +367,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-d">D · Spatial construction <span class="regcount">M045–M060</span></h3>
 <p class="note">Does geometry create real access, routing, and timing decisions?</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m045"><td class="mname"><strong>M045</strong><br>Structural support and stability</td><td>Assemblies may fall, collapse, detach, or depend on support topology.</td><td>Sequence construction and add supports or exploit gravity.</td><td>Gravity, connection strength, platform rules</td><td>Support count; mass; stability margin</td><td>High</td><td>Poly Bridge, Besiege, The Incredible Machine, Infinifactory</td><td class="mono"><a href="#m033">M033</a>, <a href="#m035">M035</a></td></tr>
 <tr id="m046"><td class="mname"><strong>M046</strong><br>Discrete grid placement</td><td>Components snap to cells, making topology and distance countable.</td><td>Place, rotate, and connect pieces on a grid.</td><td>One component per cell; adjacency rules</td><td>Area; path length; symmetry</td><td>Low</td><td>SpaceChem, Opus Magnum, Factorio, shapez, TIS-100 (near-universal)</td><td class="mono"><a href="#m006">M006</a>, <a href="#m047">M047</a>, <a href="#m108">M108</a>, <a href="#m127">M127</a></td></tr>
 <tr id="m047"><td class="mname"><strong>M047</strong><br>Hexagonal geometry</td><td>Six-neighbor geometry changes reach, rotation, packing, and collision patterns.</td><td>Plan around 60-degree directions and radial reach.</td><td>Six axes; different parity and ring distances</td><td>Area; manipulator count; rotational symmetry</td><td>Medium</td><td>Opus Magnum, MOLEK-SYNTEZ</td><td class="mono"><a href="#m032">M032</a>, <a href="#m049">M049</a>, <a href="#m051">M051</a>, <a href="#m108">M108</a></td></tr>
@@ -368,7 +381,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-e">E · Time &amp; concurrency <span class="regcount">M061–M073</span></h3>
 <p class="note">Can the player understand how local schedules produce global behaviour?</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m061"><td class="mname"><strong>M061</strong><br>Global discrete ticks</td><td>All active components advance in synchronized time steps.</td><td>Align actions across devices and reason cycle by cycle.</td><td>Simultaneous update semantics</td><td>Cycles; latency; idle time</td><td>Medium</td><td>SpaceChem, TIS-100, Opus Magnum, Manufactoria, HRM (and every Zachtronics title)</td><td class="mono"><a href="#m063">M063</a>, <a href="#m064">M064</a>, <a href="#m066">M066</a>, <a href="#m072">M072</a></td></tr>
 <tr id="m062"><td class="mname"><strong>M062</strong><br>Per-device timelines</td><td>Each system or manipulator receives a sequenced row of commands aligned to time.</td><td>Place commands on timelines and synchronize rows.</td><td>One command per slot; repeating program; collision</td><td>Cycles; command count; parallelism</td><td>Medium</td><td>Opus Magnum, MOLEK-SYNTEZ</td><td class="mono"><a href="#m049">M049</a>, <a href="#m061">M061</a>, <a href="#m063">M063</a>, <a href="#m066">M066</a></td></tr>
 <tr id="m063"><td class="mname"><strong>M063</strong><br>Automatic looping programs</td><td>A finite instruction sequence repeats to create continuous behavior.</td><td>Design a loop with a stable return state.</td><td>Program counter wraps; state persists unless reset</td><td>Loop length; throughput; state complexity</td><td>Medium</td><td>SpaceChem, Opus Magnum, TIS-100</td><td class="mono"><a href="#m061">M061</a>, <a href="#m068">M068</a>, <a href="#m113">M113</a></td></tr>
@@ -386,7 +399,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-f">F · Programming &amp; information <span class="regcount">M074–M093</span></h3>
 <p class="note">How much behaviour can the player express with a deliberately poor language?</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m074"><td class="mname"><strong>M074</strong><br>Minimal instruction vocabulary</td><td>Programs use a compact set of moves, arithmetic, jumps, and I/O operations.</td><td>Write or drag instructions and manage low-level state.</td><td>Few instructions; explicit state; no high-level data structures</td><td>Instruction count; cycles; nodes</td><td>Low</td><td>TIS-100, SHENZHEN I/O, EXAPUNKS, HRM, 7 Billion Humans</td><td class="mono"><a href="#m076">M076</a>, <a href="#m085">M085</a>, <a href="#m086">M086</a>, <a href="#m109">M109</a></td></tr>
 <tr id="m075"><td class="mname"><strong>M075</strong><br>Spatially encoded control flow</td><td>An execution token moves through placed commands, so geometry encodes control flow.</td><td>Lay command paths, loops, branches, and crossings.</td><td>Grid space; path continuity; simultaneous tokens</td><td>Area; path length; cycles</td><td>High</td><td>SpaceChem, Manufactoria, Opus Magnum</td><td class="mono"><a href="#m011">M011</a>, <a href="#m046">M046</a>, <a href="#m063">M063</a>, <a href="#m088">M088</a></td></tr>
 <tr id="m076"><td class="mname"><strong>M076</strong><br>Limited local state</td><td>Programs have only a few registers, cells, or local storage slots.</td><td>Reuse state, encode values compactly, and spill to the environment.</td><td>Fixed registers, destructive reads, address limits</td><td>Memory cells; instructions; cycles</td><td>Medium</td><td>TIS-100, SHENZHEN I/O, EXAPUNKS, HRM</td><td class="mono"><a href="#m074">M074</a>, <a href="#m077">M077</a>, <a href="#m080">M080</a>, <a href="#m109">M109</a></td></tr>
@@ -410,7 +423,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-g">G · Rule manipulation &amp; deduction <span class="regcount">M094–M104</span></h3>
 <p class="note">Is the player manipulating objects, or the rules themselves? Powerful, but it attacks the stable core the player relies on — make it foundational or leave it out.</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m094"><td class="mname"><strong>M094</strong><br>Movable rule tokens</td><td>Rule tokens are spatial objects that can be moved to alter active rules.</td><td>Rearrange rule tokens while navigating the same space.</td><td>Rule tokens may be movable; grammar must remain valid</td><td>Moves; rule count; accessibility</td><td>High</td><td>Baba Is You</td><td class="mono"><a href="#m095">M095</a>, <a href="#m097">M097</a>, <a href="#m101">M101</a>, <a href="#m104">M104</a></td></tr>
 <tr id="m095"><td class="mname"><strong>M095</strong><br>Grammar-driven rule activation</td><td>Only grammatically valid arrangements of rule tokens become active rules.</td><td>Construct or break clauses using entity, relation, property, connector, and condition tokens.</td><td>Grammar, reading direction, connectors, overlap</td><td>Moves; clauses; rule economy</td><td>High</td><td>Baba Is You</td><td class="mono"><a href="#m094">M094</a>, <a href="#m096">M096</a>, <a href="#m100">M100</a>, <a href="#m101">M101</a></td></tr>
 <tr id="m096"><td class="mname"><strong>M096</strong><br>Dynamic property assignment</td><td>Rules assign behaviors or interaction properties to entity classes.</td><td>Assign or remove properties by editing rules.</td><td>Conflicting properties, rule precedence, object existence</td><td>Moves; number of active properties</td><td>High</td><td>Baba Is You</td><td class="mono"><a href="#m095">M095</a>, <a href="#m098">M098</a>, <a href="#m099">M099</a>, <a href="#m100">M100</a></td></tr>
@@ -426,7 +439,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-h">H · Optimization &amp; architecture <span class="regcount">M105–M117</span></h3>
 <p class="note">Do different priorities produce visibly different machines?</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m105"><td class="mname"><strong>M105</strong><br>Multi-objective benchmark distributions</td><td>Solutions are plotted against community or benchmark distributions on several axes.</td><td>Compare, redesign, and choose which metric to optimize.</td><td>Metrics often conflict; no single total score</td><td>Cost; cycles; area; instructions; power</td><td>Low</td><td>Opus Magnum, TIS-100, SHENZHEN I/O, SpaceChem, EXAPUNKS</td><td class="mono"><a href="#m106">M106</a>, <a href="#m107">M107</a>, <a href="#m108">M108</a>, <a href="#m114">M114</a></td></tr>
 <tr id="m106"><td class="mname"><strong>M106</strong><br>Speed, latency, or cycle minimization</td><td>Players reduce time from input to completion or increase rate.</td><td>Parallelize work, shorten paths, remove waits, pipeline stages.</td><td>Correctness must remain; resource budget may increase</td><td>Cycles; latency; rate</td><td>Low</td><td>Opus Magnum, SpaceChem, TIS-100</td><td class="mono"><a href="#m061">M061</a>, <a href="#m064">M064</a>, <a href="#m113">M113</a></td></tr>
 <tr id="m107"><td class="mname"><strong>M107</strong><br>Component cost minimization</td><td>Parts, components, manipulators, chips, or materials have explicit or implicit costs.</td><td>Replace expensive components and share resources.</td><td>Cost table; fixed infrastructure; trade-off with speed</td><td>Currency; parts; system tiers</td><td>Low</td><td>SHENZHEN I/O, Opus Magnum</td><td class="mono"><a href="#m059">M059</a>, <a href="#m108">M108</a>, <a href="#m110">M110</a></td></tr>
@@ -440,7 +453,7 @@ table.reg tr:target td:first-child {
 <h3 id="mfam-i">I · Progression, pressure &amp; meta <span class="regcount">M118–M135</span></h3>
 <p class="note">Does this deepen construction, or compete with it? These rows pace, frame, and contextualize construction rather than extend it — several sit at the presentation boundary the guide draws up front. Include them deliberately.</p>
 <div class="tw"><table class="reg">
-<tr><th>Mechanic</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
+<tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m118"><td class="mname"><strong>M118</strong><br>Capability unlock graph</td><td>New components, operations, interfaces, or scale layers unlock through milestones.</td><td>Meet prerequisites, choose unlock paths, and integrate new capabilities.</td><td>Prerequisites, research cost, branch choices</td><td>Unlock order; research throughput; opportunity cost</td><td>Low</td><td>Factorio, Satisfactory, Mindustry</td><td class="mono"><a href="#m030">M030</a>, <a href="#m119">M119</a></td></tr>
 <tr id="m119"><td class="mname"><strong>M119</strong><br>Mechanic-isolating curriculum</td><td>Levels introduce one concept, then combine it with earlier mechanics.</td><td>Solve scaffolded tasks of increasing composition depth.</td><td>Ordered progression; gated content</td><td>Learning efficiency; hint use</td><td>Low</td><td>SpaceChem, HRM, Baba Is You, Manufactoria (and every Zachtronics title)</td><td class="mono"><a href="#m007">M007</a>, <a href="#m102">M102</a>, <a href="#m117">M117</a>, <a href="#m120">M120</a></td></tr>
 <tr id="m120"><td class="mname"><strong>M120</strong><br>Branching and optional puzzle progression</td><td>Players choose among problems or skip advanced challenges while still advancing.</td><td>Select a route through the campaign.</td><td>Prerequisites; optional nodes; narrative gates</td><td>Completion; optional mastery</td><td>Low</td><td>Opus Magnum, Cosmic Express, Baba Is You</td><td class="mono"><a href="#m117">M117</a>, <a href="#m118">M118</a>, <a href="#m119">M119</a>, <a href="#m129">M129</a></td></tr>
