@@ -309,85 +309,94 @@ table.reg tr:target td:first-child {
   <a href="#mechanics">2 · Mechanics</a>
   <a href="#systems">3 · Systems</a>
   <a href="#puzzles">4 · Puzzles</a>
+  <div class="navhead">The product</div>
+  <a href="#presentation">5 · Presentation</a>
+  <a href="#teaching">6 · Teaching</a>
+  <a href="#optimization">7 · Optimization</a>
+  <a href="#story">8 · Story</a>
+  <div class="navhead">Practice</div>
+  <a href="#practice">9 · Practice</a>
   <div class="navhead">Reference</div>
-  <a href="mechanics.html#reg-m">A · Mechanics</a>
+  <a href="mechanics.html#reg-m">A · Design elements</a>
   <a href="#reg-src">B · Sources</a>
 </div>
 </details>
 </nav>
 
 <main id="content">
-<p class="eyebrow">A guide to abstract puzzle mechanics</p>
+<p class="eyebrow">A guide to open-ended engineering puzzles</p>
 <h1 id="front">How to design a Zachlike</h1>
-<p class="lede">A Zachlike asks the player to build a machine, run it, inspect what happened, and revise it. This guide is about designing the puzzle system at the heart of that loop.</p>
-<p>The goal is <strong>a small set of understandable rules whose interactions produce a large space of solutions.</strong></p>
-<p>This guide follows one dependency chain:</p>
+<p class="lede">A Zachlike asks the player to build an executable artifact, prove it against an exact behavioural specification, then improve it along competing dimensions.</p>
+<p>The goal is <strong>a small set of understandable rules whose interactions produce a large space of solutions.</strong> The player builds something, runs it, inspects what happened, and revises it.</p>
+<p>A precise test separates <strong>correctness</strong> from <strong>quality</strong>. Passing ends the required puzzle. Speed, size, cost, robustness, elegance, and other qualities create voluntary second puzzles.</p>
+<p>The first four chapters describe one conceptual dependency:</p>
 <div class="mono">
-<p>Domain → Mechanics → Systems → Puzzles</p>
+<p>Core · Domain → Mechanics → Systems → Puzzles<br>
+Product · Presentation · Teaching · Optimization · Story<br>
+Practice · Prototype → Evidence → Revision ↺</p>
 </div>
 <p><strong>Domain</strong> supplies the process, verbs, and natural constraints. <strong>Mechanics</strong> define the available operations. <strong>Systems</strong> are what those rules do together. <strong>Puzzles</strong> select and pressure the resulting possibility space.</p>
-<p>Read the four chapters in order. Each narrows the decisions available to the next.</p>
-<h3>Presentation is the lens</h3>
-<p>Presentation is not a fifth layer. It cannot create mechanical depth; it reveals or hides that depth.</p>
-<p>This guide assumes the player can inspect rules, state, causality, and failure. It does not cover how to achieve that through interface design, art, sound, animation, editing tools, or accessibility work.</p>
-<h3>Outside the scope</h3>
-<p>This guide does not cover:</p>
+<p>Read these chapters in order because each gives the next a basis. The arrows describe how design decisions derive from one another, not a one-way production schedule. Prototype the chain as a loop: puzzle evidence can force changes to the system, the mechanic set, or even the domain.</p>
+<h3>Around the core</h3>
+<p>Four more concerns turn a sound puzzle system into a complete game:</p>
 <ul>
-<li>teaching or campaign progression;</li>
-<li>story, setting, or character framing;</li>
-<li>implementation and editor architecture;</li>
-<li>production planning or playtesting practice; or</li>
-<li>community features, rankings, and score distributions.</li>
+<li><strong>Presentation</strong> makes rules, state, causality, failure, and cost inspectable and makes revision cheap.</li>
+<li><strong>Teaching</strong> turns the campaign into a curriculum without turning the tutorial into the puzzle.</li>
+<li><strong>Optimization</strong> gives a correct machine a second life through conflicting measures, comparison, and sharing.</li>
+<li><strong>Story</strong> gives the work a purpose and helps choose which artifacts and briefs belong.</li>
 </ul>
-<p>Metrics appear only when they change the abstract solution space of a puzzle. Optimization culture and post-solve metagames do not.</p>
-<p>The separate <a href="mechanics.html#reg-m">mechanics catalog</a> is vocabulary, not a specification. A coherent game is defined as much by what it omits as by what it includes.</p>
+<p>These are not extra stages after the dependency chain. They surround it, reveal it, and must enter the prototype early enough to test the decisions they change. The final chapter closes the loop by turning the whole structure into a prototyping and playtesting practice.</p>
+<h3>What remains outside the scope</h3>
+<p>This guide does not prescribe engine architecture, art direction, audio production, platform strategy, budgets, publishing, or marketing. It states what the player-facing system must make possible, not how to implement it.</p>
+<p>The separate <a href="mechanics.html#reg-m">design-element catalog</a> is vocabulary, not a specification. A coherent game is defined as much by what it omits as by what it includes.</p>
 
 <h2 id="domain">1 · Domain</h2>
 <p>The domain is the process the game simulates: the slice of reality, engineering, or invented physics the player learns to manipulate. It is not the setting or art style.</p>
-<p>A useful domain supplies verbs, pressures, and representations. It narrows which mechanics belong without pretending that realism can make every design decision.</p>
+<p>A useful domain creates a <strong>work fantasy</strong>: the player feels like the person who makes a particular kind of artifact behave. It supplies verbs, pressures, representations, and natural briefs. It narrows which mechanics belong without pretending that realism can make every design decision.</p>
 <h3>Start from a process</h3>
-<p>Choose something a person could perform, not a broad subject. <em>Voicing a pipe organ</em> is more useful than “music” because it implies actions, equipment, shared wind, and a bounded workspace.</p>
-<p>A promising process has three properties:</p>
+<p>Choose something a person could perform, not a broad subject. <em>Designing a cheap consumer device</em>, as in <strong>SHENZHEN I/O</strong>, is more useful than “electronics” because it implies a product, components, signals, a board, a budget, and operating requirements.</p>
+<p>A promising process has four properties:</p>
 <ul>
+<li><strong>It produces an artifact.</strong> The player can name what they are making, what it receives, and what it must do.</li>
 <li><strong>It supplies verbs.</strong> The player can route, join, split, schedule, store, transform, or test something.</li>
 <li><strong>Its relevant state fits in one view.</strong> The player can inspect the causes that matter.</li>
 <li><strong>It contains pressure.</strong> Capacity, timing, reach, scarcity, or irreversibility can force decisions.</li>
 </ul>
-<p>Four contrasting prompts show the pattern:</p>
+<p>Four shipped Zachlikes show the pattern:</p>
 <div class="tw"><table>
 <thead>
 <tr>
-<th>Process</th>
+<th>Game and process</th>
 <th>Verbs</th>
-<th>Candidate pressure</th>
+<th>Pressure derived from the process</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Railway interlocking</strong></td>
-<td>set, lock, clear, release</td>
-<td>Incompatible routes cannot claim one block</td>
+<td><strong>SpaceChem · molecular production</strong></td>
+<td>route, grab, bond, unbond, synchronize</td>
+<td>two waldos share a small reactor and must coordinate the molecules they hold</td>
 </tr>
 <tr>
-<td><strong>Organ building</strong></td>
-<td>rank, wind, couple, voice</td>
-<td>One wind supply serves everything sounding</td>
+<td><strong>Infinifactory · assembly-line engineering</strong></td>
+<td>route, push, rotate, weld, destroy</td>
+<td>products must align in three-dimensional space while moving</td>
 </tr>
 <tr>
-<td><strong>Darkroom developing</strong></td>
-<td>expose, develop, stop, fix</td>
-<td>Baths are timed and some changes are irreversible</td>
+<td><strong>SHENZHEN I/O · product electronics</strong></td>
+<td>wire, program, sense, signal</td>
+<td>components, pins, power, and code are scarce</td>
 </tr>
 <tr>
-<td><strong>Ore smelting line</strong></td>
-<td>feed, move, smelt, cast</td>
-<td>One furnace's rate paces every line that feeds it</td>
+<td><strong>EXAPUNKS · network intrusion</strong></td>
+<td>move, copy, read, write, message</td>
+<td>programs travel through a constrained host topology</td>
 </tr>
 </tbody>
 </table></div>
-<p>These are prompts, not endorsements. Observe or research the process before depending on its metaphor.</p>
+<p>These games simplify their domains aggressively, but each simplification protects the work fantasy and the decisions it needs. Observe or research a process before depending on its metaphor.</p>
 <h3>Test its yield and cost</h3>
-<p>Ask five questions before committing:</p>
+<p>Ask six questions before committing:</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -399,6 +408,10 @@ table.reg tr:target td:first-child {
 <tr>
 <td>What is the process?</td>
 <td>You can name it briefly and list its objects and transformations</td>
+</tr>
+<tr>
+<td>What does the player make?</td>
+<td>The artifact has inputs, outputs, operating conditions, and a reason to exist</td>
 </tr>
 <tr>
 <td>What does it generate?</td>
@@ -421,7 +434,7 @@ table.reg tr:target td:first-child {
 <p>Specialist vocabulary is a real onboarding cost. Invented physics avoids assumed expertise, but it still needs consistent rules and readable representations.</p>
 <p>Depart from realism wherever accuracy would hide state, add labour, or create an exception the player cannot predict. Keep the fiction coherent enough that the simplification feels deliberate.</p>
 <div class="box">
-<p><strong>The domain is ready when</strong> you can name the process, derive several verbs and pressures, teach all required knowledge, and use the metaphor to reject incoherent rules.</p>
+<p><strong>The domain is ready when</strong> you can name the process and its artifacts, derive several verbs and pressures, teach all required knowledge, and use the metaphor to reject incoherent rules.</p>
 <p>Next: <a href="#mechanics">§2</a> turns those verbs into a small rule set.</p>
 </div>
 
@@ -429,6 +442,36 @@ table.reg tr:target td:first-child {
 <p>A mechanic is a rule, not a themed object. A conveyor, wire, pipe, and queue may be the same mechanic when they create the same decisions.</p>
 <p>Count a second mechanic when its rule changes what players decide or predict, how they fail, or what they can optimize.</p>
 <p>Start with as few rules as the system needs. A new exception is not depth, and documentation growing faster than possibility is a warning.</p>
+<h3>Build a construction language</h3>
+<p>Design a language for making systems, not a bag of themed parts. Define three things before expanding the palette:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Question</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>State</strong></td>
+<td>What exists, persists, and can change?</td>
+<td><strong>SpaceChem's</strong> atoms and bonds; <strong>Infinifactory's</strong> blocks and orientation; <strong>SHENZHEN I/O's</strong> signals and registers</td>
+</tr>
+<tr>
+<td><strong>Operations</strong></td>
+<td>Which small actions transform that state?</td>
+<td><strong>Opus Magnum's</strong> grab, rotate, bond, and transmute; <strong>EXAPUNKS'</strong> move, copy, read, and write</td>
+</tr>
+<tr>
+<td><strong>Coordination</strong></td>
+<td>How do operations interact across time and space?</td>
+<td><strong>TIS-100's</strong> lockstep nodes, <strong>SpaceChem's</strong> waldo paths, <strong>EXAPUNKS'</strong> host topology</td>
+</tr>
+</tbody>
+</table></div>
+<p>A finished solution usually has an <strong>architecture</strong> — where work happens — and a <strong>schedule</strong> — when it happens. Geometry may embody either one, but the rules must make both predictable.</p>
+<p>Ask what new mental model this language makes the player learn. A conventional programming or construction model with new nouns may still be useful, but it gives up one of the form's strongest pleasures: discovering a genuinely different way to organize work. Originality is a prompt, not an excuse for obscurity; the language still has to survive the tests below.</p>
 <h3>Test every mechanic</h3>
 <p>Ask whether a mechanic deepens the whole system rather than whether it sounds interesting alone.</p>
 <div class="tw"><table>
@@ -507,24 +550,57 @@ table.reg tr:target td:first-child {
 </tbody>
 </table></div>
 <p>If the honest answer is “nothing in particular,” check whether construction has become work without a decision.</p>
-<p>The separate <a href="mechanics.html#reg-m">mechanics catalog</a> maps nine broad families. Its rows are finer-grained than the count above: one mechanic as counted here — one rule the player learns as a unit — often spans several rows. Open it after you can name the domain and pressure; use it to find interactions, not to fill a palette.</p>
+<p>Keep four related terms distinct:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Scope</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pressure</strong></td>
+<td>the whole construction system</td>
+<td>A recurring scarcity that organizes decisions across puzzles</td>
+</tr>
+<tr>
+<td><strong>Constraint</strong></td>
+<td>a rule or one puzzle</td>
+<td>A hard boundary on what the player may build or what counts as valid</td>
+</tr>
+<tr>
+<td><strong>Bottleneck</strong></td>
+<td>one puzzle</td>
+<td>The facet of the central pressure that dominates that specification</td>
+</tr>
+<tr>
+<td><strong>Metric</strong></td>
+<td>valid solutions</td>
+<td>A measure that compares quality after correctness</td>
+</tr>
+</tbody>
+</table></div>
+<p>A cramped board can therefore be a constraint, packing its bottleneck, space the game's pressure, and footprint one metric. The terms describe different jobs even when they concern the same scarce thing.</p>
+<p>The separate <a href="mechanics.html#reg-m">design-element catalog</a> maps nine broad families. It is deliberately wider than the mechanic set: one mechanic as counted here — one rule the player learns as a unit — may span several construction-rule rows, while other rows name systemic phenomena or puzzle and product devices. Open it after you can name the domain and pressure; use it to find interactions and consequences, not to fill a palette.</p>
 <div class="box">
 <p><strong>The mechanic set is coherent when</strong> it fits on one hand, survives the five questions, and creates a pressure you can name in one sentence.</p>
 <p>Next: <a href="#systems">§3</a> asks what those rules do together.</p>
 </div>
 
 <h2 id="systems">3 · Systems</h2>
-<p>A system is what emerges when mechanics interact. Take the smelting line from <a href="#domain">§1</a>. Three local rules — a belt moves items one cell per tick, an arm moves one item between adjacent cells, a furnace consumes two items to emit one — already produce behaviour none of them mentions: queues, stalls, races over a shared cell, throughput that depends on layout.</p>
-<p>You write local rules; the system is what they do together. Useful complexity comes from composition — many small, unambiguous rules interacting — not from ambiguity inside one part.</p>
-<h3>Freeze the core contract</h3>
+<p>A system is what emerges when mechanics interact. In <strong>TIS-100</strong>, nodes execute tiny programs in parallel, communicate only with their four neighbours, and block until a matching read and write meet. Those local rules produce behaviour none of them names: routing protocols, pipelines, starvation, and deadlocks whose timing depends on the whole network.</p>
+<p>You write local rules; the system is what they do together. Useful complexity comes from composition — many small, unambiguous rules interacting — not from ambiguity inside one part. The machine must also be repeatable: once built, it can run again under the same conditions and produce the same visible sequence.</p>
+<h3>Freeze the system contract</h3>
 <p>Define and test the rules that every later mechanic depends on. Each category is a set of questions the system must always answer the same way:</p>
 <ul>
-<li><strong>Object identity and transformation.</strong> When are two items the same item? What exactly does the furnace emit for each input it accepts?</li>
-<li><strong>Connections, capacity, and transfer.</strong> What may connect to what, how much fits in one cell or container, and when does a transfer refuse to happen?</li>
-<li><strong>Time, update phases, and arbitration.</strong> How long is a tick, in what order do parts act inside it, and when two arms grab the same item in the same tick, which wins?</li>
-<li><strong>Failure, completion, and editing.</strong> What counts as a crash, a spill, or a finished run, and what may the player change while the machine runs?</li>
+<li><strong>Object identity and transformation.</strong> In <strong>SpaceChem</strong>, which atom does a waldo hold, and exactly when does a bond form or break?</li>
+<li><strong>Connections, capacity, and transfer.</strong> In <strong>TIS-100</strong>, which ports may communicate, and when does a read or write wait?</li>
+<li><strong>Time, update phases, and arbitration.</strong> In <strong>Opus Magnum</strong>, when do simultaneous arms act, and which collisions invalidate the cycle?</li>
+<li><strong>Failure, completion, and editing.</strong> In <strong>Infinifactory</strong>, what counts as a malformed product or a finished run, and what state resets before the next test?</li>
 </ul>
-<p>These rules are the contract because determinism rests on them: the same machine, input, rules, and seed must produce the same visible sequence. Seeded variation meets that standard when replaying a seed reproduces every failure exactly.</p>
+<p>These rules form the <strong>system contract</strong> because determinism rests on them: the same machine, input, rules, and seed must produce the same visible sequence. Seeded variation meets that standard when replaying a seed reproduces every failure exactly. A mature machine may loop forever or stop at a quota, but repetition must not change its semantics.</p>
 <p>Revise unfinished rules freely. Once players save solutions against a released rule, change it only deliberately, visibly, and with compatibility in mind.</p>
 <h3>Design interactions, not inventories</h3>
 <p>For every pair of core mechanics, ask whether one changes the value, cost, timing, or failure modes of the other. Formal connectivity alone is not an interaction: an arm can load a belt, but if the belt treats every item alike, <em>arm × belt</em> has created no new decision.</p>
@@ -546,10 +622,10 @@ table.reg tr:target td:first-child {
 <td>Does either rule earn its place only through this pair?</td>
 </tr>
 <tr>
-<td><em>belt × furnace</em></td>
-<td>Feed rate becomes a choice: an overfed furnace backs its belt up</td>
-<td>The queue is visible on the belt itself</td>
-<td>No — each also interacts with the arm</td>
+<td><em>TIS-100 port rendezvous × fixed topology</em></td>
+<td>A short route may block a node needed by another stream</td>
+<td>The active port and waiting instruction expose the stall</td>
+<td>No — each also interacts with program length and local memory</td>
 </tr>
 </tbody>
 </table></div>
@@ -557,7 +633,8 @@ table.reg tr:target td:first-child {
 <p><strong>Do this.</strong> Fill the matrix, then read it two ways. A weak <strong>row</strong> — a mechanic that changes little no matter what it is paired with — is a cut candidate. A dominant <strong>cell</strong> — one pair carrying most of the system's interest — needs puzzle tests to show it creates more than one recipe.</p>
 </div>
 <h3>Specify observable state</h3>
-<p>Define which facts any presentation must expose. Objects, values, and control need traceable paths; transformations need inspectable inputs, conditions, and outputs.</p>
+<p>Define which facts any presentation must expose. Objects, values, and control need traceable paths; transformations need inspectable inputs, conditions, and outputs. The player must be able to see both the architecture and the schedule, even when timing is encoded in distance or layout.</p>
+<p>Also define the earliest meaningful divergence the simulator can report. A collision, wrong value, missed deadline, overflow, or illegal state should preserve the failing moment and the causal state around it. <a href="#presentation">§5</a> turns that requirement into debugging tools.</p>
 <p>Turn important limits into visible properties:</p>
 <div class="tw"><table>
 <thead>
@@ -601,61 +678,77 @@ table.reg tr:target td:first-child {
 <tbody>
 <tr>
 <td><strong>Shared capacity</strong></td>
-<td>one furnace serves two lines</td>
-<td>feeding one line starves the other</td>
+<td>a <strong>SHENZHEN I/O</strong> microcontroller serves several signals</td>
+<td>servicing one input delays another</td>
 </tr>
 <tr>
 <td><strong>Synchronization</strong></td>
-<td>parts act on fixed phases</td>
-<td>distant parts must agree about timing</td>
+<td><strong>SpaceChem's</strong> two waldos act on the same cycle</td>
+<td>paths must agree about timing and collision</td>
 </tr>
 <tr>
 <td><strong>Feedback</strong></td>
-<td>output routed back as input</td>
-<td>small changes amplify or damp instead of staying local</td>
+<td>a <strong>TIS-100</strong> value returns to an earlier node</td>
+<td>local state becomes a repeating control loop</td>
 </tr>
 <tr>
 <td><strong>Alternate routes</strong></td>
-<td>more than one path reaches the goal</td>
-<td>congestion moves rather than disappears</td>
+<td>a <strong>TIS-100</strong> value can cross different nodes</td>
+<td>congestion moves to another part of the grid</td>
 </tr>
 <tr>
 <td><strong>Irreversibility</strong></td>
-<td>the furnace cannot un-smelt</td>
+<td>an <strong>Opus Magnum</strong> glyph changes an atom</td>
 <td>operation order becomes a commitment</td>
 </tr>
 <tr>
 <td><strong>Limited state</strong></td>
-<td>a latch holds one bit</td>
-<td>history must be encoded in position or timing</td>
+<td>a <strong>TIS-100</strong> node has ACC and BAK</td>
+<td>history must be distributed or encoded in timing</td>
 </tr>
 <tr>
 <td><strong>Topology</strong></td>
-<td>behaviour follows the wiring</td>
-<td>rearranging connections changes outcomes without new parts</td>
+<td><strong>EXAPUNKS</strong> behaviour follows host links</td>
+<td>changing routes changes coordination without new instructions</td>
 </tr>
 </tbody>
 </table></div>
-<p>Backpressure is a full destination stalling supply upstream: the furnace stops accepting, the belt behind it fills, the arm behind that waits. Deadlock is a cycle of parts each waiting on the next. If the system permits either, show where the chain or cycle begins.</p>
+<p>Backpressure appears directly in <strong>TIS-100</strong>: a node writing to a port waits until its neighbour reads, which can leave earlier nodes waiting behind it. A cycle of such waits is a deadlock. If the system permits either, show where the chain or cycle begins.</p>
 <p>Hidden state, inconsistent exceptions, visual ambiguity, and sheer scale usually add confusion rather than useful depth.</p>
 <div class="box">
 <p><strong>The system is coherent when</strong> its core rules are explicit, several interactions create decisions, and an experienced player can predict a tie, collision, and full container.</p>
-<p>Next: <a href="#puzzles">§4</a> turns those interactions into puzzle contracts.</p>
+<p>Next: <a href="#puzzles">§4</a> selects those interactions with puzzle specifications.</p>
 </div>
 
 <h2 id="puzzles">4 · Puzzles</h2>
 <p>A puzzle combines a specification, a board, and a palette. Together they state what must happen, where the player may build, and which parts are available.</p>
-<h3>Author the contract first</h3>
-<p>Decide what observable behaviour passes before exploring layouts. The engine checks output against that contract, not resemblance to a reference build.</p>
-<p>The specification states inputs, required outputs, quota, hard limits, and failure conditions. It does not prescribe construction steps or depend on rules outside the published system.</p>
-<p>Keep internal reference builds to prove solvability and expose accidental restrictions. They are evidence about the contract, never the definition of the answer.</p>
-<p>Let an obvious solution pass and score poorly. Optimization becomes meaningful when a player can first satisfy the contract, then discover a different decomposition, topology, or schedule.</p>
-<div class="move">
-<p><strong>Do this.</strong> Write the contract, build the obvious route, then find a contrasting route with the same palette. If the alternative fails only because it differs from your favourite, fix the validator.</p>
+<h3>Author the specification first</h3>
+<p>Decide what observable behaviour passes before exploring layouts. The engine checks output against that <strong>puzzle specification</strong>, not resemblance to a reference build.</p>
+<p>Write the specification in one sentence:</p>
+<div class="mono">
+<p>Given [inputs and conditions], produce [outputs and behaviour], while never [invalid state].</p>
 </div>
+<p>Then specify the legal input range, required outputs, quota or duration, available workspace and tools, hard limits, failure conditions, and exact pass condition. The specification does not prescribe construction steps or depend on rules outside the published system contract.</p>
+<p>Build a small test set:</p>
+<ul>
+<li>a simple case that proves basic understanding;</li>
+<li>a boundary case;</li>
+<li>a case that breaks the most obvious shortcut;</li>
+<li>a case that exercises the puzzle's central pressure; and</li>
+<li>enough variation to require a general design.</li>
+</ul>
+<p>Unseen cases may vary values, but they must not introduce new semantics. When a run fails, report the smallest useful counterexample.</p>
+<p>The verifier shapes the work. A repeated quota rewards throughput; an input-output stream rewards generalization; a test suite rewards branching and state; a final-state target rewards construction and emergence.</p>
+<p>Keep internal reference builds to prove solvability and expose accidental restrictions. They are evidence about the specification, never the definition of the answer. Authoring from a specification does not remove the duty to verify that somebody can solve it.</p>
+<h3>Choose the floor and the ceiling</h3>
+<p>Every puzzle has two difficulty targets:</p>
+<ul>
+<li><strong>Solution floor:</strong> the effort needed to make anything correct.</li>
+<li><strong>Optimization ceiling:</strong> the depth available after it works.</li>
+</ul>
+<p>Let an obvious, clumsy solution pass. Do not require an optimized score to continue unless satisfying that bound is the puzzle itself. Approachability comes from lowering the floor without flattening the ceiling.</p>
 <h3>Pressure one facet</h3>
-<p>Name the bottleneck before building the puzzle: routing, synchronization, storage, geometry, state, collision, transformation order, or topology. Pick the facet that expresses the central pressure from <a href="#mechanics">§2</a>; a game whose scarce thing is flow pressures routing and storage before geometry.</p>
-<p>If the honest answer is “the previous puzzle, but more,” re-aim it or cut it. Raise a quota only until startup, steady state, or a timing interaction becomes visible.</p>
+<p>Name the bottleneck before building the puzzle: routing, synchronization, storage, geometry, state, collision, transformation order, or topology. The bottleneck selects one facet of the central pressure defined in <a href="#mechanics">§2</a>; a game whose scarce thing is flow pressures routing and storage before geometry. Board and palette constraints then determine how directly the player must confront it.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -683,28 +776,399 @@ table.reg tr:target td:first-child {
 </tbody>
 </table></div>
 <p>Use the palette as a balance lever. Too loose trivializes the bottleneck; too tight funnels the player toward one architecture.</p>
-<p>Separate reasoning from labour. If the idea arrives quickly and the remaining work is repeated placement, retiming, or waiting, shrink or reframe the puzzle.</p>
+<p>Separate reasoning from labour. Raise a quota only until startup, steady state, or a timing interaction becomes visible. If the insight arrives quickly and the remaining work is repeated placement, retiming, or waiting, shrink or reframe the puzzle.</p>
 <div class="move">
 <p><strong>Do this.</strong> Change the bottleneck before changing the numbers. Difficulty should come from a new decision, not a larger quota or smaller board by default.</p>
 </div>
-<h3>Seek contrasting solution families</h3>
-<p>A solution family groups builds that share an architecture. Families differ in decomposition, topology, scheduling, use of state, or metric priority; layouts within one family differ only in detail.</p>
-<p>For each open puzzle, construct two plausible same-palette references from different families.</p>
-<p>Two references show possibility, not prevalence. Their purpose here is to expose a contract that accidentally permits only one recipe.</p>
-<p>Scores alone do not show diversity. Unrelated machines can share a score, and one architecture can span many scores.</p>
-<h3>Use metrics only when they reshape the puzzle</h3>
-<p>A metric belongs to the abstract puzzle when it changes which architectures are attractive. Speed, space, resources, and robustness are useful only when their costs do not all move together.</p>
-<p>If one solution wins every metric, there is no trade-off. Change the cost model, the palette, or the contract until different priorities favour different structures.</p>
-<p>A hard limit defines validity. A metric compares valid solutions. Turn a metric into a gate only when satisfying that bound is the puzzle itself.</p>
-<p>Histograms, rankings, sharing, and optimization culture are outside this guide. The only question here is whether a cost changes the solution space.</p>
+<h3>Distinguish novelty from openness</h3>
+<p><strong>Puzzle distinctiveness</strong> compares puzzles across a campaign: can the player reuse the same process with trivial edits? <strong>Solution diversity</strong> compares answers to one puzzle: can valid builds differ in decomposition, topology, scheduling, use of state, or metric priority?</p>
+<p>They are separate tests. A campaign can contain distinct puzzles that each funnel toward one answer, or an intentionally reinforcing puzzle that revisits a known process but remains rich to optimize. Label reinforcement honestly; do not present repetition as a new idea.</p>
+<p>For each open puzzle, construct two plausible same-palette references from different solution families. Two references show possibility, not prevalence, but they expose a specification that accidentally permits only one recipe. Scores alone do not show diversity: unrelated machines can share a score, and one architecture can span many scores.</p>
+<h3>Use antagonistic metrics</h3>
+<p>A metric belongs when it changes which architectures are attractive. Two or three measures are usually enough. Speed, space, resources, program size, power, and robustness work only when improving one can worsen another.</p>
+<p>The solutions where no measure can improve without another getting worse form a <strong>Pareto frontier</strong>. Aim for a populated frontier whose specialists look structurally different. If one solution wins every metric, change the cost model, palette, or specification. Show the measures separately; a weighted total hides the trade-off.</p>
+<p>A hard limit defines validity. A metric compares valid solutions. Leave some valued qualities — symmetry, readability, choreography, audacity — unscored so the graphs do not exhaust taste.</p>
 <div class="box">
-<p><strong>A puzzle is structurally sound when</strong> its contract is explicit, its bottleneck is named, one build proves solvability, and an open puzzle admits a plausible contrasting family.</p>
+<p><strong>A puzzle is structurally sound when</strong> its specification is explicit, its tests are fair, its bottleneck is named, a crude build proves the floor, and an open puzzle admits a plausible contrasting family with room above it.</p>
+<p>Next: <a href="#presentation">§5</a> makes the system editable, inspectable, and debuggable.</p>
+</div>
+
+<h2 id="presentation">5 · Presentation and debugging</h2>
+<p>Presentation is visual design, sound, animation, interface, editing, feedback, documentation, and terminology. It cannot create mechanical depth. It determines whether the player can perceive, predict, and work with the depth that exists.</p>
+<p>A decorative skin is presentation. A visible port, capacity slot, timing trace, or collision boundary becomes part of play because it changes what the player can reason about.</p>
+<p>Do not postpone this as polish. An illegible prototype cannot tell you whether a playtest exposed a system problem or merely hid a sound rule.</p>
+<h3>Make causality visible</h3>
+<p>At rest and while running, the game should answer six questions:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Required evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What does this part do?</td>
+<td>Shape, ports, labels, and animation share a stable visual grammar</td>
+</tr>
+<tr>
+<td>Where can things go?</td>
+<td>Direction, connection, crossing, reach, and capacity are visible before execution</td>
+</tr>
+<tr>
+<td>What is happening now?</td>
+<td>Active, waiting, blocked, full, empty, and faulted appear on or beside the part</td>
+</tr>
+<tr>
+<td>What caused this state?</td>
+<td>Material, data, and control can be traced from source to consequence</td>
+</tr>
+<tr>
+<td>Why did the run fail?</td>
+<td>The earliest divergence is preserved and expected state is aligned with actual state</td>
+</tr>
+<tr>
+<td>What made this score?</td>
+<td>Expensive operations, idle capacity, long paths, and waste are tied to the metric they change</td>
+</tr>
+</tbody>
+</table></div>
+<p>Preserve object identity through movement and transformation. If an item disappears into a process and an unrelated result appears elsewhere, the player cannot connect architecture to behaviour.</p>
+<p><strong>TIS-100</strong> prints values on ports and highlights the instruction each node is executing, so a blocked transfer can be traced across the grid. <strong>Opus Magnum</strong> makes an arm's program, swept space, held atom, and collision visible in the same view. Both games remain difficult without making their current state secret.</p>
+<p>Use colour, sound, and motion redundantly. Required information must survive grayscale, silence, pausing, and reduced motion. At overview scale preserve identity, direction, state, and faults; reveal detail as the player zooms in.</p>
+<h3>Make revision cheap</h3>
+<p>Open-ended construction is repeated refactoring. The time between an idea and its first observable consequence should stay short.</p>
+<ul>
+<li>Make place, delete, rotate, connect, and edit-instruction actions immediate.</li>
+<li>Support region selection, move, copy, paste, rotate or mirror, and deep undo and redo.</li>
+<li>Preserve camera, selection, partial edits, and simulation state when switching between the workspace, specification, documentation, tests, and scores.</li>
+<li>Show reach, collision, occupancy, and illegal connections before the player commits an edit.</li>
+<li>Allow several named solution variants so experimentation never requires destroying the known-good build.</li>
+</ul>
+<p>Let partial and incorrect machines run whenever they can produce meaningful behaviour. Missing output is an unmet specification, not a reason to disable the simulator.</p>
+<h3>Treat the simulator as the main interface</h3>
+<p>Keep run, pause, reset, single-step, and useful speeds reachable at all times. One step advances one defined unit of simulated time. Show the current cycle, case, and phase.</p>
+<p>When an instruction or controller acts, highlight both it and the affected object. Waiting and blocking are states, not generic errors: show what a part needs, what holds the resource, and whether the machine is merely slow or deadlocked.</p>
+<p>Stop automatically at the first meaningful failure, preserve that state, and provide a readable trace around it. A cascade of later faults must not bury the first place the player's model diverged from the simulator.</p>
+<p>Failure can be pleasurable to watch, but it must remain fast, local, informative, and costless to retry.</p>
+<h3>Be a trustworthy development environment</h3>
+<p>Use one term for every part, state, port, and operation across the editor, specification, manual, tutorial, and error messages. Pair unfamiliar icons with words until mastery is plausible.</p>
+<p>The same machine, input, rules, and seed must replay identically. Ordering, limits, tests, and scoring cannot contain hidden preferences or unexplained exceptions. A strict simulator feels fair when it exposes the rule, the relevant state, and the exact reason a run stopped.</p>
+<div class="box">
+<p><strong>Presentation works when</strong> a new observer can inspect a paused machine and describe its broad strategy, a failed run points to the first real fault, and changing an idea costs less effort than rebuilding it.</p>
+<p>Next: <a href="#teaching">§6</a> arranges these rules and tools into a curriculum.</p>
+</div>
+
+<h2 id="teaching">6 · Teaching and campaign</h2>
+<p>The player is learning one system. Puzzles are the vehicle; progress is fluency — predicting behaviour before running, recognizing reusable structures, diagnosing failures, and choosing an architecture on purpose.</p>
+<p>A campaign is therefore a curriculum whether or not it was designed as one.</p>
+<h3>Teach purpose before syntax</h3>
+<p>The first lesson is the job: given these inputs, produce these outputs. A placement walkthrough can teach gestures while leaving the player unable to explain what the machine is for.</p>
+<p>Start in the real editor with the real rules. Pre-place enough context that the minimum correct solution needs one meaningful action, then remove the scaffolding. If the first solution requires five unfamiliar actions at once, reduce the minimum solution instead of adding more explanation.</p>
+<p><strong>SpaceChem</strong> exposed the failure mode: its first complete loop required the player to understand input, grab, path arrows, drop, and output together. Later Zachlikes lowered the floor by making the first useful artifact require fewer simultaneous concepts.</p>
+<p>For each mechanic:</p>
+<ol>
+<li>show its purpose;</li>
+<li>demonstrate the smallest useful action;</li>
+<li>let the player reproduce it;</li>
+<li>ask for a simple independent use;</li>
+<li>reinforce it in a changed context; and</li>
+<li>combine it with earlier mechanics later.</li>
+</ol>
+<p>Use counterexamples to correct likely false rules. Prefer a clearer representation or simpler rule over another paragraph of instructions.</p>
+<h3>Alternate novelty and reinforcement</h3>
+<p>Give every puzzle an explicit curriculum role:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Work it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Introduce</strong></td>
+<td>One new idea is the only unknown</td>
+</tr>
+<tr>
+<td><strong>Reinforce</strong></td>
+<td>A known process becomes fluent and leaves room to optimize</td>
+</tr>
+<tr>
+<td><strong>Vary</strong></td>
+<td>Familiar rules appear under a different board, input, or pressure</td>
+</tr>
+<tr>
+<td><strong>Combine</strong></td>
+<td>Two established ideas interact for the first time</td>
+</tr>
+<tr>
+<td><strong>Capstone</strong></td>
+<td>The player chooses and coordinates several ideas independently</td>
+</tr>
+</tbody>
+</table></div>
+<p>Constant novelty turns the campaign into a series of exams. Constant repetition turns it into labour. Alternate the two deliberately, and do not call a reinforcement puzzle a new idea.</p>
+<p><strong>Kaizen: A Factory Story</strong> deliberately used easier reinforcement puzzles so players could apply a process they had just learned and then explore its optimization surface. That is different from padding a campaign with a larger quota.</p>
+<p>Teach collision order, simultaneous action, blocking, overflow, capacity, and test timing before they can cause an expensive failure. Players may discover strategies; they should not discover undocumented semantics.</p>
+<h3>Curate the order after playtesting</h3>
+<p>Author more specifications than you need, then watch them played. Remove accidental logical duplicates, fill genuine conceptual gaps, and reorder the remainder. Difficulty order is an evidence problem, not an intuition problem.</p>
+<p>When a puzzle becomes a wall, first ask whether it introduced several burdens at once, depended on an edge case that was never demonstrated, or simply required too much construction after the insight.</p>
+<p>For a broad campaign, open small batches and require only some puzzles to advance. Put the hardest material after the narrative ending or mark it clearly optional. One mandatory puzzle should not end both play and story for an otherwise capable player.</p>
+<h3>Use documentation as reference and fiction</h3>
+<p>Manuals, datasheets, zines, diagrams, and reference cards can make rule lookup part of the work fantasy. They should be searchable or well indexed, use the same terminology as the interface, remain available without losing work, and state edge cases explicitly.</p>
+<p>Documentation supports a good first-use path; it does not repair an unreadable mechanic. <a href="#story">§8</a> covers how the same artifact can also carry voice and world-building.</p>
+<div class="box">
+<p><strong>Teaching works when</strong> the player understands the job before following syntax, each new burden arrives in isolation, established ideas receive time for reinforcement, punishing semantics were demonstrated harmlessly first, and a stuck player has another route forward.</p>
+<p>Next: <a href="#optimization">§7</a> gives a solved puzzle its second life.</p>
+</div>
+
+<h2 id="optimization">7 · Optimization and sharing</h2>
+<p>Correctness and quality are separate games. <a href="#puzzles">§4</a> defines the conflicting measures that reshape a solution space. This chapter begins after the first valid machine exists.</p>
+<p>Optimization should feel voluntary. The game does not need to withhold progress, currency, or story to make improvement meaningful; the machine, the cost model, and visible evidence of better approaches can supply the challenge.</p>
+<h3>Reveal the distribution after success</h3>
+<p>Show per-puzzle histograms only after the first correct solution. The player first owns an answer; then the distribution asks a new question.</p>
+<p>A global leaderboard makes nearly everyone a distant loser and rewards cheating at the extreme. A histogram makes the middle legible. It shows how far an improvement might be, exposes clusters that may represent different solution families, and lets an ordinary player choose a reachable target.</p>
+<p><strong>SpaceChem</strong> established the pattern with separate histograms for cycles, symbols, and reactors. The graphs include first-pass and optimized solutions together, so beating the middle remains a plausible personal challenge rather than a bid for a world record.</p>
+<p>Show each antagonistic metric separately, with the current result and personal best marked. Do not collapse the measures into one total or reveal another player's architecture without an explicit spoiler action.</p>
+<h3>Make cost causal</h3>
+<p>Connect every score to behaviour the player can inspect. Show which operation spends power, what adds latency, where footprint grows, which component creates waste, and where capacity sits idle.</p>
+<p>An opaque total supports trial and error. A causal cost model supports engineering.</p>
+<p>Leave some qualities unscored. Symmetry, readability, robustness beyond the tests, elegant motion, and audacious excess give communities room to develop tastes the official graphs do not define.</p>
+<h3>Protect experiments</h3>
+<p>Never make improvement require overwriting the machine that worked. Support named solutions, duplication and branching, a known-good baseline, metric-specific variants, thumbnails, and recorded scores.</p>
+<p>Comparison should make specialists visible. When the fastest, cheapest, smallest, and most legible solutions are different artifacts, the player has several meaningful reasons to return.</p>
+<h3>Design the export with the system</h3>
+<p>A shared number says less than a shared machine. The export may be a looping animation, short video, schematic, code listing, or importable solution, but it must reveal the intelligence of the answer rather than only its final effect.</p>
+<p><strong>Opus Magnum's</strong> stable two-dimensional view, repeating machines, and visible arm choreography make its GIFs readable without editing a camera. <strong>EXAPUNKS</strong> exposes the opposite risk: agent movement alone reveals less when the important reasoning lives in code off-screen.</p>
+<p>Include the puzzle identity, relevant execution, metrics, and enough program or structure to understand the trick. Keep the frame stable, make the result easy to produce in one action, and mark spoilers. If importing and modifying shared work suits the community, preserve authorship and make remixing explicit.</p>
+<p>The export format feeds back into the mechanic and presentation. A beautiful motion that hides its control logic is a weak explanation; a complete code dump that hides the machine's choreography is equally incomplete.</p>
+<div class="box">
+<p><strong>The second game works when</strong> every score has an inspectable cause, the distributions appear only after ownership, experiments preserve the working baseline, and a shared artifact makes the clever part visible.</p>
+<p>Next: <a href="#story">§8</a> gives the work, the metrics, and the campaign a reason to exist.</p>
+</div>
+
+<h2 id="story">8 · Story and work</h2>
+<p>Story gives the puzzles something to be about. It helps select artifacts, constraints, clients, failures, and reasons to optimize. It cannot be pasted on after those decisions and still do that work.</p>
+<p>Start with the core activity and the core story, then grow them together. A puzzle may begin with a mechanical need or a story beat, but it earns its place only when both sides agree.</p>
+<h3>Let the world choose the briefs</h3>
+<p>The domain supplies possible products; the story chooses which ones matter now. A client, incident, research question, production order, or institutional demand turns an abstract specification into a job.</p>
+<p>Ask of every brief:</p>
+<ul>
+<li>Why does this artifact exist?</li>
+<li>Who needs it and under which conditions?</li>
+<li>Which functions or constraints follow from that situation?</li>
+<li>What does completing it reveal about the world or relationship?</li>
+</ul>
+<p>If the setting can be replaced without changing the artifact, functions, constraints, or documents, it is wallpaper. Revise the brief or admit that the fiction is decorative.</p>
+<p>In <strong>SHENZHEN I/O</strong>, consumer products such as signs, controllers, and novelty devices generate their own ports, signals, budgets, and test conditions. The briefs also reveal who commissioned the work, so the same specification carries character and system design.</p>
+<h3>Put story in the interface</h3>
+<p>Use media that belong to the work: emails, requests, manuals, logs, specifications, invoices, zines, test reports, and the products themselves. The same artifact can carry rules, voice, and world-building when each role remains clear.</p>
+<p><strong>TIS-100's</strong> printable computer manual presents the instruction set and the mystery of the machine as one object. <strong>EXAPUNKS'</strong> <em>Trash World News</em> does the same with a hacker zine. Neither format excuses hidden semantics; both make necessary reference material feel native to the role.</p>
+<p>Keep the mandatory channel short and place it at the edge of the build-run-inspect-revise loop. Put deeper material in an optional, re-readable tier. Do not trigger irreplaceable dialogue during execution or make the player leave the workspace to recover a missed requirement.</p>
+<p>Requirements must remain extractable from voice. Flavour may complicate motive; it must not hide inputs, outputs, limits, or failure conditions.</p>
+<h3>Give optimization a meaning</h3>
+<p>Metrics can express production economics, scarce material, limited power, urgency, secrecy, professional pride, or the standards of a demanding institution. The fiction need not reward every improvement, but it should make the measured qualities feel native to the work.</p>
+<p>Likewise, a shareable artifact should look like something this world or profession might value: a demonstration, report, schematic, listing, recording, or proof of craft.</p>
+<h3>Use tone to widen the door honestly</h3>
+<p>A realistic-looking discipline may trigger assumed expertise before the player meets the actual rules. Story and art can make the role inviting, but they must not promise a different activity from the one the system delivers. Translate specialist knowledge into learnable rules; do not disguise unexplained complexity as authenticity.</p>
+<div class="box">
+<p><strong>Story is integrated when</strong> it helps choose the work, each brief changes because of who requested it, required information stays clear, deeper fiction remains optional and re-readable, and the reasons to build and improve belong to the same world.</p>
+<p>Next: <a href="#practice">§9</a> turns the whole guide into a working method.</p>
+</div>
+
+<h2 id="practice">9 · Prototype, test, and revise</h2>
+<p>Do not begin with a full campaign. Build the smallest version that can prove the system, the editor, the curriculum, and the post-solve loop belong together.</p>
+<h3>Make a six-puzzle vertical slice</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Puzzle</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Orientation</strong></td>
+<td>One input, one output, one primitive, and the real editor</td>
+</tr>
+<tr>
+<td><strong>Second verb</strong></td>
+<td>A new operation in isolation</td>
+</tr>
+<tr>
+<td><strong>Reinforcement</strong></td>
+<td>Familiar actions in a changed context</td>
+</tr>
+<tr>
+<td><strong>Coordination</strong></td>
+<td>Two established operations interact</td>
+</tr>
+<tr>
+<td><strong>Divergence</strong></td>
+<td>The first specification that reliably produces distinct architectures</td>
+</tr>
+<tr>
+<td><strong>Capstone</strong></td>
+<td>A forgiving first pass with strong optimization tension</td>
+</tr>
+</tbody>
+</table></div>
+<p>Build the actual runner and debugging controls, a representative test harness, at least two conflicting score axes, provisional histograms, named solution variants, and one real export format. These features change how puzzles are authored; postponing them means testing a different game.</p>
+<h3>Write the one-page definition</h3>
+<p>Before expanding the campaign, record the decisions every later puzzle depends on:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Decision to record</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Experience promise</td>
+<td>What the player should feel by repeatedly doing which work</td>
+</tr>
+<tr>
+<td>Domain and artifact</td>
+<td>The process, products, verbs, and natural constraints</td>
+</tr>
+<tr>
+<td>Construction language</td>
+<td>State, operations, and coordination model</td>
+</tr>
+<tr>
+<td>System contract</td>
+<td>Identity, transfer, time, arbitration, failure, completion, editing</td>
+</tr>
+<tr>
+<td>Central pressure</td>
+<td>What the player is short of and why</td>
+</tr>
+<tr>
+<td>Metrics</td>
+<td>Which axes conflict and how their specialists differ</td>
+</tr>
+<tr>
+<td>Curriculum</td>
+<td>What is introduced, reinforced, varied, combined, and optional</td>
+</tr>
+<tr>
+<td>Story channel</td>
+<td>Which in-world medium carries briefs, reference, and voice</td>
+</tr>
+<tr>
+<td>Audience floor</td>
+<td>How crude a correct solution the intended audience can reach</td>
+</tr>
+<tr>
+<td>Non-goals</td>
+<td>What the project will deliberately omit</td>
+</tr>
+</tbody>
+</table></div>
+<p>Treat this as a decision record, not a prophecy. Change it when prototypes or players disprove it, then revisit every dependent puzzle.</p>
+<h3>Use three evidence streams</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Evidence</th>
+<th>What it reveals</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Fresh-player sessions</strong></td>
+<td>Goal comprehension, control discovery, mental models, tutorial walls, avoidable complexity</td>
+</tr>
+<tr>
+<td><strong>Long-form expert testing</strong></td>
+<td>Broken tests, duplicate puzzles, dominant strategies, weak metrics, late spikes, ceiling depth</td>
+</tr>
+<tr>
+<td><strong>Live telemetry</strong></td>
+<td>Where problems cluster across many players and whether post-solve systems change behaviour</td>
+</tr>
+</tbody>
+</table></div>
+<p>In fresh sessions, give only the information the shipped game provides and do not coach. Watch hesitation, false assumptions, ignored controls, and the first point where a player cannot explain what happened.</p>
+<p>For telemetry, record only what you can use and collect it with consent and privacy safeguards. Useful events include puzzle starts and completions, time to first run and first correct run, resets, exits, returns after solving, score improvements after seeing a distribution, exports, and a short post-solve difficulty rating.</p>
+<p>Metrics show where a problem is. Observation and interviews explain why.</p>
+<h3>Diagnose the layer that failed</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>First response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Every player rebuilds the same machine</td>
+<td>Specification or palette is prescriptive</td>
+<td>Widen the specification and test another solution family</td>
+</tr>
+<tr>
+<td>Players guess at failures</td>
+<td>State or causality is hidden</td>
+<td>Preserve the first divergence and expose its dependencies</td>
+</tr>
+<tr>
+<td>Tutorials require constant explanation</td>
+<td>Minimum solution or representation is too complex</td>
+<td>Reduce the first task before adding prose</td>
+</tr>
+<tr>
+<td>Every puzzle feels like a new exam</td>
+<td>No reinforcement</td>
+<td>Reuse known ideas under a changed context</td>
+</tr>
+<tr>
+<td>One architecture wins every score</td>
+<td>Metrics or costs move together</td>
+<td>Create pairwise trade-offs and retest the frontier</td>
+</tr>
+<tr>
+<td>One puzzle ends the campaign</td>
+<td>Several burdens or too much labour arrived together</td>
+<td>Split, bridge, branch, or move it after the ending</td>
+</tr>
+<tr>
+<td>The story could be swapped without effect</td>
+<td>Fiction is wallpaper</td>
+<td>Derive the artifact and constraints from the world</td>
+</tr>
+<tr>
+<td>Shared results hide the clever part</td>
+<td>Export omits program, structure, or timing</td>
+<td>Redesign the view or include an importable artifact</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Use release gates</h3>
+<p>Before authoring more content, ask:</p>
+<ul>
+<li><strong>System:</strong> Can a few primitives express surprising behaviour without special-case parts?</li>
+<li><strong>Specification:</strong> Can the player state exactly why a failed run failed?</li>
+<li><strong>Diversity:</strong> Do several correct solutions differ structurally?</li>
+<li><strong>Floor:</strong> Can the intended audience make a crude correct artifact?</li>
+<li><strong>Ceiling:</strong> Can experts keep finding meaningful improvements?</li>
+<li><strong>Trade-off:</strong> Does improving one score sometimes worsen another?</li>
+<li><strong>Curriculum:</strong> Are purpose, reinforcement, combination, and optional mastery ordered cleanly?</li>
+<li><strong>World:</strong> Does each brief reveal something about the setting or work?</li>
+<li><strong>Artifact:</strong> Does the share format reveal what is clever?</li>
+<li><strong>Evidence:</strong> Have fresh players, experts, and observed behaviour all changed the design?</li>
+</ul>
+<p>If several gates fail, do not write more levels. Change the system or the product layer that is hiding it.</p>
+<div class="box">
+<p><strong>The working rule.</strong> Build the smallest game that delivers the complete loop, then improve it by watching people use it. A puzzle sheet can prove an intention; only a running machine and another person's reasoning can test it.</p>
 </div>
 
 <hr>
 <p class="eyebrow">References</p>
 <h1 id="registers">Go deeper</h1>
-<p class="lede">A mechanics catalog for exploration and primary sources for verification.</p>
+<p class="lede">A design-element catalog for exploration and primary sources for verification.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -714,8 +1178,8 @@ table.reg tr:target td:first-child {
 </thead>
 <tbody>
 <tr>
-<td><strong><a href="mechanics.html#reg-m">A · Mechanics catalog</a></strong></td>
-<td>You need vocabulary for a rule or another family to cross with the system</td>
+<td><strong><a href="mechanics.html#reg-m">A · Design-element catalog</a></strong></td>
+<td>You need vocabulary for a rule, systemic consequence, or supporting product device</td>
 </tr>
 <tr>
 <td><strong><a href="#reg-src">B · Sources</a></strong></td>
@@ -723,8 +1187,8 @@ table.reg tr:target td:first-child {
 </tr>
 </tbody>
 </table></div>
-<p>The mechanics catalog is deliberately broad. Each row records a rule, the action it creates, its constraints, possible optimization axes, an editorial emergence rating, examples to inspect, and other mechanics that may change it.</p>
-<p>Read the <em>combines with</em> column first. A mechanic earns its place through the decisions it creates with other rules, not through novelty alone.</p>
+<p>The design-element catalog is deliberately broader than the mechanic set. It includes construction rules, systemic phenomena, and puzzle or product devices. Each row records the action or design problem it creates, its constraints, possible optimization axes, an editorial emergence rating, examples to inspect, and related elements that may change it.</p>
+<p>Read the <em>combines with</em> column first. A construction rule earns its place through the decisions it creates with other rules; a phenomenon or support device earns its place by exposing, testing, or extending those decisions.</p>
 
 <h2 id="reg-src">B · Sources</h2>
 <p>This guide is a design argument, not a literature review. These primary sources show how shipped puzzle systems were designed and discussed; none establishes a universal recipe.</p>
@@ -739,8 +1203,8 @@ table.reg tr:target td:first-child {
 <tbody>
 <tr>
 <td><a href="https://www.zachtronics.com/zach-like/"><em>ZACH-LIKE</em> (2019)</a></td>
-<td>Design documents, rules, puzzles, and production artifacts across Zachtronics games</td>
-<td>all four</td>
+<td>Design documents, rules, puzzles, interfaces, and production artifacts across Zachtronics games</td>
+<td>all chapters</td>
 </tr>
 <tr>
 <td><a href="https://www.gdcvault.com/play/1025715/Open-Ended-Puzzle-Design-at"><em>Open-Ended Puzzle Design at Zachtronics</em></a>, GDC 2019</td>
@@ -749,13 +1213,43 @@ table.reg tr:target td:first-child {
 </tr>
 <tr>
 <td><a href="https://www.gamedeveloper.com/design/postmortem-zachtronics-industries-i-spacechem-i-"><em>SpaceChem</em> postmortem</a></td>
-<td>How one spatial puzzle system, its constraints, and its content changed through production</td>
-<td><a href="#mechanics">§2</a>, <a href="#puzzles">§4</a></td>
+<td>Specification-first authoring, logical uniqueness, antagonistic metrics, histograms, tutorial failures, and campaign length</td>
+<td><a href="#puzzles">§4</a>, <a href="#teaching">§6</a>, <a href="#optimization">§7</a>, <a href="#practice">§9</a></td>
+</tr>
+<tr>
+<td><a href="https://www.gamedeveloper.com/design/spacechem-s-zach-barth-on-educational-games-tutorial-design"><em>SpaceChem's Zach Barth on educational games and tutorial design</em></a></td>
+<td>MDA, original programming paradigms, minimum solution complexity, and verifying puzzles not solved by their author</td>
+<td><a href="#mechanics">§2</a>, <a href="#puzzles">§4</a>, <a href="#teaching">§6</a></td>
+</tr>
+<tr>
+<td><a href="https://www.gamedeveloper.com/design/road-to-the-igf-zachtronics-i-infinifactory-i-"><em>Road to the IGF: Infinifactory</em></a></td>
+<td>Inventing and cutting mechanics according to whether they improve open-ended puzzles</td>
+<td><a href="#mechanics">§2</a>, <a href="#systems">§3</a></td>
 </tr>
 <tr>
 <td><a href="https://www.gamedeveloper.com/business/building-an-i-infinifactory-i-how-to-turn-science-into-a-successful-game"><em>Building an Infinifactory</em></a></td>
-<td>Translating a construction system into open spatial problems</td>
-<td><a href="#systems">§3</a>, <a href="#puzzles">§4</a></td>
+<td>Crude-to-elegant solution spectra, score distributions, story cohesion, and Early Access feedback</td>
+<td><a href="#puzzles">§4</a>, <a href="#optimization">§7</a>, <a href="#story">§8</a>, <a href="#practice">§9</a></td>
+</tr>
+<tr>
+<td><a href="https://www.gamedeveloper.com/design/-things-we-create-tell-people-who-we-are-designing-zachtronics-i-tis-100-i-"><em>Designing TIS-100</em></a></td>
+<td>A tiny distributed language, printable manual, and story embedded in a technical artifact</td>
+<td><a href="#mechanics">§2</a>, <a href="#systems">§3</a>, <a href="#presentation">§5</a>, <a href="#story">§8</a></td>
+</tr>
+<tr>
+<td><a href="https://www.gamedeveloper.com/design/zachtronics-i-shenzhen-i-o-i-is-a-game-for-people-who-code-games"><em>Designing SHENZHEN I/O</em></a></td>
+<td>Work fantasy, product-derived briefs, constrained electronics, manuals, and niche audience choices</td>
+<td><a href="#domain">§1</a>, <a href="#mechanics">§2</a>, <a href="#story">§8</a></td>
+</tr>
+<tr>
+<td><a href="https://www.gamedeveloper.com/business/dev-q-a-zachtronics-team-on-building-personality-into-puzzles"><em>Building personality into Opus Magnum</em></a></td>
+<td>Story-mechanic collaboration and the origin and design of the looping GIF exporter</td>
+<td><a href="#optimization">§7</a>, <a href="#story">§8</a></td>
+</tr>
+<tr>
+<td><a href="https://zencastr.com/z/rcNLr0J7">Draknek &amp; Friends, Episode 35: Zach Barth</a>, 2025</td>
+<td>Kaizen's approachability work, reinforcement puzzles, tutorial testing, and story-led puzzle briefs</td>
+<td><a href="#puzzles">§4</a>, <a href="#teaching">§6</a>, <a href="#story">§8</a>, <a href="#practice">§9</a></td>
 </tr>
 <tr>
 <td><a href="https://gdcvault.com/play/1026590/Reading-the-Rules-of-Baba"><em>Reading the Rules of Baba Is You</em></a>, GDC 2020</td>
@@ -775,7 +1269,7 @@ table.reg tr:target td:first-child {
 </tbody>
 </table></div>
 <div class="note">
-<p>Talks are linked in full rather than quoted from auto-generated captions. Game examples in the mechanics catalog are leads for inspection, not proof that a mechanic originated in one title.</p>
+<p>Talks and interviews are linked in full rather than reduced to isolated quotations. Game examples in the guide and design-element catalog are concrete cases to inspect, not proof that an element originated in one title or a claim that one implementation is universal.</p>
 </div>
 
 </main>
