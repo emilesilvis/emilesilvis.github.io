@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="version" content="1.0.0">
+<meta name="version" content="1.1.0">
 <title>A · Design-element catalog · How to Design a Zachlike</title>
 <script>
 (function () {
@@ -307,19 +307,19 @@ table.reg tr:target td:first-child {
 <a class="back" href="guide.html#registers">← Back to the guide</a>
 <main id="content">
 <h2 id="reg-m">A · Design-element catalog <span class="regcount">100 rows · M001–M135</span></h2>
-<p class="guide-version">Version 1.0.0 · <time datetime="2026-08-08">2026-08-08</time></p>
-<p>This catalog is a source of ideas, not a checklist. It contains three kinds of entries:</p>
+<p class="guide-version">Version 1.1.0 · <time datetime="2026-08-08">08-08-2026</time></p>
+<p>This catalog is an idea source, not a checklist. You will find three kinds of entries:</p>
 <ul>
 <li><strong>Rules</strong> the player uses to build.</li>
 <li><strong>Effects</strong> that can emerge when rules interact.</li>
 <li><strong>Tools</strong> for specifying, explaining, testing, or scoring a machine.</li>
 </ul>
-<p>One mechanic in <a href="guide.html#mechanics">§2</a> may use several rows here. Choose only the entries that strengthen the game's central pressure and each other.</p>
+<p>One mechanic in <a href="guide.html#mechanics">§2</a> may use several rows here. Choose only the entries that strengthen the game's central pressure and one another.</p>
 <p>IDs never change. When a row is removed, its number stays unused, so gaps such as those in M011–M029 are intentional.</p>
-<p>Ratings and game examples are prompts, not measurements. Some examples come from open factory games rather than specification-driven puzzles, so their ideas may not transfer directly. Inspect a game before borrowing from it, then test any rule against the five questions in <a href="guide.html#mechanics">§2</a>.</p>
-<p>The <em>combines with</em> column suggests pairs worth testing. A pair may be listed in only one of its two rows.</p>
+<p>Ratings and game examples are prompts, not measurements. Some examples come from open factory games rather than specification-driven puzzles, so their ideas may not transfer directly. Inspect a game before you borrow from it, then test the rule against the five questions in <a href="guide.html#mechanics">§2</a>.</p>
+<p>Start with the <em>combines with</em> column. It suggests pairs worth testing, although a pair may appear in only one of its two rows.</p>
 <div class="note">
-<p><strong>Emergence scale.</strong> <em>Low</em> — results follow directly from an action. <em>Medium</em> — several rules must be considered together. <em>High</em> — local rules can create surprising system-wide behaviour or failures.</p>
+<p><strong>Emergence scale.</strong> <em>Low:</em> results follow directly from an action. <em>Medium:</em> several rules must be considered together. <em>High:</em> local rules can create surprising system-wide behaviour or failures.</p>
 </div>
 <h3 id="mfam-a">A · Specification &amp; verification <span class="regcount">M001–M010</span></h3>
 <p class="note">Can the player infer a fair spec and test against it? M103 and M113 belong here by subject; they sit in G and H by number.</p>
@@ -421,7 +421,7 @@ table.reg tr:target td:first-child {
 <tr id="m093"><td class="mname"><strong>M093</strong><br>User-authored scripting or programmable devices</td><td>The game exposes a language or editor for custom logic beyond fixed puzzle pieces.</td><td>Write scripts, define chips, or author control programs.</td><td>Sandbox security, instruction limits, API scope</td><td>Code size; performance; reuse</td><td>Medium</td><td>Factorio (mods), EXAPUNKS (Redshift)</td><td class="mono"><a href="#m087">M087</a>, <a href="#m090">M090</a>, <a href="#m126">M126</a>, <a href="#m128">M128</a></td></tr>
 </table></div>
 <h3 id="mfam-g">G · Rule manipulation &amp; deduction <span class="regcount">M094–M104</span></h3>
-<p class="note">Is the player manipulating objects, or the rules themselves? Powerful, but it attacks the stable core the player relies on — make it foundational or leave it out.</p>
+<p class="note">Is the player manipulating objects, or the rules themselves? This can be powerful, but it attacks the stable core the player relies on. Make it foundational or leave it out.</p>
 <div class="tw"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m094"><td class="mname"><strong>M094</strong><br>Movable rule tokens</td><td>Rule tokens are spatial objects that can be moved to alter active rules.</td><td>Rearrange rule tokens while navigating the same space.</td><td>Rule tokens may be movable; grammar must remain valid</td><td>Moves; rule count; accessibility</td><td>High</td><td>Baba Is You</td><td class="mono"><a href="#m095">M095</a>, <a href="#m097">M097</a>, <a href="#m101">M101</a>, <a href="#m104">M104</a></td></tr>
@@ -451,7 +451,7 @@ table.reg tr:target td:first-child {
 <tr id="m117"><td class="mname"><strong>M117</strong><br>Optional optimization challenges</td><td>A level can be completed for correctness, with extra thresholds for size, speed, or elegance.</td><td>Return to refine a working solution.</td><td>Thresholds may be mutually incompatible</td><td>Any selected metric</td><td>Low</td><td>HRM, 7 Billion Humans, EXAPUNKS</td><td class="mono"><a href="#m105">M105</a>, <a href="#m106">M106</a>, <a href="#m109">M109</a>, <a href="#m120">M120</a></td></tr>
 </table></div>
 <h3 id="mfam-i">I · Progression, pressure &amp; meta <span class="regcount">M118–M135</span></h3>
-<p class="note">Does this deepen construction, or compete with it? These rows pace, frame, and contextualize construction rather than extend it — several sit at the presentation boundary the guide draws up front. Include them deliberately.</p>
+<p class="note">Does this deepen construction, or compete with it? These rows pace, frame, and contextualize construction rather than extend it. Several sit at the presentation boundary the guide draws up front, so include them deliberately.</p>
 <div class="tw"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m118"><td class="mname"><strong>M118</strong><br>Capability unlock graph</td><td>New components, operations, interfaces, or scale layers unlock through milestones.</td><td>Meet prerequisites, choose unlock paths, and integrate new capabilities.</td><td>Prerequisites, research cost, branch choices</td><td>Unlock order; research throughput; opportunity cost</td><td>Low</td><td>Factorio, Satisfactory, Mindustry</td><td class="mono"><a href="#m030">M030</a>, <a href="#m119">M119</a></td></tr>
@@ -464,7 +464,7 @@ table.reg tr:target td:first-child {
 <tr id="m131"><td class="mname"><strong>M131</strong><br>Continuous ambient dataflow animation</td><td>Entities and values are rendered continuously moving through the system, so a running system explains itself without stepping.</td><td>Watch the system run and spot anomalies visually.</td><td>Rendering fidelity; visual density at scale</td><td>Legibility; observability</td><td>Low</td><td>Factorio, shapez, Opus Magnum, SpaceChem, Manufactoria</td><td class="mono"><a href="#m008">M008</a>, <a href="#m009">M009</a>, <a href="#m011">M011</a></td></tr>
 <tr id="m133"><td class="mname"><strong>M133</strong><br>In-world diversion / minigame pacing</td><td>Built-in secondary minigames (card, solitaire, idle) sit beside the main puzzles as in-fiction rest.</td><td>Take an in-world break at a self-contained minigame.</td><td>The minigame's own rules</td><td>Streaks (soft)</td><td>Low</td><td>SHENZHEN I/O, Opus Magnum, Last Call BBS, EXAPUNKS</td><td class="mono"><a href="#m129">M129</a>, <a href="#m134">M134</a></td></tr>
 <tr id="m134"><td class="mname"><strong>M134</strong><br>Diegetic multi-game shell</td><td>The product is a fictional device or OS containing several distinct sub-games the player moves between.</td><td>Switch context between toys within a framed console/OS.</td><td>Each sub-game's own rules</td><td>Per-sub-game</td><td>Low</td><td>Last Call BBS, EXAPUNKS (Redshift)</td><td class="mono"><a href="#m128">M128</a>, <a href="#m129">M129</a>, <a href="#m133">M133</a></td></tr>
-<tr id="m135"><td class="mname"><strong>M135</strong><br>Assembly-into-world narrative payoff</td><td>The player’s solved machines and products visibly feed the game world or story, answering “why am I building this?”</td><td>Solve, then watch products appear in the world or cutscenes.</td><td>Authoring cost</td><td>—</td><td>Low</td><td>Infinifactory, shapez, Factorio, Opus Magnum</td><td class="mono"><a href="#m118">M118</a>, <a href="#m129">M129</a></td></tr>
+<tr id="m135"><td class="mname"><strong>M135</strong><br>Assembly-into-world narrative payoff</td><td>The player’s solved machines and products visibly feed the game world or story, answering “why am I building this?”</td><td>Solve, then watch products appear in the world or cutscenes.</td><td>Authoring cost</td><td>Not applicable</td><td>Low</td><td>Infinifactory, shapez, Factorio, Opus Magnum</td><td class="mono"><a href="#m118">M118</a>, <a href="#m129">M129</a></td></tr>
 </table></div>
 
 </main>
