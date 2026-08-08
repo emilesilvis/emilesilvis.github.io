@@ -5,22 +5,22 @@
 import {
   PORTS, KIND_NAMES, NOTES, defaultConfig, prettyWord, byId,
   wireTicks, measureScore, mergeBestScore, makeRun, stepRun, runCase,
-} from './engine.mjs?v=0.9.6-2';
-import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.6-2';
+} from './engine.mjs?v=0.9.7-1';
+import { LEVELS, referenceMachines, showsWalkthrough } from './levels.mjs?v=0.9.7-1';
 import {
   initialLevelIndex,
   isLevelUnlocked,
   prerequisiteId,
   sessionMode,
-} from './progression.mjs?v=0.9.6-2';
+} from './progression.mjs?v=0.9.7-1';
 import {
   wordMarbleState,
   pathDirectionMarkers,
   roundedPathData,
   roundedPathPoints,
   transitProgress,
-} from './motion.mjs?v=0.9.6-2';
-import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.6-2';
+} from './motion.mjs?v=0.9.7-1';
+import { boardSurface, fitCamera, machineContentBounds } from './board-camera.mjs?v=0.9.7-1';
 import {
   groupMovementEdit,
   partMovementEdit,
@@ -29,10 +29,10 @@ import {
   routeWireWithCrossings,
   spliceCandidateAtCell,
   spliceWire,
-} from './board-layout.mjs?v=0.9.6-2';
-import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.6-2';
-import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.6-2';
-import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.6-2';
+} from './board-layout.mjs?v=0.9.7-1';
+import { commissionCaseSpec, orderCommissionParts, terminalName } from './commission.mjs?v=0.9.7-1';
+import { SOUND_BAR_HEIGHT, drawWordMarble, drawSoundBar, soundBarWidth } from './notation.mjs?v=0.9.7-1';
+import { makeRecital, recordRecitalPass } from './recital.mjs?v=0.9.7-1';
 import {
   cellKey,
   extendRouteFromPort,
@@ -41,7 +41,7 @@ import {
   wireAxisAtCell,
   wireEndpointOccupied,
   wireRouteCells,
-} from './wire-routing.mjs?v=0.9.6-2';
+} from './wire-routing.mjs?v=0.9.7-1';
 import {
   partFootprintCells,
   partFootprintSize,
@@ -54,13 +54,13 @@ import {
   portGeometry,
   terminalCardGeometry,
   terminalNameGeometry,
-} from './part-geometry.mjs?v=0.9.6-2';
-import { partArtSelection } from './part-art.mjs?v=0.9.6-2';
+} from './part-geometry.mjs?v=0.9.7-1';
+import { partArtSelection } from './part-art.mjs?v=0.9.7-1';
 import {
   playWord, playThud, playResolve, setMuted, isMuted,
   setMachineVolume, getMachineVolume,
   setSoundtrack, setMusicOn, isMusicOn, setMusicVolume, getMusicVolume,
-} from './audio.mjs?v=0.9.6-2';
+} from './audio.mjs?v=0.9.7-1';
 
 // Tutorials show teaching decks. Campaign contracts stay case-only.
 
@@ -96,6 +96,11 @@ const PROCESSING_DWELL = 0.48;       // nearly half a departure tick stays in th
 // 39-level completion as progress through a different sequence.
 const SAVE_KEY = 'wolftone-v0.9-campaign-v2';
 const BOARD_LAYOUT_VERSION = 6;
+// The launch notice is shown once per player and then only on request. Its
+// version is bumped by hand when the wording changes materially. Tying it to
+// the release version would reopen the dialog on every patch and teach
+// returning players to dismiss it unread.
+const PROTOTYPE_NOTICE_VERSION = 1;
 const WIRE_TOOL = 'wire';
 const UNLIMITED_KINDS = new Set(['crossing', 'junction']);
 const TERMINAL_KINDS = new Set(['quill', 'resonator']);
@@ -3003,14 +3008,18 @@ document.addEventListener('keydown', (e) => {
   const buttonFocused = document.activeElement?.tagName === 'BUTTON';
   const command = e.metaKey || e.ctrlKey;
   const helpDialog = $('help-dialog');
-  if (!typing && e.key === '?' && !helpDialog.open) {
+  // Any open dialog owns the keyboard. Without this the board shortcuts still
+  // fire underneath a modal, and '?' opens Help behind the prototype notice.
+  const openDialog = document.querySelector('dialog[open]');
+  if (openDialog) {
+    if (e.key !== 'Escape') return;
     e.preventDefault();
-    helpDialog.showModal();
+    openDialog.close();
     return;
   }
-  if (e.key === 'Escape' && helpDialog.open) {
+  if (!typing && e.key === '?') {
     e.preventDefault();
-    helpDialog.close();
+    helpDialog.showModal();
     return;
   }
   if (!typing && !buttonFocused && !command && e.code === 'Space') {
@@ -3146,6 +3155,17 @@ $('deck-prev').addEventListener('click', () => { walkIndex -= 1; renderDeck(); }
 $('deck-next').addEventListener('click', () => { walkIndex += 1; renderDeck(); });
 $('deck-toggle').addEventListener('click', () => { deckHidden = !deckHidden; renderDeck(); });
 $('help-button').addEventListener('click', () => $('help-dialog').showModal());
+
+// One dialog, two entry points: the masthead word and a Help footnote. Only
+// one modal may be open at a time, so opening the notice closes Help first.
+const prototypeDialog = $('prototype-dialog');
+function showPrototypeNotice() {
+  if (prototypeDialog.open) return;
+  $('help-dialog').close();
+  prototypeDialog.showModal();
+}
+$('prototype-note').addEventListener('click', showPrototypeNotice);
+$('help-prototype-note').addEventListener('click', showPrototypeNotice);
 setMuted(save.muted ?? false);
 setMachineVolume(save.machineVolume ?? 0.4);
 setMusicOn(save.music ?? !(save.muted ?? false));
@@ -3221,4 +3241,14 @@ document.addEventListener('click', (e) => {
     requestedId,
     unlockAll: UNLOCK_ALL_LEVELS,
   }));
+}
+
+// Last, so the first board is already drawn behind the backdrop. Reference
+// sessions are skipped because persist() is a no-op under them: the seen flag
+// would never stick and the notice would reopen on every load. Playtest
+// sessions do see it, since playtesters are who it is written for.
+if (!REFERENCE_MODE && save.prototypeNotice !== PROTOTYPE_NOTICE_VERSION) {
+  save.prototypeNotice = PROTOTYPE_NOTICE_VERSION;
+  persist();
+  prototypeDialog.showModal();
 }

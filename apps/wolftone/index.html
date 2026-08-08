@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Wolf Tone is a musical marble-machine puzzle: Quills turn sound into word marbles, mechanisms reshape their notes, and Resonators turn them back into sound waves." />
     <title>Wolf Tone: Play</title>
-    <link rel="stylesheet" href="./style.css?v=0.9.6-2" />
+    <link rel="stylesheet" href="./style.css?v=0.9.7-1" />
     <script defer src="https://cloud.umami.is/script.js" data-website-id="e0b952c3-2a28-4575-9603-386229d51c15"></script>
   </head>
   <body>
     <header class="masthead">
       <div class="brand">
         <strong>WOLF TONE</strong>
-        <small>v0.9.6 · prototype</small>
+        <small>v0.9.7 · <button id="prototype-note" class="text-link" type="button" aria-haspopup="dialog" aria-controls="prototype-dialog">prototype</button></small>
         <small id="session-mode-label" class="session-mode-label" hidden></small>
       </div>
       <div class="level-switcher">
@@ -58,6 +58,19 @@
           <div><dt>M / Shift+M</dt><dd>Toggle machine sound / music</dd></div>
           <div><dt>Escape</dt><dd>Stop a run or cancel the current gesture</dd></div>
         </dl>
+        <button id="help-prototype-note" class="text-link help-footnote" type="button" aria-haspopup="dialog" aria-controls="prototype-dialog">About this prototype</button>
+      </form>
+    </dialog>
+
+    <dialog id="prototype-dialog" aria-labelledby="prototype-title">
+      <form method="dialog" class="notice-sheet">
+        <div class="help-heading">
+          <h2 id="prototype-title">This is a prototype</h2>
+          <button type="submit" aria-label="Close the prototype notice">×</button>
+        </div>
+        <p>The campaign is small because this prototype tests whether the mechanics can lead to interesting puzzles and machines. If they can, it will be expanded into a full campaign.</p>
+        <p>For the same reason, there's no story. Tutorial and explanatory text is literal and straightforward.</p>
+        <button class="notice-begin" type="submit" autofocus>Begin</button>
       </form>
     </dialog>
 
@@ -185,6 +198,6 @@
       </aside>
     </main>
 
-    <script type="module" src="./main.mjs?v=0.9.6-2"></script>
+    <script type="module" src="./main.mjs?v=0.9.7-1"></script>
   </body>
 </html>
