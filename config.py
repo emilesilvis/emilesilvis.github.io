@@ -44,10 +44,6 @@ NAVIGATION = [
         "path": "/projects"
     },
     {
-        "title": "Software business",
-        "path": "/emile-silvis-software"
-    },
-    {
         "title": "Books read",
         "path": "/books-read"
     },
