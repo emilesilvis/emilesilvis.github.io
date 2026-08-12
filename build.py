@@ -4,6 +4,11 @@ from pathlib import Path
 from datetime import datetime
 import shutil, re, html, hashlib
 import markdown  # only external dependency
+from pangram_badge import (
+    PangramBadgeService,
+    prose_from_html,
+    verified_human_badge,
+)
 
 
 ROOT = Path(__file__).parent
@@ -94,7 +99,7 @@ def apply_template(title, body_html, seo_image="", seo_description="", date="", 
             .replace("{{umami_website_id}}", UMAMI["website_id"]))
 
 
-def build_post(md_path, is_page=False):
+def build_post(md_path, is_page=False, pangram_badges=None):
     raw = md_path.read_text(encoding="utf-8")
     
     # Parse frontmatter if it exists
@@ -125,11 +130,29 @@ def build_post(md_path, is_page=False):
     else:
         date = frontmatter.get("date", "-".join(md_path.stem.split("-", 3)[:3]))
         main_heading = f'<h1>{html.escape(title)}</h1>\n<time datetime="{date}" class="post-date">{date}</time>'
+
+        if pangram_badges is not None:
+            result = pangram_badges.analyze(prose_from_html(html_body))
+            if result is not None:
+                badge_html = verified_human_badge(result)
+                if badge_html:
+                    html_body = f"{html_body}\n{badge_html}"
+                    print(f"Pangram: verified {md_path.name} as human-written")
+                else:
+                    print(
+                        f"Pangram: {md_path.name} classified as "
+                        f"{result.prediction_short}; badge omitted"
+                    )
+                print(f"Pangram report: {md_path.name} {result.dashboard_link}")
     
     return title, apply_template(title, html_body, seo_image=seo_image, seo_description=seo_description, date=date, main_heading=main_heading)
 
 
 def main():
+    pangram_badges = PangramBadgeService.from_environment(
+        ROOT / ".cache" / "pangram" / "results.json"
+    )
+
     # clean & recreate output dir
     if OUT.exists(): shutil.rmtree(OUT)
     OUT.mkdir()
@@ -159,7 +182,11 @@ def main():
     # Process pages
     pages = sorted(PAGES.glob("*.md"))
     for md in pages:
-        title, full_html = build_post(md, is_page=True)
+        title, full_html = build_post(
+            md,
+            is_page=True,
+            pangram_badges=pangram_badges,
+        )
         slug = md.stem
         fname = f"{slug}.html"
         (OUT / fname).write_text(full_html, encoding="utf-8")
@@ -173,7 +200,7 @@ def main():
     posts_by_year = {}
 
     for md in posts:
-        title, full_html = build_post(md)
+        title, full_html = build_post(md, pangram_badges=pangram_badges)
         slug = md.stem.split("-", 3)[-1]  # after the date
         fname = f"{slug}.html"
         (OUT / fname).write_text(full_html, encoding="utf-8")
