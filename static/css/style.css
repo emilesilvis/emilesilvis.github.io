@@ -293,6 +293,32 @@ th {
     text-decoration: underline;
 }
 
+/* Pangram human-writing verification */
+.pangram-verification {
+    margin: 3rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.pangram-verification__link {
+    color: var(--text-muted);
+}
+
+.pangram-verification__check {
+    margin-right: 0.2rem;
+    color: var(--text-color);
+}
+
+.pangram-verification strong {
+    color: var(--text-color);
+}
+
+.pangram-verification__source {
+    color: var(--accent);
+}
+
 /* Footer */
 footer {
     margin-top: 3rem;
