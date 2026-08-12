@@ -143,6 +143,7 @@ def build_post(md_path, is_page=False, pangram_badges=None):
                         f"Pangram: {md_path.name} classified as "
                         f"{result.prediction_short}; badge omitted"
                     )
+                print(f"Pangram report: {md_path.name} {result.dashboard_link}")
     
     return title, apply_template(title, html_body, seo_image=seo_image, seo_description=seo_description, date=date, main_heading=main_heading)
 

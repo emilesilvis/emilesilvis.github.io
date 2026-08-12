@@ -1,3 +1,5 @@
+import io
+from contextlib import redirect_stdout
 import json
 from pathlib import Path
 import tempfile
@@ -164,10 +166,17 @@ class PangramRenderingTests(unittest.TestCase):
                 client=client,
             )
 
-            _, generated_html = build_post(post_path, pangram_badges=service)
+            output = io.StringIO()
+            with redirect_stdout(output):
+                _, generated_html = build_post(post_path, pangram_badges=service)
 
             self.assertIn("Verified human writing", generated_html)
             self.assertEqual(client.calls, ["A paragraph written by a person."])
+            self.assertIn(
+                "Pangram report: 01-01-2026-test-post.md "
+                "https://www.pangram.com/history/result-123",
+                output.getvalue(),
+            )
 
 
 if __name__ == "__main__":
