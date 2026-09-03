@@ -12,7 +12,7 @@ UMAMI = {
 BIO = {
     "name": "Emile Silvis",
     "bio": "Welcome to my corner of the web.",
-    "image": "/static/images/profile.png",
+    "image": "/static/images/profile.jpg",
     "social": {
         "x": {
             "url": "https://x.com/emilesilvis",
