@@ -199,7 +199,8 @@ th {
 }
 
 /* Avatar is wrapped in a homepage link for the h-card's u-url/u-uid; keep it
-   block-level and centered so the circular photo sits exactly as before. */
+   block-level and centered. The photo shows uncropped, so its height follows
+   the image's own aspect ratio. */
 .bio-image-link {
     display: block;
     width: 120px;
@@ -208,9 +209,8 @@ th {
 
 .bio-image {
     width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
+    height: auto;
+    border-radius: 8px;
     margin: 0 auto 1rem;
     display: block;
 }
