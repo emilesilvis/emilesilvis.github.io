@@ -1,0 +1,78 @@
+/* The host's /static/css/style.css supplies typography, spacing and colours. */
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.puzzle-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.puzzle-nav h1 { margin: 0; font-size: 1rem; }
+.puzzle-nav > :last-child { text-align: right; }
+.puzzle-nav a { font-size: 0.9rem; }
+a:hover, .text-button:hover { text-decoration: underline; }
+
+.diagram {
+  width: 100%;
+  height: auto;
+  max-height: 24rem;
+  object-fit: contain;
+  margin: 1rem auto 1.5rem;
+  mix-blend-mode: multiply;
+}
+
+[data-theme="dark"] .diagram {
+  filter: invert(1) hue-rotate(180deg);
+  mix-blend-mode: screen;
+}
+
+label { display: block; margin-bottom: 0.35rem; }
+.unit, small { color: var(--text-muted); }
+small { display: block; font-size: 0.75rem; margin-top: 0.35rem; }
+.answer-row { display: flex; gap: 0.5rem; }
+input, button { font: inherit; }
+input {
+  width: 100%;
+  min-width: 0;
+  color: var(--text-color);
+  background: var(--bg-color);
+  border: 1px solid var(--text-lighter);
+  border-radius: 0;
+  padding: 0.3rem 0.5rem;
+}
+button { cursor: pointer; }
+#check {
+  border: 1px solid var(--text-lighter);
+  border-radius: 0;
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 0.3rem 0.8rem;
+}
+button:disabled { cursor: default; opacity: 0.6; }
+.help-actions { display: flex; gap: 1.5rem; margin-top: 1rem; }
+.text-button { border: 0; padding: 0; color: var(--accent); background: none; }
+#hints, #solution ol { padding-left: 1.5rem; }
+#hints li, #solution li { margin: 0.6rem 0; }
+#solution { border-top: 1px solid var(--border-color); margin-top: 1.5rem; }
+.puzzle-list { margin-top: 2rem; font-size: 0.9rem; }
+.puzzle-list summary { color: var(--accent); cursor: pointer; width: fit-content; }
+.puzzle-list ol { list-style: none; padding: 0; margin: 0.5rem 0; }
+.puzzle-list li { margin: 0.25rem 0; }
+.puzzle-list [aria-current="page"] { color: var(--text-color); font-weight: 600; }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+@media (max-width: 600px) {
+  body { padding: 1.25rem 1rem; }
+  .puzzle-nav { gap: 0.5rem; }
+}
+
+@media print {
+  body { padding: 0; color: #222; background: #fff; }
+  .puzzle-nav a, form, .help-actions, .puzzle-list, #hints, #solution, #feedback, noscript { display: none !important; }
+  .diagram, [data-theme="dark"] .diagram { filter: none; mix-blend-mode: normal; }
+}
