@@ -1,6 +1,5 @@
 ---
 title: "What I have learned from running a small software consultancy"
-seo_image: "/static/images/profile.png"
 seo_description: "Lessons learned from co-founding and running Glio, a small software consultancy."
 ---
 

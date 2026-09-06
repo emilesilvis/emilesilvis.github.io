@@ -1,6 +1,5 @@
 ---
 title: "Growth comes from real failure"
-seo_image: "/static/images/profile.png"
 seo_description: "Real failure hurts. And that's exactly why it drives genuine growth."
 ---
 

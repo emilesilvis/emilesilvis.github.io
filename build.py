@@ -75,6 +75,7 @@ def render(markdown_text):
 
 
 def apply_template(title, body_html, seo_image="", seo_description="", date="", main_heading=""):
+    seo_image = html.escape(seo_image, quote=True)
     return (TEMPL.replace("{{title}}", html.escape(title))
             .replace("{{content}}", body_html)
             .replace("{{year}}", str(datetime.now().year))
@@ -82,7 +83,6 @@ def apply_template(title, body_html, seo_image="", seo_description="", date="", 
             .replace("{{hostname}}", HOSTNAME)
             .replace("{{bio.name}}", BIO["name"])
             .replace("{{bio.bio}}", BIO["bio"])
-            .replace("{{bio.image}}", BIO["image"])
             .replace("{{bio.social.x.url}}", BIO["social"]["x"]["url"])
             .replace("{{bio.social.x.icon}}", BIO["social"]["x"]["icon"])
             .replace("{{bio.social.linkedin.url}}", BIO["social"]["linkedin"]["url"])
@@ -92,7 +92,9 @@ def apply_template(title, body_html, seo_image="", seo_description="", date="", 
             .replace("{{bio.social.rss.url}}", BIO["social"]["rss"]["url"])
             .replace("{{bio.social.rss.icon}}", BIO["social"]["rss"]["icon"])
             .replace("{{nav}}", NAV_HTML)
-            .replace("{{seo_image}}", seo_image)
+            .replace("{{og_image_meta}}", f'<meta property="og:image" content="{seo_image}">' if seo_image else "")
+            .replace("{{twitter_image_meta}}", f'<meta name="twitter:image" content="{seo_image}">' if seo_image else "")
+            .replace("{{twitter_card}}", "summary_large_image" if seo_image else "summary")
             .replace("{{seo_description}}", seo_description)
             .replace("{{date}}", date)
             .replace("{{main_heading}}", main_heading)
@@ -117,7 +119,7 @@ def build_post(md_path, is_page=False, pangram_badges=None):
     html_body = render(body)
     
     # Get SEO data from frontmatter or use defaults
-    seo_image = frontmatter.get("seo_image", "/static/images/profile.png")
+    seo_image = frontmatter.get("seo_image", "")
     seo_description = frontmatter.get("seo_description", "")
     
     # Make SEO image URL absolute
@@ -220,10 +222,7 @@ def main():
         index_content.append("</ul>")
     index_content.append('</div>')
 
-    # Default SEO image for index page
-    default_seo_image = HOSTNAME + "/static/images/profile.png"
-
-    index_html = apply_template(SITE_NAME, "\n".join(index_content), main_heading="", seo_image=default_seo_image)
+    index_html = apply_template(SITE_NAME, "\n".join(index_content), main_heading="")
     (OUT / "index.html").write_text(index_html, encoding="utf-8")
 
     # Generate sitemap.xml

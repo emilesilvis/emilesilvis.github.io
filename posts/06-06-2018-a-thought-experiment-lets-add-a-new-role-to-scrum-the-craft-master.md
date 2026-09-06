@@ -1,6 +1,5 @@
 ---
 title: "A thought experiment: let's add a new role to scrum — the craft master"
-seo_image: "/static/images/profile.png"
 seo_description: "A thought experiment exploring whether adding a 'craft master' role to Scrum could empower developers."
 ---
 

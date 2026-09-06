@@ -1,6 +1,5 @@
 ---
 title: "Fix your budget, not your scope"
-seo_image: "/static/images/profile.png"
 seo_description: "An alternative to fixed bid and time-and-materials contracts for software projects: fixed budget, scope controlled."
 ---
 

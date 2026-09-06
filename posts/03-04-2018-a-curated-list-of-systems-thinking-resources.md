@@ -1,6 +1,5 @@
 ---
 title: "A curated list of systems thinking resources"
-seo_image: "/static/images/profile.png"
 seo_description: "A curated list of books, websites, tools, videos and courses on systems thinking."
 ---
 

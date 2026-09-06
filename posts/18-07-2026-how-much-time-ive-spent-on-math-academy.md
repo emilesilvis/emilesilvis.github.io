@@ -1,6 +1,5 @@
 ---
 title: "How much time I've spent on Math Academy"
-seo_image: "/static/images/profile.png"
 seo_description: "583 active days, 14,111 XP and roughly 235 hours: what two and a half years of Math Academy actually looks like."
 ---
 

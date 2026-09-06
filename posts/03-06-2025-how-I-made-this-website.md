@@ -1,6 +1,5 @@
 ---
 title: "How I made this website"
-seo_image: "/static/images/profile.png"
 seo_description: "How I made this website with Cursor."
 ---
 

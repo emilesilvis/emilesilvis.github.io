@@ -1,6 +1,5 @@
 ---
 title: "A quick review of Exploring Everyday Things with R and Ruby"
-seo_image: "/static/images/profile.png"
 seo_description: "A review of the book Exploring Everyday Things with R and Ruby — a fun whirlwind tour of using Ruby and R to prod at a variety of problems."
 ---
 

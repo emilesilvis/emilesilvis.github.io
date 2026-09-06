@@ -1,6 +1,5 @@
 ---
 title: "I did a workshop on systems thinking"
-seo_image: "/static/images/profile.png"
 seo_description: "A workshop on systems thinking presented at the MiXiT conference in Lyon."
 ---
 
