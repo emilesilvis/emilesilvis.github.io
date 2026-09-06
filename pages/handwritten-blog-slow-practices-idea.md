@@ -1,9 +1,9 @@
 ---
-seo_description: "A shared invitation each month to slow down and make a handwritten page. Help choose and run a Slow Practice on handwritten.blog."
+seo_description: "How Slow Practices on handwritten.blog would work: a monthly invitation, handwritten responses, and the operator's role."
 ---
-# Help run Slow Practices
+# Slow Practices
 
-I'm looking for people to help run Slow Practices on [handwritten.blog](https://handwritten.blog/). The idea is simple: a shared invitation each month to slow down, pay attention, and make something by hand.
+Slow Practices is an idea for [handwritten.blog](https://handwritten.blog/): a shared invitation each month to slow down, pay attention, and make something by hand.
 
 ## How it works
 
@@ -15,8 +15,14 @@ A practice could be listening to a song, taking a slow walk, or returning to the
 
 Next month brings a new practice. Earlier invitations and responses stay in the archive.
 
-## Want to be an operator?
+[![An example Slow Practice with its invitation and contributed pages](/static/images/slow-practices/practice.png)](/static/images/slow-practices/practice.png)
+
+*An example practice and its responses. Select a screenshot to view it full size.*
+
+## What an operator does
 
 You'd choose the practice, write the invitation, and encourage people to take part. I'll take care of the website.
 
-Email [hello@handwritten.blog](mailto:hello@handwritten.blog?subject=Running%20a%20Slow%20Practice) with a practice you'd like to run.
+[![The operator's form for creating a practice, filled with example content](/static/images/slow-practices/operator-create.png)](/static/images/slow-practices/operator-create.png)
+
+*The form an operator uses to create a practice.*
