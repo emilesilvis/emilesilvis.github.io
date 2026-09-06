@@ -15,6 +15,8 @@ main {
 .puzzle-nav > :last-child { text-align: right; }
 .puzzle-nav a { font-size: 0.9rem; }
 a:hover, .text-button:hover { text-decoration: underline; }
+.difficulty { color: var(--text-muted); font-size: 0.8rem; margin: -1rem 0 1rem; }
+.archive-difficulty { color: var(--text-muted); }
 
 .diagram {
   width: 100%;

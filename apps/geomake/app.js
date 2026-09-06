@@ -1,4 +1,4 @@
-import { evaluateAnswer, matchesAnswer } from './answer.js?v=46f34873ff48';
+import { evaluateAnswer, matchesAnswer } from './answer.js?v=9d30678079ce';
 
 const page = document.querySelector('main');
 const answer = document.querySelector('#answer');
