@@ -11,7 +11,7 @@ UMAMI = {
 # Bio configuration
 BIO = {
     "name": "Emile Silvis",
-    "bio": "Welcome to my corner of the web.",
+    "bio": "A place where I can write down my thoughts.",
     "social": {
         "x": {
             "url": "https://x.com/emilesilvis",
