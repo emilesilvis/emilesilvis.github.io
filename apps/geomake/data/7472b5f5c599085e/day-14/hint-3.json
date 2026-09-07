@@ -1,0 +1,1 @@
+"Writing BD:DC=p:1, CE:EA=q:1 and AF:FB=r:1, the corner fractions are p/(pq+p+1), q/(qr+q+1) and r/(rp+r+1). Derive each from shared heights, then subtract their sum from 1."
