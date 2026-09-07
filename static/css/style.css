@@ -276,7 +276,7 @@ th {
     text-decoration: underline;
 }
 
-/* Pangram human-writing verification */
+/* Pangram writing classification */
 .pangram-verification {
     margin: 3rem 0 0;
     padding-top: 1rem;

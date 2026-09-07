@@ -6,8 +6,9 @@ import shutil, re, html, hashlib
 import markdown  # only external dependency
 from pangram_badge import (
     PangramBadgeService,
+    human_badge,
+    ineligible_reason,
     prose_from_html,
-    verified_human_badge,
 )
 
 
@@ -101,7 +102,8 @@ def apply_template(title, body_html, seo_image="", seo_description="", date="", 
             .replace("{{umami_website_id}}", UMAMI["website_id"]))
 
 
-def build_post(md_path, is_page=False, pangram_badges=None):
+def read_post(md_path):
+    """Read the same rendered body for both publishing and explicit scans."""
     raw = md_path.read_text(encoding="utf-8")
     
     # Parse frontmatter if it exists
@@ -117,6 +119,11 @@ def build_post(md_path, is_page=False, pangram_badges=None):
     h1, _, body = raw.partition("\n")
     title = h1.lstrip("# ").strip() or md_path.stem
     html_body = render(body)
+    return title, html_body, frontmatter
+
+
+def build_post(md_path, is_page=False, pangram_badges=None):
+    title, html_body, frontmatter = read_post(md_path)
     
     # Get SEO data from frontmatter or use defaults
     seo_image = frontmatter.get("seo_image", "")
@@ -134,12 +141,18 @@ def build_post(md_path, is_page=False, pangram_badges=None):
         main_heading = f'<h1>{html.escape(title)}</h1>\n<time datetime="{date}" class="post-date">{date}</time>'
 
         if pangram_badges is not None:
-            result = pangram_badges.analyze(prose_from_html(html_body))
+            prose = prose_from_html(html_body)
+            reason = ineligible_reason(prose)
+            result = pangram_badges.lookup(prose)
+            if reason:
+                print(f"Pangram: {md_path.name} skipped ({reason})")
+            elif result is None:
+                print(f"Pangram: {md_path.name} has no matching recorded result; badge omitted")
             if result is not None:
-                badge_html = verified_human_badge(result)
+                badge_html = human_badge(result)
                 if badge_html:
                     html_body = f"{html_body}\n{badge_html}"
-                    print(f"Pangram: verified {md_path.name} as human-written")
+                    print(f"Pangram: {md_path.name} classified as Human (version {result.version})")
                 else:
                     print(
                         f"Pangram: {md_path.name} classified as "
@@ -151,9 +164,7 @@ def build_post(md_path, is_page=False, pangram_badges=None):
 
 
 def main():
-    pangram_badges = PangramBadgeService.from_environment(
-        ROOT / ".cache" / "pangram" / "results.json"
-    )
+    pangram_badges = PangramBadgeService.from_environment()
 
     # clean & recreate output dir
     if OUT.exists(): shutil.rmtree(OUT)
