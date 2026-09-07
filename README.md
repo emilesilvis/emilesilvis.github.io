@@ -23,14 +23,17 @@ Check meta tags:
 
 ## Lily
 
-The full game is served at <https://emilesilvis.com/lily/> without sign-in.
+The full game is served at <https://emilesilvis.com/lily/> in English and Dutch
+without sign-in. It initially follows the browser's supported language preference;
+the visible English / Nederlands picker preserves progress and saves the choice.
 `apps/lily/` contains the unmodified static release from the private Lily source
 repository; `build.py` copies it directly to `out/lily/`.
 
-- Source commit: `e68cc1b83cc84fb39775fd88fa06819e17f07e03`.
+- Source commit: `1d3d394652b194c02841bfb703eff95343a17641`.
 - Release archive: `lily.tar.gz`, SHA-256
-  `6aa3e24e29044c8a6eb79508edaa523c16cdf2f918f0f3a7a4a2c160acbe4506`.
-- Payload: nine files, including the game, local artwork/fonts, and font licenses.
+  `ef3d1621e0ac0d29093e2c142770c79c3e79c1a5b008e5266eaffa3328c3bc38`.
+- Payload: nine files, 1,985,132 bytes, including both languages, local artwork/fonts,
+  and font licenses.
 
 To reproduce this release, use a clean checkout of the private Lily repository
 at the source commit above, with Node 22.13 or later:
@@ -49,6 +52,9 @@ python build.py
 ```
 
 For a new release, verify its manifest/checksums and update the provenance above.
+Confirm `apps/lily/` and `out/lily/` match every manifest file and digest, then smoke
+test `/lily` and `/lily/` in fresh English and Dutch browser contexts, including
+language switching during play, reload persistence, asset loading, and phone controls.
 Keep source, manifests, build reports, credentials, and hosting configuration
 outside `apps/lily/`; its contents are published verbatim. Do not edit generated
 bundles: make changes in the private source repository and rebuild instead.
