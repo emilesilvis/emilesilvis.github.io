@@ -78,3 +78,6 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .puzzle-nav a, form, .help-actions, .puzzle-list, #hints, #solution, #feedback, noscript { display: none !important; }
   .diagram, [data-theme="dark"] .diagram { filter: none; mix-blend-mode: normal; }
 }
+
+.app-nav { display: flex; align-items: center; justify-content: space-between; max-width: var(--max-width); margin: 0 auto 1rem; gap: 1rem; }
+.app-nav .theme-toggle { position: static; flex-shrink: 0; }

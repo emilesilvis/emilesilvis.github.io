@@ -1,4 +1,6 @@
 ---
+series: How 1+1 becomes 2
+series_order: 2
 title: "How a list of 1s and 0s becomes tiny, physical switches (part 2/5)"
 seo_description: "Following the 1s and 0s into hardware: adders built from logic gates, every gate built from NANDs, and the transistor at the bottom."
 ---

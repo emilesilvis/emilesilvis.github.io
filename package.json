@@ -1,0 +1,6 @@
+{
+  "name": "emilesilvis-site-checks",
+  "private": true,
+  "description": "Accessibility tooling for browser regression checks; not used to build the site",
+  "devDependencies": { "axe-core": "4.10.3" }
+}

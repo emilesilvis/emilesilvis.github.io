@@ -1,4 +1,6 @@
 ---
+series: How 1+1 becomes 2
+series_order: 1
 title: "How 1+1 becomes a list of 1s and 0s (part 1/5)"
 seo_description: "How 1+1 in a high-level language is ground down into binary machine code: compiler, VM translator, and assembler."
 ---

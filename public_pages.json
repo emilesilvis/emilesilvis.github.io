@@ -1,0 +1,75 @@
+{
+  "llm-exposure-eu-jobs-interactive.html": {
+    "source": "html/llm-exposure-eu-jobs-interactive.html",
+    "title": "🇪🇺 LLM Exposure for EU Jobs",
+    "description": "Explore employment and estimated LLM exposure across EU and Dutch occupations in an interactive treemap and searchable table.",
+    "url": "/llm-exposure-eu-jobs-interactive.html"
+  },
+  "unit-circle.html": {
+    "source": "html/unit-circle.html",
+    "title": "Interactive Unit Circle",
+    "description": "Explore all six trigonometric functions on an interactive unit circle, with an adjustable angle and a step-by-step tutorial.",
+    "url": "/unit-circle.html"
+  },
+  "geomake/day-02.html": {
+    "source": "apps/geomake/day-02.html",
+    "title": "Puzzle 2",
+    "description": "A circle is inscribed in a square of side 4 cm. Find the shaded area (inside the square, outside the circle).",
+    "url": "/geomake/day-02.html"
+  },
+  "geomake/day-03.html": {
+    "source": "apps/geomake/day-03.html",
+    "title": "Puzzle 3",
+    "description": "In a square of side 4 cm, a quarter circle of radius 2 cm is drawn at each corner. Find the shaded area in the middle.",
+    "url": "/geomake/day-03.html"
+  },
+  "geomake/day-04.html": {
+    "source": "apps/geomake/day-04.html",
+    "title": "Puzzle 4",
+    "description": "A square is inscribed in a circle of radius 7 cm. Find the shaded area (inside the circle, outside the square).",
+    "url": "/geomake/day-04.html"
+  },
+  "geomake/day-05.html": {
+    "source": "apps/geomake/day-05.html",
+    "title": "Puzzle 5",
+    "description": "Inside a square of side 10 cm, two quarter-circle arcs of radius 10 cm are drawn, centered at opposite corners. Find the shaded leaf-shaped area between them.",
+    "url": "/geomake/day-05.html"
+  },
+  "geomake/day-06.html": {
+    "source": "apps/geomake/day-06.html",
+    "title": "Puzzle 6",
+    "description": "The two circles have the same center. The 14 cm segment has both endpoints on the outer circle and is tangent to the inner circle (it just touches it). Find the shaded area between the circles.",
+    "url": "/geomake/day-06.html"
+  },
+  "geomake/day-07.html": {
+    "source": "apps/geomake/day-07.html",
+    "title": "Puzzle 7",
+    "description": "Both squares have side 10 cm. A corner of the tilted square lies exactly at the center of the other square. Find their shaded overlap area. The angle of rotation is not given.",
+    "url": "/geomake/day-07.html"
+  },
+  "geomake/index.html": {
+    "source": "apps/geomake/index.html",
+    "title": "Puzzle 1",
+    "description": "The rectangle has area 80 cm². The shaded triangle uses the whole bottom side as its base, and its third vertex lies on the top side. Find the shaded area.",
+    "url": "/geomake/"
+  },
+  "how-to-design-a-zachlike/guide.html": {
+    "source": "apps/how-to-design-a-zachlike/guide.html",
+    "title": "How to Design a Zachlike",
+    "description": "A practical guide to designing open-ended engineering puzzles: domains, mechanics, systems, teaching, and a catalog of design elements.",
+    "url": "/how-to-design-a-zachlike/",
+    "alias": true
+  },
+  "how-to-design-a-zachlike/index.html": {
+    "source": "apps/how-to-design-a-zachlike/index.html",
+    "title": "How to Design a Zachlike",
+    "description": "A practical guide to designing open-ended engineering puzzles: domains, mechanics, systems, teaching, and a catalog of design elements.",
+    "url": "/how-to-design-a-zachlike/"
+  },
+  "how-to-design-a-zachlike/mechanics.html": {
+    "source": "apps/how-to-design-a-zachlike/mechanics.html",
+    "title": "A · Design-element catalog · How to Design a Zachlike",
+    "description": "A practical guide to designing open-ended engineering puzzles: domains, mechanics, systems, teaching, and a catalog of design elements.",
+    "url": "/how-to-design-a-zachlike/mechanics.html"
+  }
+}

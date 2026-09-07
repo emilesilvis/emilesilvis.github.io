@@ -1,4 +1,6 @@
 ---
+series: How 1+1 becomes 2
+series_order: 4
 title: "How tiny, physical switches learn to follow instructions (part 4/5)"
 seo_description: "How instruction bits are wired straight into the machinery: the program counter, the anatomy of an instruction, and memory-mapped I/O."
 ---

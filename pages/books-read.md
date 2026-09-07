@@ -1,3 +1,6 @@
+---
+seo_description: "Books Emile Silvis has read, from science fiction and mathematics to software, philosophy, and systems thinking."
+---
 # Books read
 
 - *[Mathematica: A Secret World of Intuition and Curiosity](https://www.goodreads.com/book/show/200128457-mathematica)* — David Bessis *(read: 2026-05-08)*

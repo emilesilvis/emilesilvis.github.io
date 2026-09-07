@@ -1,4 +1,6 @@
 ---
+series: How 1+1 becomes 2
+series_order: 3
 title: "How tiny, physical switches learn to remember (part 3/5)"
 seo_description: "How a clock and the data flip flop give a pile of logic gates time and memory: registers, RAM, and the heartbeat of the machine."
 ---

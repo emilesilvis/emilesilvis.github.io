@@ -1,0 +1,225 @@
+{
+  "entries": {
+    "07af61c06e9bc48eb21b3ad27a6fb8f482211f7f7f25e11e9ff48ad624251018": {
+      "dashboard_link": "https://www.pangram.com/history/1cc6ac3f-ce1a-4861-8d53-86b4845ef896",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "08fc3de26555b0ad6f9673c58b31f8aaac9a2dd758d9272e0fde42127b9e3c3b": {
+      "dashboard_link": "https://www.pangram.com/history/6ae0ba3d-4d84-4e82-8400-9dbaccd11e47",
+      "fraction_ai": 0.31039220094680786,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 0.6896077990531921,
+      "headline": "AI Detected",
+      "model": "default",
+      "prediction_short": "Mixed",
+      "version": "3.3.2"
+    },
+    "13fd1541abd854c046ace3eeb79d1628ca8eb211aba15f58156b1631d37d0620": {
+      "dashboard_link": "https://www.pangram.com/history/8cabce14-9444-4887-9514-36bcc82eca85",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "1679547c750a313a705ad71256c064dbd1e11922261769ee67562e4a0777135b": {
+      "dashboard_link": "https://www.pangram.com/history/fc0befa7-6ca7-42fb-a284-ef19090184b8",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "2af3e438c2d72e220772bf67c9a16e21ae2b45d25d73217913ebfd059db9499e": {
+      "dashboard_link": "https://www.pangram.com/history/8359f2d7-d93d-42bf-8415-1107b45811b3",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "30f7d0b06595888ed3834f3261190dd67141037ffe7eae6305503d40a9e72464": {
+      "dashboard_link": "https://www.pangram.com/history/ea493891-2f9f-4e04-a189-e9731360c4b6",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "4bb50df0acf14b5b90632cb1226fc1d58c61da1fdba50a3366b99d3471eec3bc": {
+      "dashboard_link": "https://www.pangram.com/history/8a07e4dd-5752-4523-98cb-c04501c24379",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "4ebaccb776701eea03ebe25495ce6b0e4a00a2c8be96d528f85a6a895ca78c2b": {
+      "dashboard_link": "https://www.pangram.com/history/e37c38ae-2557-4535-8bfa-5addf8f96327",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "63552526910d252b13b8bea3cfac32f12a58c14a7368bb05906121e26625f803": {
+      "dashboard_link": "https://www.pangram.com/history/c2fa181c-886a-44a5-abd1-4b10aba51019",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.24282865226268768,
+      "fraction_human": 0.7571713328361511,
+      "headline": "Mostly Human, AI Assisted",
+      "model": "default",
+      "prediction_short": "Mixed",
+      "version": "3.3.2"
+    },
+    "68c9bd769a8103ae13f7c1ef93a5995c9196e8773a320d3e15106878984be531": {
+      "dashboard_link": "https://www.pangram.com/history/be95477b-cb4c-4131-acf2-62e850d520b6",
+      "fraction_ai": 0.2711578905582428,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 0.7288420796394348,
+      "headline": "Mostly Human, AI Detected",
+      "model": "default",
+      "prediction_short": "Mixed",
+      "version": "3.3.2"
+    },
+    "691b8cc5e01f6244b6bcfd5a49ecdc9288dafd513688e50fd6ac70bbfbbda97a": {
+      "dashboard_link": "https://www.pangram.com/history/24048f88-f3b8-438a-acb8-e6204e3c54d7",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "86e88971c834f6382977d16e00831089f0da88c1cbffac98695d1b4df6905dcc": {
+      "dashboard_link": "https://www.pangram.com/history/bb6898d1-fc45-451b-bfd9-33f3ddc18c95",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "8d124f9c119e4d5a343e877e11e51abb4b6bf97f21a9b8e63c4fecf511d9a415": {
+      "dashboard_link": "https://www.pangram.com/history/24c3d210-fbd1-41ac-880a-037e94804a86",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "9598665401a691e01bbcf0613663dc2e2fd1fdc8f1d3d82bfc0c0eb7179f53bc": {
+      "dashboard_link": "https://www.pangram.com/history/5611be7c-fc9a-4016-8d64-1ec83ac3892c",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "a081d41614fc0981bede8ca16e3d365c5c9be7239bc50d7c35b88c80c9204f84": {
+      "dashboard_link": "https://www.pangram.com/history/37b7b9d6-63e0-4306-9eb3-9ea587511726",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "a5300db5dc8c4ad50f9ff7ed76f8f60088e86620f2c68090483d832f336b3cd3": {
+      "dashboard_link": "https://www.pangram.com/history/28ddb806-8c79-4fe8-83d7-099be6c252d5",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "abdf59494d6b18b63f9c2421a811698e932889c1bc6b64d22b350493b807d72a": {
+      "dashboard_link": "https://www.pangram.com/history/68874710-7933-43bf-8e51-2de484b76e9a",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "b1a438f06a8e4b70621f5dcf47b6cefb2e44b53fa984ce8b506b84b7a9f871da": {
+      "dashboard_link": "https://www.pangram.com/history/8da7960b-2799-428a-80d2-20ca59b7e858",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "b2f937550bc17f12d9b1ec782d61a727a11db76e3db3c27df79f0ed979b77e47": {
+      "dashboard_link": "https://www.pangram.com/history/b2463310-349f-4cc1-977b-be70df2744da",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    },
+    "ca7e0fac0c58f5894964e9d6078957126d91eb50a594c8792f2bb84a83ed726b": {
+      "dashboard_link": "https://www.pangram.com/history/2740a585-9ae0-431c-b575-60df26814422",
+      "fraction_ai": 0.7712476253509521,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 0.22875238955020905,
+      "headline": "AI Detected",
+      "model": "default",
+      "prediction_short": "Mixed",
+      "version": "3.3.2"
+    },
+    "dacc2edcc029ec4fd2803f4a5501ef2abbd2687de3c1a7fcb72bf478da8a43da": {
+      "dashboard_link": "https://www.pangram.com/history/75e8a317-87e3-4d22-a0cf-9033b9d50f39",
+      "fraction_ai": 0.35104236006736755,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 0.6489576101303101,
+      "headline": "AI Detected",
+      "model": "default",
+      "prediction_short": "Mixed",
+      "version": "3.3.2"
+    },
+    "fb4995dbbbbd8cd82f0d2152c449a50618b6b135e9a8b5d77e3771ae3f4b08a1": {
+      "dashboard_link": "https://www.pangram.com/history/315944bd-78fa-4240-81b7-84fbf5d31bd1",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "default",
+      "prediction_short": "Human",
+      "version": "3.3.2"
+    }
+  },
+  "schema_version": 1
+}
