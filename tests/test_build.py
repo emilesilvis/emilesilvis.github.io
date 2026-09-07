@@ -113,8 +113,13 @@ class BuildTests(unittest.TestCase):
             self.assertTrue((out / 'uncached.html').exists())
             self.assertEqual((out / 'CNAME').read_text().strip(), 'emilesilvis.com')
             self.assertTrue((out / '.nojekyll').exists())
-            self.assertNotIn('Verified human writing', (out / 'uncached.html').read_text())
+            self.assertNotIn('class="pangram-verification"', (out / 'uncached.html').read_text())
             self.assertEqual(check_site(out), [])
+            lily = out / 'lily/index.html'
+            self.assertEqual(lily.read_bytes(), (build.ROOT / 'apps/lily/index.html').read_bytes())
+            lily.write_text(lily.read_text() + '\n<!-- modified release -->')
+            self.assertTrue(any('differs from the preserved app export' in error for error in check_site(out)))
+            lily.write_bytes((build.ROOT / 'apps/lily/index.html').read_bytes())
             # Prove the checker catches actual broken output.
             page = out / 'uncached.html'
             page.write_text(page.read_text().replace('</main>', '<a href="/absent.html">Broken</a></main>'))

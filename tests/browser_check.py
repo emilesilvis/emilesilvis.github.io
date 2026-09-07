@@ -20,7 +20,7 @@ FIXTURES = [
     '/part-4-how-tiny-physical-switches-learn-to-follow-instructions.html',
     '/part-5-how-1-plus-1-becomes-2.html',
     '/unit-circle.html', '/llm-exposure-eu-jobs-interactive.html',
-    '/geomake/', '/how-to-design-a-zachlike/', '/how-to-design-a-zachlike/mechanics.html',
+    '/geomake/', '/geomake/day-14.html', '/how-to-design-a-zachlike/', '/how-to-design-a-zachlike/mechanics.html',
 ]
 
 
@@ -83,8 +83,10 @@ def main():
         try:
             ctx = context()
             page = page_in(ctx)
+            exports = json.loads((ROOT / 'public_pages.json').read_text())
+            separate_checks = {path for path, metadata in exports.items() if metadata.get('alias') or metadata.get('preserve_export')}
             paths = ['/' + path.relative_to(ROOT / 'out').as_posix() for path in sorted((ROOT / 'out').rglob('*.html'))
-                     if path.relative_to(ROOT / 'out').as_posix() != 'how-to-design-a-zachlike/guide.html']
+                     if path.relative_to(ROOT / 'out').as_posix() not in separate_checks]
             for path in paths:
                 inspect(page, path, 390, 'light', accessibility=True)
             print(f'Inspected {len(paths)} pages at phone width, including accessibility.', flush=True)
@@ -250,10 +252,10 @@ def main():
 
             ctx = context()
             page = page_in(ctx)
-            for day in range(1, 8):
+            for day in range(1, 15):
                 path = '/geomake/' if day == 1 else f'/geomake/day-{day:02}.html'
                 visit(page, path)
-                directory = ROOT / f'apps/geomake/data/baca39e909561c5a/day-{day:02}'
+                directory = ROOT / 'apps/geomake' / page.locator('main').get_attribute('data-help')
                 expected_answer = json.loads((directory / 'check.json').read_text())
                 page.locator('#answer').fill(str(expected_answer))
                 page.locator('#check').click()
@@ -269,8 +271,28 @@ def main():
                 expect(page.locator('#solution')).to_be_hidden()
                 page.reload()
                 expect(page.locator('#answer')).to_have_value(str(expected_answer))
-            report['flows'].append('Geomake: all seven answers, hints, solutions, and persisted input')
+            report['flows'].append('Geomake: all fourteen answers, hints, solutions, and persisted input')
             ctx.close()
+
+            # Lily is an unchanged imported release; smoke-test both bundled languages.
+            for locale, path, heading in (
+                ('en-US', '/lily', 'A place to begin'),
+                ('nl-NL', '/lily/', 'Een plek om te beginnen'),
+            ):
+                ctx = context(locale=locale)
+                page = page_in(ctx)
+                failed_assets = []
+                page.on('requestfailed', lambda request: failed_assets.append(request.url))
+                page.on('response', lambda response: failed_assets.append(response.url) if response.status >= 400 else None)
+                visit(page, path)
+                expect(page.get_by_role('heading', level=1)).to_have_text(heading)
+                page.evaluate('() => document.fonts.ready')
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+                page.reload()
+                expect(page.get_by_role('heading', level=1)).to_have_text(heading)
+                assert not failed_assets, failed_assets
+                ctx.close()
+            report['flows'].append('Lily: unchanged export loads in English and Dutch, both URL forms, phone reflow, reload and local assets')
 
             # Observe lazy loading with a local fixture, never a live presence service.
             ctx = context()

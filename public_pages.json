@@ -71,5 +71,54 @@
     "title": "A · Design-element catalog · How to Design a Zachlike",
     "description": "A practical guide to designing open-ended engineering puzzles: domains, mechanics, systems, teaching, and a catalog of design elements.",
     "url": "/how-to-design-a-zachlike/mechanics.html"
+  },
+  "geomake/day-08.html": {
+    "source": "apps/geomake/day-08.html",
+    "title": "Puzzle 8",
+    "description": "ABCD is a square. Points E, F, G and H lie on AB, BC, CD and DA, respectively, with AE:EB = BF:FC = CG:GD = DH:HA = 1:3. The inner square EFGH has area 160 cm². Find the total shaded area of the four corners.",
+    "url": "/geomake/day-08.html"
+  },
+  "geomake/day-09.html": {
+    "source": "apps/geomake/day-09.html",
+    "title": "Puzzle 9",
+    "description": "In trapezoid ABCD, AB is parallel to CD. Diagonals AC and BD meet at O. Triangle COD has area 18 cm² and triangle AOB has area 32 cm². Find the total shaded area of triangles AOD and BOC.",
+    "url": "/geomake/day-09.html"
+  },
+  "geomake/day-10.html": {
+    "source": "apps/geomake/day-10.html",
+    "title": "Puzzle 10",
+    "description": "Triangle ABC has area 56 cm². D lies on BC with BD:DC = 3:1, and E is the midpoint of AC. Segments AD and BE meet at P. Find the shaded area of triangle ABP.",
+    "url": "/geomake/day-10.html"
+  },
+  "geomake/day-11.html": {
+    "source": "apps/geomake/day-11.html",
+    "title": "Puzzle 11",
+    "description": "E is the midpoint of side AC of triangle ABC. D lies on BC, and AD meets BE at P. Triangle ABP has area 54 cm²; triangle APE has area 9 cm². The position of D is otherwise unknown. Find the shaded area of triangle BDP.",
+    "url": "/geomake/day-11.html"
+  },
+  "geomake/day-12.html": {
+    "source": "apps/geomake/day-12.html",
+    "title": "Puzzle 12",
+    "description": "Triangle ABC has area 588 cm². D lies on BC with BD:DC = 3:1, E is the midpoint of AC, and AD meets BE at P. Two segments parallel to BC run across the triangle, one through E and one through P. Find the shaded area of the strip between them.",
+    "url": "/geomake/day-12.html"
+  },
+  "geomake/day-13.html": {
+    "source": "apps/geomake/day-13.html",
+    "title": "Puzzle 13",
+    "description": "Triangle ABC has area 104 cm². D, E and F lie on BC, CA and AB, respectively, with BD:DC = CE:EA = AF:FB = 3:1. Draw AD, BE and CF. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. Find the shaded area of triangle PQR.",
+    "url": "/geomake/day-13.html"
+  },
+  "geomake/day-14.html": {
+    "source": "apps/geomake/day-14.html",
+    "title": "Puzzle 14",
+    "description": "Triangle ABC has area 252 cm². D, E and F lie on BC, CA and AB, respectively. This time BD:DC = 3:1, CE:EA = 1:1 and AF:FB = 2:1. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. Find the shaded area of triangle PQR.",
+    "url": "/geomake/day-14.html"
+  },
+  "lily/index.html": {
+    "source": "apps/lily/index.html",
+    "title": "Lily — A garden of possibilities",
+    "description": "A little puzzle game about thinking differently. Move words, rewrite the garden’s rules, and guide your little inhabitants home.",
+    "url": "/lily/",
+    "preserve_export": true
   }
 }

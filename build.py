@@ -18,7 +18,7 @@ import markdown
 from assets import Images
 from config import SITE_NAME, BIO, HOSTNAME, UMAMI, NAVIGATION
 from content import Document, read_document
-from pangram_badge import PangramBadgeService, prose_from_html, verified_human_badge
+from pangram_badge import PangramBadgeService, human_badge, ineligible_reason, prose_from_html
 
 ROOT = Path(__file__).parent
 POSTS = ROOT / 'posts'
@@ -203,12 +203,16 @@ def render_document(document, *, pangram_badges=None, images=None, documents=())
         display_date = f'{document.published.day} {document.published:%b %Y}'
         heading += f'<time datetime="{document.published.isoformat()}" class="post-date">{display_date}</time>'
         if pangram_badges is not None:
-            result = pangram_badges.analyze(prose_from_html(body))
+            prose = prose_from_html(body)
+            result = pangram_badges.lookup(prose)
             if result is not None:
-                badge = verified_human_badge(result)
+                badge = human_badge(result)
                 if badge:
                     body += '\n' + badge
                 print(f'Pangram report: {document.source.name} {result.dashboard_link}')
+            else:
+                reason = ineligible_reason(prose) or 'no matching recorded result'
+                print(f'Pangram skipped: {document.source.name}: {reason}')
         heading += series_navigation(document, documents)
     return apply_template(
         document.title, body, seo_image=document.image, seo_description=document.description,
@@ -297,6 +301,8 @@ def main():
     if html_copies != set(extras):
         raise ValueError(f'Update public_pages.json for HTML exports: {html_copies ^ set(extras)}')
     for target, metadata in extras.items():
+        if not isinstance(metadata.get('preserve_export', False), bool):
+            raise ValueError(f'{target}: preserve_export must be a boolean')
         if metadata.get('source') != copies[target].relative_to(ROOT).as_posix():
             raise ValueError(f'{target}: public_pages.json source does not match the copied file')
         for field in ('title', 'description', 'url'):
@@ -319,7 +325,7 @@ def main():
     for target, source in copies.items():
         destination = OUT / target
         destination.parent.mkdir(parents=True, exist_ok=True)
-        if target in extras:
+        if target in extras and not extras[target].get('preserve_export'):
             metadata = extras[target]
             raw = source.read_text(encoding='utf-8')
             head = page_metadata(metadata['title'], metadata['description'], metadata['url'])
@@ -331,8 +337,8 @@ def main():
 
     images = Images(ROOT, OUT)
     # Rendering never constructs a client or reads an API key. Refresh analysis
-    # explicitly with analyze_posts.py and keep the resulting metadata in git.
-    badges = PangramBadgeService(ROOT / 'data/pangram/results.json')
+    # explicitly with scan_pangram.py and keep the resulting metadata in git.
+    badges = PangramBadgeService.from_environment()
     for document in [*pages, *posts]:
         (OUT / document.url.lstrip('/')).write_text(render_document(document, pangram_badges=badges, images=images, documents=posts), encoding='utf-8')
 

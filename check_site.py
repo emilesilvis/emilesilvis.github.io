@@ -4,6 +4,7 @@
 from collections import Counter
 from datetime import date, datetime
 from html.parser import HTMLParser
+import json
 from pathlib import Path
 import re
 from urllib.parse import unquote, urljoin, urlsplit
@@ -58,6 +59,9 @@ class Page(HTMLParser):
 
 
 def check_site(out: Path) -> list[str]:
+    root = Path(__file__).parent
+    exports = json.loads((root / 'public_pages.json').read_text())
+    preserved = {path: metadata for path, metadata in exports.items() if metadata.get('preserve_export')}
     pages = {path.relative_to(out).as_posix(): Page(path.read_text(encoding='utf-8')) for path in out.rglob('*.html')}
     errors = []
     host = urlsplit(HOSTNAME).netloc
@@ -76,16 +80,27 @@ def check_site(out: Path) -> list[str]:
 
     if not pages:
         return ['No generated HTML found; run python build.py first.']
+    for path, metadata in preserved.items():
+        source = root / metadata['source']
+        # These imported applications render their interface in JavaScript.
+        # Preserve the release HTML and verify its payload, assets and sitemap.
+        for original in source.parent.rglob('*'):
+            if original.is_file():
+                target = out / Path(path).parent / original.relative_to(source.parent)
+                if not target.is_file() or target.read_bytes() != original.read_bytes():
+                    errors.append(f'{target.relative_to(out)}: differs from the preserved app export')
     for path, page in pages.items():
-        if not page.title.strip() or not page.lang or page.headings != 1:
+        if not page.title.strip() or not page.lang or (path not in preserved and page.headings != 1):
             errors.append(f'{path}: needs a title, language, and exactly one h1')
-        for field in ('description', 'viewport', 'og:title', 'og:description', 'og:url', 'og:type', 'twitter:card'):
+        fields = ('description', 'viewport') if path in preserved else ('description', 'viewport', 'og:title', 'og:description', 'og:url', 'og:type', 'twitter:card')
+        for field in fields:
             if not page.meta.get(field):
                 errors.append(f'{path}: missing {field} metadata')
-        if len(page.canonical) != 1 or page.canonical[0] != page.meta.get('og:url'):
-            errors.append(f'{path}: canonical URL and og:url must agree')
-        elif not page.canonical[0].startswith(HOSTNAME + '/'):
-            errors.append(f'{path}: canonical URL must use {HOSTNAME}')
+        if path not in preserved:
+            if len(page.canonical) != 1 or page.canonical[0] != page.meta.get('og:url'):
+                errors.append(f'{path}: canonical URL and og:url must agree')
+            elif not page.canonical[0].startswith(HOSTNAME + '/'):
+                errors.append(f'{path}: canonical URL must use {HOSTNAME}')
         duplicate_ids = [value for value, count in Counter(page.ids).items() if count > 1]
         if duplicate_ids:
             errors.append(f'{path}: duplicate IDs {duplicate_ids}')
@@ -121,6 +136,7 @@ def check_site(out: Path) -> list[str]:
         sitemap = ET.parse(out / 'sitemap.xml')
         urls = [element.text for element in sitemap.findall('.//{*}loc')]
         expected = {page.canonical[0] for page in pages.values() if len(page.canonical) == 1 and page.meta.get('robots') != 'noindex'}
+        expected.update(HOSTNAME + metadata['url'] for metadata in preserved.values())
         if set(urls) != expected or len(urls) != len(set(urls)):
             errors.append(f'sitemap.xml: canonical coverage differs: {set(urls) ^ expected}')
         for url in urls:
