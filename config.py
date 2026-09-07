@@ -45,9 +45,5 @@ NAVIGATION = [
     {
         "title": "Books read",
         "path": "/books-read"
-    },
-    {
-        "title": "Maths stuff",
-        "path": "/maths"
     }
 ]
