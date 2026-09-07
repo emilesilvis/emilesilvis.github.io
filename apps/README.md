@@ -2,7 +2,7 @@ These are checked-in static applications copied into the site by `build.py`.
 
 | App | Version retained here | Upstream provenance |
 | --- | --- | --- |
-| Geomake | Edition `7472b5f5c599085e`, fourteen puzzles with sequential answer gates | [emilesilvis/geomake](https://github.com/emilesilvis/geomake), commit `d8a407b1607d0f47bd5b698a7700460a633917e2`, seed 7; the puzzle pack is unchanged from [release PR #40](https://github.com/emilesilvis/emilesilvis.github.io/pull/40). Older help files remain for cached pages. |
+| Geomake | Edition `7472b5f5c599085e`, fourteen puzzles with sequential answer gates | [emilesilvis/geomake](https://github.com/emilesilvis/geomake), commit `96b51e4c79fc7682a67fed79807a4e240632b75f`, seed 7; the puzzle pack is unchanged from [release PR #40](https://github.com/emilesilvis/emilesilvis.github.io/pull/40). Older help files remain for cached pages. |
 | How to design a Zachlike | 1.1.0, dated 2026-08-08 | Authored HTML is maintained here; no upstream repository or export command was recorded. |
 | Lily | English/Dutch static release, thirty gardens | Private Lily source, commit `1d3d394652b194c02841bfb703eff95343a17641`; archive checksum and repeatable build instructions are in [README.md](../README.md#lily). |
 

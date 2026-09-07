@@ -1,5 +1,5 @@
-import { evaluateAnswer, matchesAnswer } from './answer.js?v=537314553dbd';
-import { createProgress } from './progress.js?v=537314553dbd';
+import { evaluateAnswer, matchesAnswer } from './answer.js?v=9f8e67d17ccf';
+import { createProgress } from './progress.js?v=9f8e67d17ccf';
 
 const page = document.querySelector('main');
 const day = Number(page.dataset.day);
