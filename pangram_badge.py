@@ -1,21 +1,24 @@
-"""Build-time Pangram analysis and verified-human badge rendering.
+"""Recorded Pangram results, explicit scans, and classification badges.
 
-Only compact result metadata is cached. The submitted post text and API key are
-never written to the cache or generated site.
+Only compact result metadata and pending task IDs are stored. API keys and
+submitted text are never written to the results file.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from hashlib import sha256
 from html import escape
 from html.parser import HTMLParser
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
 import time
-from typing import Any
+from typing import Any, Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -23,13 +26,25 @@ from urllib.request import Request, urlopen
 
 API_BASE_URL = "https://text.external-api.pangram.com"
 CACHE_SCHEMA_VERSION = 1
-DEFAULT_MODEL = "default"
+DEFAULT_MODEL = "pangram-4"
+DEFAULT_RESULTS_PATH = Path(__file__).parent / "data" / "pangram" / "results.json"
+MIN_WORDS = 50
 TERMINAL_SUCCESS = "STAGE_SUCCESS"
 TERMINAL_FAILURE = "STAGE_FAILED"
 
 
 class PangramError(RuntimeError):
     """Raised when Pangram cannot produce a trustworthy completed result."""
+
+
+class _RetryableError(PangramError):
+    def __init__(self, message: str, retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+class _FailedTask(PangramError):
+    """A terminal failure, rather than a temporarily unavailable result."""
 
 
 @dataclass(frozen=True)
@@ -42,6 +57,7 @@ class PangramResult:
     fraction_ai_assisted: float
     fraction_human: float
     dashboard_link: str
+    analyzed_at: str | None = None
 
     @classmethod
     def from_mapping(cls, value: dict[str, Any], *, model: str) -> "PangramResult":
@@ -55,20 +71,39 @@ class PangramResult:
                 fraction_ai_assisted=_fraction(value, "fraction_ai_assisted"),
                 fraction_human=_fraction(value, "fraction_human"),
                 dashboard_link=_required_string(value, "dashboard_link"),
+                analyzed_at=_analysis_date(value.get("analyzed_at")),
             )
+            if not _is_pangram_dashboard_url(result.dashboard_link):
+                raise ValueError("invalid public dashboard link")
         except (TypeError, ValueError) as exc:
             raise PangramError(f"Pangram returned an invalid result: {exc}") from exc
 
-        if not _is_pangram_dashboard_url(result.dashboard_link):
-            raise PangramError("Pangram did not return a valid public dashboard link")
         return result
 
     def to_cache(self) -> dict[str, Any]:
         return asdict(self)
 
     @property
-    def is_verified_human(self) -> bool:
+    def is_human(self) -> bool:
         return self.prediction_short.casefold() == "human"
+
+
+def _analysis_date(value: Any) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("analyzed_at is not a timestamp")
+    date = datetime.fromisoformat(value)
+    if date.tzinfo is None:
+        raise ValueError("analyzed_at must include a timezone")
+    return date.astimezone(timezone.utc).isoformat()
+
+
+def ineligible_reason(text: str) -> str | None:
+    count = len(text.split())
+    if count < MIN_WORDS:
+        return f"only {count} prose words; at least {MIN_WORDS} are required"
+    return None
 
 
 def _required_string(value: dict[str, Any], key: str) -> str:
@@ -115,47 +150,82 @@ class PangramClient:
             raise ValueError("api_key must not be empty")
         if not model.strip():
             raise ValueError("model must not be empty")
-        self.api_key = api_key
-        self.model = model
+        for value in (timeout_seconds, poll_interval_seconds, request_timeout_seconds):
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError("timeouts and polling interval must be positive and finite")
+        self.api_key = api_key.strip()
+        self.model = model.strip()
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self.poll_interval_seconds = poll_interval_seconds
         self.request_timeout_seconds = request_timeout_seconds
 
-    def analyze(self, text: str) -> PangramResult:
-        created = self._request_json(
-            "POST",
-            "/task",
-            {
-                "text": text,
-                "model": self.model,
-                "public_dashboard_link": True,
-            },
-        )
-        task_id = created.get("task_id")
-        if not isinstance(task_id, str) or not task_id.strip():
-            raise PangramError("Pangram did not return a task ID")
-
+    def analyze(
+        self,
+        text: str,
+        *,
+        task_id: str | None = None,
+        on_submitted: Callable[[str], None] | None = None,
+    ) -> PangramResult:
+        reason = ineligible_reason(text)
+        if reason:
+            raise PangramError(f"Pangram scan skipped: {reason}")
         deadline = time.monotonic() + self.timeout_seconds
+        if task_id is None:
+            # Task creation is deliberately not retried: an ambiguous response
+            # can represent an accepted, chargeable request.
+            created = self._request_json(
+                "POST", "/task",
+                {"text": text, "model": self.model, "public_dashboard_link": True},
+                timeout=min(self.request_timeout_seconds, self._remaining(deadline)),
+            )
+            task_id = created.get("task_id")
+            if not isinstance(task_id, str) or not task_id.strip():
+                raise PangramError("Pangram did not return a task ID")
+            if on_submitted is not None:
+                on_submitted(task_id)
+
+        backoff = max(1.0, self.poll_interval_seconds)
         while True:
-            response = self._request_json("GET", f"/task/{quote(task_id, safe='')}")
+            remaining = self._remaining(deadline)
+            try:
+                response = self._request_json(
+                    "GET", f"/task/{quote(task_id, safe='')}",
+                    timeout=min(self.request_timeout_seconds, remaining),
+                )
+            except _RetryableError as exc:
+                delay = max(backoff, exc.retry_after or 0)
+                time.sleep(min(delay, self._remaining(deadline)))
+                backoff = min(backoff * 2, 30)
+                continue
+            self._remaining(deadline)
+            backoff = max(1.0, self.poll_interval_seconds)
             stage = response.get("stage")
             if stage == TERMINAL_SUCCESS:
-                return PangramResult.from_mapping(response, model=self.model)
+                return PangramResult.from_mapping(
+                    dict(response, analyzed_at=datetime.now(timezone.utc).isoformat()),
+                    model=self.model,
+                )
             if stage == TERMINAL_FAILURE:
                 reason = response.get("headline") or "analysis failed"
-                raise PangramError(f"Pangram analysis failed: {reason}")
-            if time.monotonic() >= deadline:
-                raise PangramError(
-                    f"Pangram analysis did not finish within {self.timeout_seconds:g} seconds"
-                )
-            time.sleep(self.poll_interval_seconds)
+                raise _FailedTask(f"Pangram analysis failed: {reason}")
+            time.sleep(min(self.poll_interval_seconds, self._remaining(deadline)))
+
+    def _remaining(self, deadline: float) -> float:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise PangramError(
+                f"Pangram analysis did not finish within {self.timeout_seconds:g} seconds"
+            )
+        return remaining
 
     def _request_json(
         self,
         method: str,
         path: str,
         payload: dict[str, Any] | None = None,
+        *,
+        timeout: float,
     ) -> dict[str, Any]:
         body = None
         headers = {
@@ -174,14 +244,21 @@ class PangramClient:
             method=method,
         )
         try:
-            with urlopen(request, timeout=self.request_timeout_seconds) as response:
+            with urlopen(request, timeout=timeout) as response:
                 raw = response.read()
         except HTTPError as exc:
             detail = _response_detail(exc.read())
             suffix = f": {detail}" if detail else ""
+            if exc.code in {408, 429, 500, 502, 503, 504}:
+                raise _RetryableError(
+                    f"Pangram returned HTTP {exc.code}{suffix}",
+                    _retry_after(exc.headers.get("Retry-After") if exc.headers else None),
+                ) from None
             raise PangramError(f"Pangram returned HTTP {exc.code}{suffix}") from None
         except URLError as exc:
-            raise PangramError(f"Could not reach Pangram: {exc.reason}") from None
+            raise _RetryableError(f"Could not reach Pangram: {exc.reason}") from None
+        except (TimeoutError, ConnectionError) as exc:
+            raise _RetryableError(f"Could not reach Pangram: {exc}") from None
 
         try:
             value = json.loads(raw)
@@ -190,6 +267,19 @@ class PangramClient:
         if not isinstance(value, dict):
             raise PangramError("Pangram returned an unexpected response")
         return value
+
+
+def _retry_after(value: str | None) -> float | None:
+    if value is None:
+        return None
+    try:
+        delay = float(value)
+    except ValueError:
+        try:
+            delay = parsedate_to_datetime(value).timestamp() - time.time()
+        except (TypeError, ValueError, OverflowError):
+            return None
+    return max(0, delay) if math.isfinite(delay) else None
 
 
 def _response_detail(raw: bytes) -> str:
@@ -204,97 +294,135 @@ def _response_detail(raw: bytes) -> str:
 
 
 class PangramBadgeService:
-    """Resolve Pangram results from a content-addressed cache or the API."""
+    """Read recorded results; only explicit analyze calls can submit scans."""
 
     def __init__(
         self,
-        cache_path: Path,
+        results_path: Path = DEFAULT_RESULTS_PATH,
         *,
         model: str = DEFAULT_MODEL,
-        api_key: str | None = None,
-        required: bool = False,
         client: PangramClient | None = None,
     ) -> None:
-        self.cache_path = cache_path
-        self.model = model
-        self.required = required
-        self.client = client or (
-            PangramClient(api_key, model=model) if api_key and api_key.strip() else None
-        )
-        self.entries = self._load_entries()
+        if not model.strip():
+            raise ValueError("model must not be empty")
+        if client is not None and client.model != model.strip():
+            raise ValueError("client and results must use the same model")
+        self.results_path = results_path
+        self.model = model.strip()
+        self.client = client
+        self.entries, self.pending_tasks = self._load()
 
     @classmethod
-    def from_environment(cls, default_cache_path: Path) -> "PangramBadgeService":
-        cache_path = Path(os.environ.get("PANGRAM_CACHE_PATH", default_cache_path))
-        return cls(
-            cache_path,
-            model=os.environ.get("PANGRAM_MODEL", DEFAULT_MODEL),
-            api_key=os.environ.get("PANGRAM_API_KEY"),
-            required=_environment_flag("PANGRAM_REQUIRED"),
-        )
+    def from_environment(cls) -> "PangramBadgeService":
+        # Rendering is always offline, even if a developer has an API key set.
+        return cls(Path(os.environ.get("PANGRAM_RESULTS_PATH", DEFAULT_RESULTS_PATH)))
 
-    def analyze(self, text: str) -> PangramResult | None:
+    def lookup(self, text: str, *, model: str | None = None) -> PangramResult | None:
+        """Return the newest matching report, optionally limited to one model."""
         normalized = text.strip()
-        if not normalized:
+        if ineligible_reason(normalized):
             return None
+        candidates = []
+        for fingerprint, value in self.entries.items():
+            recorded_model = value["model"]
+            if model is not None and recorded_model != model:
+                continue
+            if fingerprint == self._fingerprint(normalized, model=recorded_model):
+                candidates.append(PangramResult.from_mapping(value, model=recorded_model))
+        return max(candidates, key=lambda result: result.analyzed_at or "", default=None)
 
+    def has_pending(self, text: str) -> bool:
+        return self._fingerprint(text.strip()) in self.pending_tasks
+
+    def analyze(self, text: str, *, refresh: bool = False) -> PangramResult | None:
+        normalized = text.strip()
+        if ineligible_reason(normalized):
+            return None
         fingerprint = self._fingerprint(normalized)
-        cached = self.entries.get(fingerprint)
-        if isinstance(cached, dict):
-            try:
-                return PangramResult.from_mapping(cached, model=self.model)
-            except PangramError:
-                # A malformed or old cache entry should be refreshed when possible.
-                self.entries.pop(fingerprint, None)
-
+        pending = self.pending_tasks.get(fingerprint)
+        if pending is not None and pending["model"] != self.model:
+            raise PangramError("Pending task model does not match the requested model")
+        cached = self.lookup(normalized, model=self.model)
+        if cached is not None and not refresh and pending is None:
+            return cached
         if self.client is None:
-            if self.required:
-                raise PangramError(
-                    "This post has no cached Pangram result and PANGRAM_API_KEY is not set"
-                )
-            return None
+            raise PangramError("Set PANGRAM_API_KEY to run an explicit scan")
+        # Check that progress can be saved before starting chargeable work.
+        self._save()
 
-        result = self.client.analyze(normalized)
+        def remember_task(task_id: str) -> None:
+            self.pending_tasks[fingerprint] = {"task_id": task_id, "model": self.model}
+            self._save()
+
+        try:
+            result = self.client.analyze(
+                normalized,
+                task_id=pending["task_id"] if pending else None,
+                on_submitted=remember_task,
+            )
+        except _FailedTask:
+            self.pending_tasks.pop(fingerprint, None)
+            self._save()
+            raise
         self.entries[fingerprint] = result.to_cache()
-        self._save_entries()
+        self.pending_tasks.pop(fingerprint, None)
+        self._save()
         return result
 
-    def _fingerprint(self, text: str) -> str:
-        payload = f"{CACHE_SCHEMA_VERSION}\0{self.model}\0{text}".encode("utf-8")
+    def _fingerprint(self, text: str, *, model: str | None = None) -> str:
+        payload = f"{CACHE_SCHEMA_VERSION}\0{model or self.model}\0{text}".encode("utf-8")
         return sha256(payload).hexdigest()
 
-    def _load_entries(self) -> dict[str, dict[str, Any]]:
+    def _load(self) -> tuple[dict[str, Any], dict[str, Any]]:
         try:
-            value = json.loads(self.cache_path.read_text(encoding="utf-8"))
-        except (FileNotFoundError, json.JSONDecodeError, OSError):
-            return {}
-        if not isinstance(value, dict) or value.get("schema_version") != CACHE_SCHEMA_VERSION:
-            return {}
-        entries = value.get("entries")
-        return entries if isinstance(entries, dict) else {}
+            value = json.loads(self.results_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {}, {}
+        except (ValueError, OSError) as exc:
+            raise PangramError(f"Cannot read Pangram results at {self.results_path}: {exc}") from exc
+        try:
+            if not isinstance(value, dict) or value.get("schema_version") != CACHE_SCHEMA_VERSION:
+                raise ValueError("unsupported results schema")
+            entries = value.get("entries")
+            pending = value.get("pending_tasks", {})
+            if not isinstance(entries, dict) or not isinstance(pending, dict):
+                raise ValueError("entries and pending_tasks must be objects")
+            for fingerprint in (*entries, *pending):
+                if len(fingerprint) != 64 or any(c not in "0123456789abcdef" for c in fingerprint):
+                    raise ValueError("invalid content fingerprint")
+            for record in entries.values():
+                if not isinstance(record, dict):
+                    raise ValueError("invalid result entry")
+                PangramResult.from_mapping(record, model=_required_string(record, "model"))
+            for task in pending.values():
+                if not isinstance(task, dict):
+                    raise ValueError("invalid pending task")
+                _required_string(task, "task_id")
+                _required_string(task, "model")
+        except (ValueError, PangramError) as exc:
+            # Never discard paid records and silently submit replacement scans.
+            raise PangramError(f"Invalid Pangram results at {self.results_path}: {exc}") from exc
+        return entries, pending
 
-    def _save_entries(self) -> None:
-        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+    def _save(self) -> None:
+        self.results_path.parent.mkdir(parents=True, exist_ok=True)
         value = {
             "schema_version": CACHE_SCHEMA_VERSION,
             "entries": self.entries,
+            "pending_tasks": self.pending_tasks,
         }
         with tempfile.NamedTemporaryFile(
             "w",
             encoding="utf-8",
-            dir=self.cache_path.parent,
-            prefix=f".{self.cache_path.name}.",
+            dir=self.results_path.parent,
+            prefix=f".{self.results_path.name}.",
             suffix=".tmp",
             delete=False,
         ) as handle:
             json.dump(value, handle, indent=2, sort_keys=True)
             handle.write("\n")
             temporary_path = Path(handle.name)
-        temporary_path.replace(self.cache_path)
-
-
-def _environment_flag(name: str) -> bool:
-    return os.environ.get(name, "").strip().casefold() in {"1", "true", "yes", "on"}
+        temporary_path.replace(self.results_path)
 
 
 class _ProseExtractor(HTMLParser):
@@ -365,16 +493,20 @@ def prose_from_html(html_content: str) -> str:
     return "\n\n".join(line for line in lines if line)
 
 
-def verified_human_badge(result: PangramResult) -> str:
+def human_badge(result: PangramResult) -> str:
     """Render a badge only for Pangram's categorical Human result."""
 
-    if not result.is_verified_human:
+    if not result.is_human:
         return ""
 
     dashboard_link = escape(result.dashboard_link, quote=True)
-    return f'''<aside class="pangram-verification" aria-label="Verified human writing by Pangram">
-  <a class="pangram-verification__link" href="{dashboard_link}" target="_blank" rel="noopener noreferrer" title="Open this post's public Pangram analysis">
+    details = f"Open this post's public analysis (Pangram {result.version}"
+    if result.analyzed_at:
+        details += f", {result.analyzed_at[:10]}"
+    details = escape(details + ")", quote=True)
+    return f'''<aside class="pangram-verification" aria-label="Pangram result: Human">
+  <a class="pangram-verification__link" href="{dashboard_link}" target="_blank" rel="noopener noreferrer" title="{details}">
     <span class="pangram-verification__check" aria-hidden="true">✓</span>
-    <strong>Verified human writing</strong> by <span class="pangram-verification__source">Pangram</span>
+    <span class="pangram-verification__source">Pangram</span> result: <strong>Human</strong>
   </a>
 </aside>'''

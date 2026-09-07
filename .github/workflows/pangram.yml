@@ -1,0 +1,46 @@
+name: Scan posts with Pangram 4
+
+on:
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: Rescan existing Pangram 4 results (uses additional credits)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pangram-scans
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Scan posts
+        env:
+          PANGRAM_API_KEY: ${{ secrets.PANGRAM_API_KEY }}
+          PANGRAM_REFRESH: ${{ inputs.refresh }}
+        run: |
+          if [ "$PANGRAM_REFRESH" = "true" ]; then
+            python scan_pangram.py --model pangram-4 --refresh
+          else
+            python scan_pangram.py --model pangram-4
+          fi
+      - name: Save results and pending tasks for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pangram-results
+          path: data/pangram/results.json
+          if-no-files-found: error
