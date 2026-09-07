@@ -1,20 +1,60 @@
-import { evaluateAnswer, matchesAnswer } from './answer.js?v=9d30678079ce';
+import { evaluateAnswer, matchesAnswer } from './answer.js?v=537314553dbd';
+import { createProgress } from './progress.js?v=537314553dbd';
 
 const page = document.querySelector('main');
+const day = Number(page.dataset.day);
+const total = Number(page.dataset.total);
+const progress = createProgress(page.dataset.edition, total);
+const puzzle = document.querySelector('#puzzle');
+const locked = document.querySelector('#locked');
+const resume = document.querySelector('#resume');
+const progressNote = document.querySelector('#progress');
+const puzzleLinks = document.querySelectorAll('[data-puzzle-day]');
 const answer = document.querySelector('#answer');
 const feedback = document.querySelector('#feedback');
 const hintButton = document.querySelector('#hint');
 const explainButton = document.querySelector('#explain');
 const hints = document.querySelector('#hints');
 const solution = document.querySelector('#solution');
-const storageKey = `geomake:${page.dataset.edition}:${page.dataset.day}:answer`;
 let hintCount = 0;
 let checking = false;
 
-try { answer.value = localStorage.getItem(storageKey) || ''; } catch { /* Optional convenience only. */ }
+function updateProgress() {
+  const completed = progress.completedThrough();
+  const available = Math.min(completed + 1, total);
+  puzzle.hidden = day > available;
+  locked.hidden = !puzzle.hidden;
+  for (const link of puzzleLinks) {
+    const target = Number(link.dataset.puzzleDay);
+    if (target <= available) {
+      link.setAttribute('href', link.dataset.href);
+      link.removeAttribute('aria-disabled');
+      link.removeAttribute('role');
+    } else {
+      link.removeAttribute('href');
+      link.setAttribute('role', 'link');
+      link.setAttribute('aria-disabled', 'true');
+    }
+    if (target === available) resume.setAttribute('href', link.dataset.href);
+  }
+  resume.textContent = `Puzzle ${available}`;
+  for (const state of document.querySelectorAll('[data-state-day]')) {
+    const target = Number(state.dataset.stateDay);
+    state.textContent = target <= completed ? ' · Solved' : target > available ? ' · Locked' : '';
+  }
+  progressNote.textContent = day <= completed
+    ? (day < total ? `Puzzle ${day + 1} is unlocked.` : `All ${total} puzzles solved.`)
+    : (day < total ? `Enter the correct answer to unlock Puzzle ${day + 1}.` : 'Solve this puzzle to complete the set.');
+}
+
+updateProgress();
+window.addEventListener('storage', updateProgress);
+window.addEventListener('pageshow', updateProgress);
+
+answer.value = progress.loadAnswer(day);
 answer.addEventListener('input', () => {
   feedback.hidden = true;
-  try { localStorage.setItem(storageKey, answer.value); } catch { /* Solving works without storage. */ }
+  progress.saveAnswer(day, answer.value);
 });
 
 function message(text) {
@@ -30,14 +70,22 @@ async function readHelp(file) {
 
 document.querySelector('#answer-form').addEventListener('submit', async event => {
   event.preventDefault();
-  if (checking) return;
+  if (checking || puzzle.hidden) return;
   const submitted = answer.value;
   checking = true;
   document.querySelector('#check').disabled = true;
   try {
     evaluateAnswer(submitted);
     const expected = await readHelp('check');
-    if (answer.value === submitted) message(matchesAnswer(submitted, expected) ? 'Correct.' : 'Not quite. Try again.');
+    if (answer.value !== submitted) return;
+    if (!matchesAnswer(submitted, expected)) {
+      message('Not quite. Try again.');
+    } else if (progress.markSolved(day)) {
+      updateProgress();
+      message('Correct.');
+    } else {
+      message('Correct, but your progress could not be saved. Allow browser storage and check again.');
+    }
   } catch (error) {
     if (answer.value === submitted) message(error instanceof Error ? error.message : 'Please try again.');
   } finally {

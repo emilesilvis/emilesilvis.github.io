@@ -17,6 +17,8 @@ main {
 a:hover, .text-button:hover { text-decoration: underline; }
 .difficulty { color: var(--text-muted); font-size: 0.8rem; margin: -1rem 0 1rem; }
 .archive-difficulty { color: var(--text-muted); }
+.progress-note, .puzzle-state { color: var(--text-muted); font-size: 0.8rem; }
+a[aria-disabled="true"] { color: var(--text-muted); cursor: default; text-decoration: none; }
 
 .diagram {
   width: 100%;
