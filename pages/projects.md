@@ -1,3 +1,6 @@
+---
+seo_description: "Interactive projects and experiments by Emile Silvis."
+---
 # Projects
 
 A few things I've built and tinker with.

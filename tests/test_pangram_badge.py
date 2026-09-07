@@ -395,6 +395,19 @@ class PangramCommandTests(OfflineTest):
         self.assertEqual(status, 0)
         self.assertEqual(len(client.calls), 1)
 
+    def test_scan_and_render_agree_after_metadata_and_derived_values(self):
+        client = StubClient(pangram_result())
+        post = self.post(PROSE + '\n\nEuropean average: {{eu_average_exposure}}/10.')
+        post.write_text('---\nseries: Computer series\nseries_order: 1\n---\n' + post.read_text())
+        with patch.dict("os.environ", {"PANGRAM_API_KEY": "secret"}), \
+             patch("scan_pangram.PangramClient", return_value=client), \
+             redirect_stdout(io.StringIO()):
+            self.assertEqual(scan_main([str(post), "--results", str(self.path)]), 0)
+            _, rendered = build_post(post, pangram_badges=PangramBadgeService(self.path))
+        self.assertIn('European average: 4.4/10.', client.calls[0][0])
+        self.assertNotIn('Computer series', client.calls[0][0])
+        self.assertIn('aria-label="Pangram result: Human"', rendered)
+
     def test_all_paths_are_read_before_any_scan_is_submitted(self):
         client = StubClient(pangram_result())
         with patch.dict("os.environ", {"PANGRAM_API_KEY": "secret"}), \

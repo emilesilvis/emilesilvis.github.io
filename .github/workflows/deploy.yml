@@ -1,55 +1,90 @@
-name: Deploy to GitHub Pages
+name: Check and deploy site
 
 on:
+  pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: site-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
+    name: Site checks
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-          cache: 'pip'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        uses: actions/checkout@v6
 
-      - name: Run tests
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Set up Node for accessibility tooling
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install check dependencies
+        run: |
+          python -m pip install -r requirements-dev.txt
+          npm ci --ignore-scripts
+          python -m playwright install --with-deps chromium
+
+      - name: Cache generated image variants
+        uses: actions/cache@v5
+        with:
+          path: .cache/images
+          key: images-${{ runner.os }}-${{ hashFiles('static/images/**', 'assets.py', 'requirements.txt') }}
+
+      - name: Run generator tests
         run: python -m unittest discover -s tests -v
 
-      - name: Build site
+      - name: Build without external analysis
         run: python build.py
-      
-      - name: Upload artifact
+
+      - name: Check generated site
+        run: python check_site.py
+
+      - name: Check browser behavior and accessibility
+        run: python tests/browser_check.py
+
+      - name: Upload browser evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: browser-checks
+          path: artifacts/browser
+          if-no-files-found: ignore
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: out
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

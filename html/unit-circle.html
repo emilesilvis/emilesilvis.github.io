@@ -11,9 +11,9 @@
     background: #f0f4f8;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-    user-select: none;
+    min-height: 100vh;
+    color: #1e293b;
+    color-scheme: light;
   }
   #values {
     flex-shrink: 0;
@@ -52,14 +52,14 @@
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: box-shadow 0.15s;
     min-height: 36px;
     touch-action: manipulation;
   }
   .toggle.off {
     background: #fff;
     color: inherit;
-    opacity: 0.4;
+    opacity: 1;
   }
   .toggle:disabled {
     opacity: 0.25;
@@ -81,18 +81,65 @@
       min-height: 34px;
     }
   }
+
+  [hidden] { display: none !important; }
+  .app-header { display: flex; align-items: center; gap: 1rem; padding: 10px 16px; background: white; }
+  .app-header a { color: #1d4ed8; font-size: 14px; }
+  .app-header h1 { font-size: 18px; }
+  main { min-width: 0; }
+  .visual-stage { position: relative; }
+  #canvas { width: 100%; height: max(440px, calc(100dvh - 260px)); touch-action: none; }
+  .angle-control { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.4rem 1rem; padding: 10px 16px; background: #fff; }
+  .angle-control input { width: min(360px, 100%); accent-color: #1d4ed8; }
+  .help-text { text-align: center; padding: 6px 16px; font-size: 13px; color: #475569; }
+  #tutorial-card { position: absolute; left: 51%; right: 3%; top: 50%; transform: translateY(-50%); max-width: 420px; padding: 20px; background: white; border: 1px solid #cbd5e1; border-radius: 12px; }
+  #tutorial-card p { margin: 10px 0; font-size: 15px; line-height: 1.6; }
+  #tutorial-card h2 { font-size: 20px; }
+  #tutorial-progress { color: #475569; font-size: 13px; }
+  #tutorial-formula { white-space: pre-wrap; font: 600 15px/1.6 system-ui; margin-block: 10px; }
+  .tutorial-nav, #tutorial-highlights { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .tutorial-nav { justify-content: space-between; }
+  .tutorial-nav button, .term { font: inherit; min-height: 36px; padding: 5px 10px; color: #1d4ed8; background: white; border: 1px solid #cbd5e1; border-radius: 5px; cursor: pointer; }
+  .term { font-size: 13px; text-decoration: underline; }
+  .tutorial-nav button:disabled { color: #475569; cursor: default; }
+  :where(a, button, input, canvas):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
+  @media (max-width: 700px) {
+    #tutorial-card { position: static; transform: none; max-width: none; margin: 0 12px 12px; }
+    .tutorial-active #canvas { height: 320px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
 </style>
 </head>
 <body>
-<div id="values"></div>
-<canvas id="canvas"></canvas>
-<div id="controls"></div>
+<header class="app-header"><a href="/projects.html">← Projects</a><h1>Unit Circle</h1></header>
+<main id="content">
+<div id="values" role="group" aria-label="Trigonometric values"></div>
+<div class="visual-stage">
+  <canvas id="canvas" role="img" tabindex="0" aria-label="Unit circle and trigonometric function graphs" aria-describedby="angle-help">Use the angle control below to explore the trigonometric values above.</canvas>
+  <section id="tutorial-card" aria-labelledby="tutorial-title" hidden>
+    <div aria-live="polite" aria-atomic="true">
+      <p id="tutorial-progress"></p><h2 id="tutorial-title" tabindex="-1"></h2>
+      <p id="tutorial-body"></p><pre id="tutorial-formula" hidden></pre>
+    </div>
+    <div id="tutorial-highlights" role="group" aria-label="Highlight parts of the diagram"></div>
+    <nav class="tutorial-nav" aria-label="Tutorial steps"><button id="tutorial-prev" type="button">← Previous</button><button id="tutorial-next" type="button">Next →</button></nav>
+  </section>
+</div>
+<div class="angle-control"><label for="angle-input">Angle: <output id="angle-value" for="angle-input">45°</output></label><input id="angle-input" type="range" min="0" max="359" step="1" value="45" aria-describedby="angle-help"></div>
+<div id="controls" role="group" aria-label="Visible curves and tutorial"></div>
+<p id="angle-help" class="help-text">Drag the point or adjust the angle. With the diagram focused, use arrow keys to move one degree.</p>
+<noscript><p>Enable JavaScript to adjust the circle and read the tutorial.</p></noscript>
+</main>
 
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const valuesEl = document.getElementById('values');
 const controlsEl = document.getElementById('controls');
+const angleInput = document.getElementById('angle-input');
+const tutorialCard = document.getElementById('tutorial-card');
+const functionNames = { sin: 'Sine', cos: 'Cosine', tan: 'Tangent', sec: 'Secant', csc: 'Cosecant', cot: 'Cotangent' };
 
 const VERSION = '1.0.0';
 
@@ -103,8 +150,8 @@ let dragging = false;
 
 const fns = ['sin', 'cos', 'tan', 'sec', 'csc', 'cot'];
 const colors = {
-  sin: '#22c55e', cos: '#3b82f6', tan: '#f97316',
-  sec: '#06b6d4', csc: '#ec4899', cot: '#a855f7'
+  sin: '#166534', cos: '#1e40af', tan: '#92400e',
+  sec: '#155e75', csc: '#9d174d', cot: '#6b21a8'
 };
 const visible = { sin: true, cos: true, tan: false, sec: false, csc: false, cot: false };
 let useRadians = false;
@@ -113,7 +160,6 @@ let tutorialActive = false;
 let tutorialStep = 0;
 let savedState = null;
 let hoveredHighlight = null;  // currently hovered highlight box
-let highlightBoxes = [];      // bounding boxes for highlighted terms in card
 
 const specialAngles = [
   { deg: 0, rad: '0' }, { deg: 30, rad: 'π/6' }, { deg: 45, rad: 'π/4' },
@@ -311,7 +357,10 @@ function snapToSpecial(deg) {
 // Landscape: circle on left, graph on right
 function getLayout(w, h) {
   const pad = 30;
-  const isPortrait = h > w * 1.1;
+  if (tutorialActive && w <= 700) {
+    return { cx: w / 2, cy: h / 2, circleR: Math.min((w - pad * 2) / 2.8, (h - pad * 2) / 2.8), gLeft: pad, gTopOffset: h, isPortrait: true, pad };
+  }
+  const isPortrait = !tutorialActive && h > w * 1.1;
   if (isPortrait) {
     const topH = Math.round(h * 0.44);
     const circleR = Math.min((w - pad * 2) / 2.8, (topH - pad * 2) / 2.8);
@@ -341,8 +390,12 @@ fns.forEach(fn => {
     btn.style.color = colors[fn];
   }
   btn.dataset.fn = fn;
+  btn.type = 'button';
+  btn.setAttribute('aria-label', functionNames[fn] + ' curve');
+  btn.setAttribute('aria-pressed', String(visible[fn]));
   btn.addEventListener('click', () => {
     visible[fn] = !visible[fn];
+    btn.setAttribute('aria-pressed', String(visible[fn]));
     btn.classList.toggle('off', !visible[fn]);
     if (visible[fn]) {
       btn.style.background = colors[fn];
@@ -364,12 +417,15 @@ controlsEl.appendChild(sep);
 const degRadBtn = document.createElement('button');
 degRadBtn.className = 'toggle';
 degRadBtn.textContent = 'Deg';
+degRadBtn.setAttribute('aria-label', 'Use radians');
+degRadBtn.setAttribute('aria-pressed', 'false');
 degRadBtn.style.borderColor = '#64748b';
 degRadBtn.style.background = '#64748b';
 degRadBtn.style.color = '#fff';
 degRadBtn.addEventListener('click', () => {
   useRadians = !useRadians;
   degRadBtn.textContent = useRadians ? 'Rad' : 'Deg';
+  degRadBtn.setAttribute('aria-pressed', String(useRadians));
   draw();
 });
 controlsEl.appendChild(degRadBtn);
@@ -377,9 +433,12 @@ controlsEl.appendChild(degRadBtn);
 const tutorialBtn = document.createElement('button');
 tutorialBtn.className = 'toggle off';
 tutorialBtn.textContent = 'Tutorial';
-tutorialBtn.style.borderColor = '#8b5cf6';
+tutorialBtn.style.borderColor = '#6d28d9';
+tutorialBtn.type = 'button';
+tutorialBtn.setAttribute('aria-controls', 'tutorial-card');
+tutorialBtn.setAttribute('aria-expanded', 'false');
 tutorialBtn.style.background = '#fff';
-tutorialBtn.style.color = '#8b5cf6';
+tutorialBtn.style.color = '#6d28d9';
 tutorialBtn.addEventListener('click', () => {
   if (tutorialActive) stopTutorial();
   else startTutorial();
@@ -388,7 +447,7 @@ controlsEl.appendChild(tutorialBtn);
 
 const versionEl = document.createElement('span');
 versionEl.textContent = `v${VERSION}`;
-versionEl.style.cssText = 'color:#cbd5e1;font-size:11px;margin-left:auto;user-select:text';
+versionEl.style.cssText = 'color:#475569;font-size:11px;margin-left:auto;user-select:text';
 controlsEl.appendChild(versionEl);
 
 // Sync toggle button visuals with visible state
@@ -396,6 +455,7 @@ function updateToggleButtons() {
   controlsEl.querySelectorAll('button[data-fn]').forEach(btn => {
     const fn = btn.dataset.fn;
     const on = visible[fn];
+    btn.setAttribute('aria-pressed', String(on));
     btn.classList.toggle('off', !on);
     btn.style.background = on ? colors[fn] : '#fff';
     btn.style.color = on ? '#fff' : colors[fn];
@@ -410,18 +470,26 @@ function updateToggleButtons() {
 function startTutorial() {
   savedState = { angleDeg, angle, visible: {...visible} };
   tutorialActive = true;
+  document.body.classList.add('tutorial-active');
+  tutorialCard.hidden = false;
+  angleInput.disabled = true;
+  tutorialBtn.setAttribute('aria-expanded', 'true');
   tutorialStep = 0;
   tutorialBtn.classList.remove('off');
-  tutorialBtn.style.background = '#8b5cf6';
+  tutorialBtn.style.background = '#6d28d9';
   tutorialBtn.style.color = '#fff';
   tutorialBtn.textContent = 'Exit';
   applyTutorialStep();
+  document.getElementById('tutorial-title').focus({ preventScroll: true });
 }
 
 function stopTutorial() {
   tutorialActive = false;
+  document.body.classList.remove('tutorial-active');
+  tutorialCard.hidden = true;
+  angleInput.disabled = false;
+  tutorialBtn.setAttribute('aria-expanded', 'false');
   hoveredHighlight = null;
-  highlightBoxes = [];
   canvas.style.cursor = 'crosshair';
   Object.assign(visible, savedState.visible);
   angleDeg = savedState.angleDeg;
@@ -429,10 +497,11 @@ function stopTutorial() {
   savedState = null;
   tutorialBtn.classList.add('off');
   tutorialBtn.style.background = '#fff';
-  tutorialBtn.style.color = '#8b5cf6';
+  tutorialBtn.style.color = '#6d28d9';
   tutorialBtn.textContent = 'Tutorial';
   updateToggleButtons();
-  draw();
+  resize();
+  tutorialBtn.focus({ preventScroll: true });
 }
 
 function applyTutorialStep() {
@@ -440,8 +509,10 @@ function applyTutorialStep() {
   angleDeg = step.angle;
   angle = angleDeg * Math.PI / 180;
   Object.keys(visible).forEach(fn => { visible[fn] = step.visible[fn]; });
+  hoveredHighlight = null;
   updateToggleButtons();
-  draw();
+  renderTutorialContent();
+  resize();
 }
 
 function nextStep() {
@@ -489,10 +560,12 @@ function trigValues(a) {
 // Update values display
 function updateValues() {
   const v = trigValues(angle);
+  angleInput.value = angleDeg;
+  angleInput.setAttribute('aria-valuetext', `${angleDeg} degrees`);
+  document.getElementById('angle-value').textContent = angleDisplayStr(angleDeg);
   valuesEl.innerHTML = fns.map(fn => {
     const val = isNaN(v[fn]) ? 'undef' : v[fn].toFixed(3);
-    const opacity = visible[fn] ? 1 : 0.3;
-    return `<div style="opacity:${opacity}"><span style="color:${colors[fn]}">${fn}</span>(${angleDisplayStr(angleDeg)}) = ${val}</div>`;
+    return `<div><span style="color:${visible[fn] ? colors[fn] : '#475569'}">${fn}</span>(${angleDisplayStr(angleDeg)}) = ${val}</div>`;
   }).join('');
 }
 
@@ -646,20 +719,20 @@ function drawAllLabels(toX, toY, px, py, v, circleR) {
     text('1',
       toX(hypMidX + perpX / pLen * 0.08),
       toY(hypMidY + perpY / pLen * 0.08),
-      '#6366f1', labelSize, 'center');
+      '#4338ca', labelSize, 'center');
     // sin label
     const sinLabel = sideLabel('sin', v);
     if (sinLabel && sinLabel !== '—') {
       const xOff = px >= 0 ? -pad : pad;
       text(sinLabel, toX(px) + xOff, toY(py / 2),
-        '#6366f1', labelSize, px >= 0 ? 'right' : 'left');
+        '#4338ca', labelSize, px >= 0 ? 'right' : 'left');
     }
     // cos label
     const cosLabel = sideLabel('cos', v);
     if (cosLabel && cosLabel !== '—') {
       const yOff = py >= 0 ? pad : -pad;
       text(cosLabel, toX(px / 2), toY(0) + yOff,
-        '#6366f1', labelSize, 'center', py >= 0 ? 'top' : 'bottom');
+        '#4338ca', labelSize, 'center', py >= 0 ? 'top' : 'bottom');
     }
   }
 
@@ -670,13 +743,13 @@ function drawAllLabels(toX, toY, px, py, v, circleR) {
       const tanMidX = (px + v.sec) / 2;
       const tOff = py >= 0 ? -pad : pad;
       text(tanLabel, toX(tanMidX), toY(py / 2) + tOff,
-        '#f97316', labelSize, 'center');
+        '#9a3412', labelSize, 'center');
     }
     const secLabel = sideLabel('sec', v);
     if (secLabel && secLabel !== '—') {
       const yOff = py >= 0 ? -(pad + 2) : (pad + 2);
       text(secLabel, toX(v.sec / 2), toY(0) + yOff,
-        '#f97316', labelSize, 'center', py >= 0 ? 'bottom' : 'top');
+        '#9a3412', labelSize, 'center', py >= 0 ? 'bottom' : 'top');
     }
   }
 
@@ -689,51 +762,17 @@ function drawAllLabels(toX, toY, px, py, v, circleR) {
       const cotMidY = (py + v.csc) / 2;
       const xOff = px >= 0 ? -pad : pad;
       text(cotLabel, toX(cotMidX) + xOff, toY(cotMidY),
-        '#a855f7', labelSize, px >= 0 ? 'right' : 'left');
+        '#6b21a8', labelSize, px >= 0 ? 'right' : 'left');
     }
     // csc label on O→C segment (y-axis)
     const cscLabel = sideLabel('csc', v);
     if (cscLabel && cscLabel !== '—') {
       const xOff = px >= 0 ? -pad : pad;
       text(cscLabel, toX(0) + xOff, toY(v.csc / 2),
-        '#a855f7', labelSize, px >= 0 ? 'right' : 'left');
+        '#6b21a8', labelSize, px >= 0 ? 'right' : 'left');
     }
   }
 
-}
-
-// Word-wrap text for tutorial card
-function wrapText(str, maxWidth, font) {
-  ctx.font = font;
-  const words = str.split(' ');
-  const lines = [];
-  let currentLine = '';
-  for (const word of words) {
-    const test = currentLine ? currentLine + ' ' + word : word;
-    if (ctx.measureText(test).width > maxWidth && currentLine) {
-      lines.push(currentLine);
-      currentLine = word;
-    } else {
-      currentLine = test;
-    }
-  }
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
-
-// Rounded rect helper
-function roundRect(x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
 }
 
 // Get canvas coordinates for a circle element's midpoint
@@ -827,186 +866,39 @@ function drawConnectorLine(hlBox, targetPt, color) {
   ctx.restore();
 }
 
-// Apply color highlights to a rendered text line (overlay colored terms on top)
-function applyHighlights(lineText, x, y, font, highlights) {
-  if (!highlights || highlights.length === 0) return;
-  const hlFont = font.replace('400', '600');
-  for (const hl of highlights) {
-    let pos = 0;
-    while (true) {
-      const idx = lineText.indexOf(hl.term, pos);
-      if (idx === -1) break;
-      ctx.font = font;
-      const prefix = lineText.slice(0, idx);
-      const prefixW = ctx.measureText(prefix).width;
-      const termW = ctx.measureText(hl.term).width;
-      // Clear original text behind
-      ctx.fillStyle = 'rgba(255,255,255,0.97)';
-      ctx.fillRect(x + prefixW - 1, y - 1, termW + 2, 15);
-      // Subtle color background pill
-      ctx.fillStyle = hl.color + '15';
-      roundRect(x + prefixW - 3, y - 2, termW + 6, 17, 3);
-      ctx.fill();
-      // Colored bold text
-      ctx.font = hlFont;
-      ctx.fillStyle = hl.color;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText(hl.term, x + prefixW, y);
-      // Dotted underline
-      ctx.beginPath();
-      ctx.strokeStyle = hl.color + '50';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([2, 2]);
-      ctx.moveTo(x + prefixW, y + 13);
-      ctx.lineTo(x + prefixW + termW, y + 13);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      // Store bounding box for hover detection
-      highlightBoxes.push({
-        x: x + prefixW - 3, y: y - 2,
-        w: termW + 6, h: 17,
-        target: hl.target, color: hl.color, term: hl.term
-      });
-      ctx.font = font;
-      pos = idx + hl.term.length;
-    }
-  }
-}
-
-// Bounding boxes for tutorial nav buttons (set during draw, checked on click)
-let prevBtnBox = null, nextBtnBox = null;
-
-// Tutorial card overlay
-function drawTutorialCard(w, h, cx, cy, circleR, gLeft, gTopOffset = 0, isPortrait = false) {
-  if (!tutorialActive) return;
-  highlightBoxes = [];
+// The teaching text and navigation remain ordinary, accessible HTML.
+function renderTutorialContent() {
   const step = TUTORIAL_STEPS[tutorialStep];
-  const stepHighlights = step.highlights || [];
-  const cardW = Math.min(w - gLeft - 40, 340);
-  const cardPad = 20;
-  const lineH = 20;
-
-  // Position card horizontally
-  const cardX = gLeft + 20;
-
-  // Fonts — generous sizing for readability
-  const titleFont = '700 18px system-ui, sans-serif';
-  const bodyFont = '400 14px system-ui, sans-serif';
-  const formulaFont = '700 15px system-ui, sans-serif';
-  const stepFont = '600 12px system-ui, sans-serif';
-
-  const bodyLines = wrapText(step.body, cardW - cardPad * 2, bodyFont);
-  const formulaLines = step.formula ? step.formula.split('\n') : [];
-
-  // Measure content height first for vertical centering
-  let contentH = cardPad; // top padding
-  contentH += 16; // step counter
-  contentH += 8;
-  contentH += 18; // title
-  contentH += 10;
-  contentH += bodyLines.length * lineH; // body
-  if (formulaLines.length) {
-    contentH += 12;
-    contentH += formulaLines.length * 20; // formula
+  document.getElementById('tutorial-progress').textContent = `Step ${tutorialStep + 1} of ${TUTORIAL_STEPS.length}`;
+  document.getElementById('tutorial-title').textContent = step.title;
+  document.getElementById('tutorial-body').textContent = step.body;
+  const formula = document.getElementById('tutorial-formula');
+  formula.hidden = !step.formula;
+  formula.textContent = step.formula || '';
+  document.getElementById('tutorial-prev').disabled = tutorialStep === 0;
+  document.getElementById('tutorial-next').textContent = tutorialStep === TUTORIAL_STEPS.length - 1 ? 'Finish' : 'Next →';
+  const highlights = document.getElementById('tutorial-highlights');
+  highlights.replaceChildren();
+  for (const highlight of step.highlights || []) {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'term'; button.textContent = highlight.term;
+    button.setAttribute('aria-label', 'Highlight ' + highlight.term);
+    const show = () => {
+      const rect = button.getBoundingClientRect(), board = canvas.getBoundingClientRect();
+      hoveredHighlight = { ...highlight, x: rect.left - board.left, y: rect.top - board.top, h: rect.height };
+      draw();
+    };
+    const clear = () => { hoveredHighlight = null; draw(); };
+    button.addEventListener('mouseenter', show); button.addEventListener('focus', show);
+    button.addEventListener('click', show); button.addEventListener('mouseleave', clear); button.addEventListener('blur', clear);
+    highlights.append(button);
   }
-  contentH += 20; // spacing before nav
-  contentH += 22; // nav buttons
-  contentH += cardPad; // bottom padding
-
-  // Vertically center the card within the card's area (graph area)
-  const areaTop = isPortrait ? gTopOffset : 0;
-  const cardY = areaTop + Math.max(20, (h - areaTop - contentH) / 2);
-
-  // Draw card background
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.08)';
-  ctx.shadowBlur = 16;
-  ctx.shadowOffsetY = 4;
-  roundRect(cardX, cardY, cardW, contentH, 14);
-  ctx.fillStyle = 'rgba(255,255,255,0.97)';
-  ctx.fill();
-  ctx.restore();
-
-  // Border
-  roundRect(cardX, cardY, cardW, contentH, 14);
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  let curY = cardY + cardPad;
-  const textX = cardX + cardPad;
-  const textW = cardW - cardPad * 2;
-
-  // Step counter
-  ctx.font = stepFont;
-  ctx.fillStyle = '#94a3b8';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText(`Step ${tutorialStep + 1} of ${TUTORIAL_STEPS.length}`, textX, curY);
-  curY += 24;
-
-  // Title
-  ctx.font = titleFont;
-  ctx.fillStyle = '#1e293b';
-  ctx.fillText(step.title, textX, curY);
-  curY += 28;
-
-  // Body (with color-coded highlights)
-  bodyLines.forEach(l => {
-    ctx.font = bodyFont;
-    ctx.fillStyle = '#475569';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText(l, textX, curY);
-    applyHighlights(l, textX, curY, bodyFont, stepHighlights);
-    curY += lineH;
-  });
-
-  // Formula (with color-coded highlights)
-  if (formulaLines.length) {
-    curY += 10;
-    formulaLines.forEach(l => {
-      ctx.font = formulaFont;
-      ctx.fillStyle = '#6366f1';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText(l, textX, curY);
-      applyHighlights(l, textX, curY, formulaFont, stepHighlights);
-      curY += 20;
-    });
-  }
-
-  curY += 16;
-
-  // Navigation buttons
-  const navY = curY;
-  const btnH = 22;
-
-  // Prev button
-  prevBtnBox = null;
-  if (tutorialStep > 0) {
-    ctx.font = '600 14px system-ui, sans-serif';
-    ctx.fillStyle = '#6366f1';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText('← Prev', textX, navY);
-    const prevW = ctx.measureText('← Prev').width;
-    prevBtnBox = { x: textX - 4, y: navY - 4, w: prevW + 8, h: btnH + 4 };
-  }
-
-  // Next button (or "Finish")
-  const isLast = tutorialStep === TUTORIAL_STEPS.length - 1;
-  const nextLabel = isLast ? '✓ Finish' : 'Next →';
-  ctx.font = '600 14px system-ui, sans-serif';
-  ctx.fillStyle = '#6366f1';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'top';
-  const nextTextX = cardX + cardW - cardPad;
-  ctx.fillText(nextLabel, nextTextX, navY);
-  const nextW = ctx.measureText(nextLabel).width;
-  nextBtnBox = { x: nextTextX - nextW - 4, y: navY - 4, w: nextW + 8, h: btnH + 4 };
 }
+document.getElementById('tutorial-prev').addEventListener('click', prevStep);
+document.getElementById('tutorial-next').addEventListener('click', nextStep);
+angleInput.addEventListener('input', () => {
+  angleDeg = Number(angleInput.value); angle = angleDeg * Math.PI / 180; draw();
+});
 
 // Main draw
 function draw() {
@@ -1055,7 +947,7 @@ function draw() {
       const ly = toY(sy * off);
       const align = Math.abs(sx) < 0.3 ? 'center' : sx > 0 ? 'left' : 'right';
       const label = useRadians ? sa.rad : `${sa.deg}\u00B0`;
-      text(label, lx, ly, '#94a3b8', 9, align, 'middle');
+      text(label, lx, ly, '#475569', 9, align, 'middle');
     });
   }
 
@@ -1071,7 +963,7 @@ function draw() {
 
   // Angle label
   const labelAngle = angle / 2;
-  text(angleDisplayStr(angleDeg), cx + Math.cos(labelAngle) * circleR * 0.25, cy - Math.sin(labelAngle) * circleR * 0.25, '#64748b', 11, 'center');
+  text(angleDisplayStr(angleDeg), cx + Math.cos(labelAngle) * circleR * 0.25, cy - Math.sin(labelAngle) * circleR * 0.25, '#475569', 11, 'center');
 
   // Clamp for visual display — directional limits from available space
   const maxRight = isPortrait ? (w - cx - pad) / circleR : (gLeft - cx - pad) / circleR;
@@ -1203,7 +1095,6 @@ function draw() {
     } else {
       ctx.fillRect(gLeft, 0, w - gLeft, h);
     }
-    drawTutorialCard(w, h, cx, cy, circleR, gLeft, gTopOffset, isPortrait);
     // Connector line from hovered highlight to circle element
     if (hoveredHighlight) {
       const targetPt = getTargetPoint(hoveredHighlight.target, toX, toY, px, py, v);
@@ -1247,11 +1138,11 @@ function draw() {
     ? [[0,'0'], [90,'π/2'], [180,'π'], [270,'3π/2'], [360,'2π']]
     : [[0,'0°'], [90,'90°'], [180,'180°'], [270,'270°'], [360,'360°']];
   graphLabels.forEach(([d, label]) => {
-    text(label, gToX(d), gBot + 16, '#94a3b8', 10, 'center');
+    text(label, gToX(d), gBot + 16, '#475569', 10, 'center');
   });
   // Y axis labels
   for (let yv = -yRange; yv <= yRange; yv++) {
-    if (yv !== 0) text(yv.toString(), gLeft - 8, gToY(yv), '#94a3b8', 10, 'right');
+    if (yv !== 0) text(yv.toString(), gLeft - 8, gToY(yv), '#475569', 10, 'right');
   }
 
   // Plot functions
@@ -1354,26 +1245,8 @@ function getAngleFromEvent(e) {
 }
 
 function onDown(e) {
-  // Tutorial: check card button clicks
-  if (tutorialActive) {
-    const rect = canvas.getBoundingClientRect();
-    let clientX, clientY;
-    if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
-    else { clientX = e.clientX; clientY = e.clientY; }
-    const mx = clientX - rect.left;
-    const my = clientY - rect.top;
-    if (prevBtnBox && mx >= prevBtnBox.x && mx <= prevBtnBox.x + prevBtnBox.w &&
-        my >= prevBtnBox.y && my <= prevBtnBox.y + prevBtnBox.h) {
-      prevStep();
-      return;
-    }
-    if (nextBtnBox && mx >= nextBtnBox.x && mx <= nextBtnBox.x + nextBtnBox.w &&
-        my >= nextBtnBox.y && my <= nextBtnBox.y + nextBtnBox.h) {
-      nextStep();
-      return;
-    }
-    return; // lock angle dragging during tutorial
-  }
+  if (tutorialActive) return;
+  canvas.focus({ preventScroll: true });
 
   const a = getAngleFromEvent(e);
   if (a !== null) {
@@ -1422,62 +1295,17 @@ canvas.addEventListener('touchstart', onDown, { passive: false });
 canvas.addEventListener('touchmove', onMove, { passive: false });
 canvas.addEventListener('touchend', onUp);
 
-// Tutorial highlight hover detection
-canvas.addEventListener('mousemove', (e) => {
-  if (!tutorialActive || highlightBoxes.length === 0) {
-    if (hoveredHighlight) {
-      hoveredHighlight = null;
-      canvas.style.cursor = 'crosshair';
-      draw();
-    }
-    return;
-  }
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  let found = null;
-  for (const box of highlightBoxes) {
-    if (mx >= box.x && mx <= box.x + box.w && my >= box.y && my <= box.y + box.h) {
-      found = box;
-      break;
-    }
-  }
-  // Also check nav buttons for pointer cursor
-  let overNav = false;
-  if (prevBtnBox && mx >= prevBtnBox.x && mx <= prevBtnBox.x + prevBtnBox.w &&
-      my >= prevBtnBox.y && my <= prevBtnBox.y + prevBtnBox.h) overNav = true;
-  if (nextBtnBox && mx >= nextBtnBox.x && mx <= nextBtnBox.x + nextBtnBox.w &&
-      my >= nextBtnBox.y && my <= nextBtnBox.y + nextBtnBox.h) overNav = true;
-  canvas.style.cursor = (found || overNav) ? 'pointer' : 'default';
-  if (found !== hoveredHighlight) {
-    hoveredHighlight = found;
-    draw();
-  }
-});
-
-// Keyboard
+// Arrow shortcuts belong to the focused diagram; native controls own their keys.
 window.addEventListener('keydown', e => {
+  if (tutorialActive && e.key === 'Escape') { e.preventDefault(); stopTutorial(); return; }
+  if (e.target !== canvas) return;
   if (tutorialActive) {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
-      e.preventDefault();
-      nextStep();
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      prevStep();
-    } else if (e.key === 'Escape') {
-      stopTutorial();
-    }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); nextStep(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prevStep(); }
     return;
   }
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-    angleDeg = (angleDeg - 1 + 360) % 360;
-    angle = angleDeg * Math.PI / 180;
-    draw();
-  } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-    angleDeg = (angleDeg + 1) % 360;
-    angle = angleDeg * Math.PI / 180;
-    draw();
-  }
+  const delta = ['ArrowLeft', 'ArrowDown'].includes(e.key) ? -1 : ['ArrowRight', 'ArrowUp'].includes(e.key) ? 1 : 0;
+  if (delta) { e.preventDefault(); angleDeg = (angleDeg + delta + 360) % 360; angle = angleDeg * Math.PI / 180; draw(); }
 });
 
 // Init

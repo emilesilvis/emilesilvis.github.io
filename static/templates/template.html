@@ -4,147 +4,50 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
-    <meta name="description" content="{{seo_description}}">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="{{title}}">
-    <meta property="og:description" content="{{seo_description}}">
-    {{og_image_meta}}
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="{{twitter_card}}">
-    <meta name="twitter:title" content="{{title}}">
-    <meta name="twitter:description" content="{{seo_description}}">
-    {{twitter_image_meta}}
-    
-    <link rel="stylesheet" href="/static/css/style.css">
+    {{metadata}}
+    <link rel="stylesheet" href="{{stylesheet}}">
     <link rel="alternate" type="application/atom+xml" title="{{site_name}}" href="/feed.xml">
-    
-    <!-- Umami Analytics -->
+    <script src="{{theme_script}}"></script>
     <script defer src="https://cloud.umami.is/script.js" data-website-id="{{umami_website_id}}"></script>
-    
-    <!-- Theme initialization script (runs immediately to prevent flash) -->
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
+    <script type="module" src="{{presence_script}}"></script>
 </head>
 <body>
-<!-- Dark mode toggle button -->
-<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-    <span id="theme-icon">🌙</span>
-</button>
-
+<a class="skip-link" href="#content">Skip to content</a>
 <div class="layout">
+    <!-- Representative IndieWeb h-card. Keep the canonical identity URL. -->
+    <header class="site-header h-card">
+        <div class="brand-row">
+            <a class="site-name p-name u-url u-uid" href="{{hostname}}/">{{bio.name}}</a>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+                <span id="theme-icon" aria-hidden="true">🌙</span>
+            </button>
+        </div>
+        <nav class="main-nav" aria-label="Main navigation">{{nav}}</nav>
+        <p class="p-note">{{bio.bio}}</p>
+        <div class="social-links">
+            <a href="{{bio.social.x.url}}" class="social-link" target="_blank" rel="noopener noreferrer"><img src="{{bio.social.x.icon}}" alt="X" class="social-icon" width="24" height="24"></a>
+            <a href="{{bio.social.linkedin.url}}" class="social-link" target="_blank" rel="noopener noreferrer"><img src="{{bio.social.linkedin.icon}}" alt="LinkedIn" class="social-icon" width="24" height="24"></a>
+            <a href="{{bio.social.github.url}}" class="social-link" target="_blank" rel="me noopener noreferrer"><img src="{{bio.social.github.icon}}" alt="GitHub" class="social-icon" width="24" height="24"></a>
+            <a href="{{bio.social.rss.url}}" class="social-link"><img src="{{bio.social.rss.icon}}" alt="RSS" class="social-icon" width="24" height="24"></a>
+        </div>
+    </header>
     <div class="main-content">
-        <h1><a href="/">{{site_name}}</a></h1>
-        <main>
+        <main id="content" tabindex="-1">
             {{main_heading}}
             {{content}}
         </main>
-        <footer>©️ {{year}} {{site_name}}</footer>
-
-        <!-- IndieWeb Webring navigation (🕸️💍.ws / xn--sr8hvo.ws).
-             The previous/next endpoints identify this site via the HTTP Referer,
-             so these links must NOT carry rel="noreferrer" or navigation breaks. -->
-        <nav class="webring" aria-label="IndieWeb Webring">
-            <a href="https://xn--sr8hvo.ws/previous" title="Previous site in the ring">←</a>
-            An <a href="https://xn--sr8hvo.ws">IndieWeb Webring</a> 🕸️💍
-            <a href="https://xn--sr8hvo.ws/next" title="Next site in the ring">→</a>
-        </nav>
-
-        <!-- TownSquare presence widget -->
-        <!-- Load the third-party stylesheet non-render-blocking so it never delays
-             the rest of the page (e.g. the bio box that follows it in the DOM).
-             media="print" makes it inapplicable to screen until it has loaded,
-             then onload flips it to all. -->
-        <link rel="stylesheet" href="https://townsquare.cauenapier.com/widget.css" media="print" onload="this.media='all'">
-        <div id="townsquare-root"></div>
-        <script type="module">
-          import { mountTownSquare } from "https://townsquare.cauenapier.com/townsquare.mjs";
-
-          mountTownSquare(document.getElementById("townsquare-root"), {
-            serverOrigin: "https://townsquare.cauenapier.com",
-            siteKey: "site_5uzYK6UdzyWi8nd0",
-            scene: {"benches":2,"benchXs":[0.2,0.72],"trees":1,"treeXs":[0.8],"lamps":1,"lampXs":[0.12],"birds":3},
-            theme: "host"
-          });
-        </script>
+        <footer>
+            <p>© {{year}} {{site_name}}</p>
+            <!-- The ring identifies this site by Referer. Do not add noreferrer. -->
+            <nav class="webring" aria-label="IndieWeb Webring">
+                <a href="https://xn--sr8hvo.ws/previous" aria-label="Previous site in the ring">←</a>
+                An <a href="https://xn--sr8hvo.ws">IndieWeb Webring</a> 🕸️💍
+                <a href="https://xn--sr8hvo.ws/next" aria-label="Next site in the ring">→</a>
+            </nav>
+            <div id="townsquare-root"></div>
+            <button id="townsquare-retry" type="button" hidden>Load community widget</button>
+        </footer>
     </div>
-    <!-- Representative h-card (microformats2) so the IndieWeb Webring directory
-         can read the name (p-name) and note (p-note).
-         u-url + u-uid both point to the homepage, which makes
-         this the representative h-card when the ring fetches https://emilesilvis.com/. -->
-    <aside class="bio-section h-card">
-        <a class="p-name u-url u-uid" href="{{hostname}}/">{{bio.name}}</a>
-        <p class="p-note">{{bio.bio}}</p>
-        <div class="social-links">
-            <a href="{{bio.social.x.url}}" class="social-link" target="_blank" rel="noopener noreferrer">
-                <img src="{{bio.social.x.icon}}" alt="X" class="social-icon">
-            </a>
-            <a href="{{bio.social.linkedin.url}}" class="social-link" target="_blank" rel="noopener noreferrer">
-                <img src="{{bio.social.linkedin.icon}}" alt="LinkedIn" class="social-icon">
-            </a>
-            <a href="{{bio.social.github.url}}" class="social-link" target="_blank" rel="me noopener noreferrer">
-                <img src="{{bio.social.github.icon}}" alt="GitHub" class="social-icon">
-            </a>
-            <a href="{{bio.social.rss.url}}" class="social-link" rel="noopener noreferrer">
-                <img src="{{bio.social.rss.icon}}" alt="RSS" class="social-icon">
-            </a>
-        </div>
-        <hr>
-        <nav class="main-nav">
-            {{nav}}
-        </nav>
-    </aside>
 </div>
-
-<!-- Dark mode toggle functionality -->
-<script>
-    (function() {
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        
-        function updateThemeIcon(theme) {
-            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-
-        // Keep the TownSquare widget's theme in sync with the site toggle
-        function syncTownSquareTheme(theme) {
-            const root = document.getElementById('townsquare-root');
-            if (root) root.setAttribute('data-townsquare-theme', theme === 'dark' ? 'dark' : 'light');
-        }
-
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            updateThemeIcon(theme);
-            syncTownSquareTheme(theme);
-        }
-
-        // Initialize icon based on current theme
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        updateThemeIcon(currentTheme);
-        syncTownSquareTheme(currentTheme);
-        
-        // Toggle theme on button click
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        });
-        
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-            if (!localStorage.getItem('theme')) {
-                setTheme(e.matches ? 'dark' : 'light');
-            }
-        });
-    })();
-</script>
 </body>
 </html>

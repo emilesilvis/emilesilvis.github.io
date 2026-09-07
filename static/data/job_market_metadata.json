@@ -1,0 +1,28 @@
+{
+  "data_file": "job_market_data.json",
+  "employment_source": "https://ec.europa.eu/eurostat/databrowser/view/LFSA_EGAI2D",
+  "generator_repository": "https://github.com/emilesilvis/eu-jobs",
+  "employment_unit": "thousands of people",
+  "regions": {
+    "eu": "EU27_2020",
+    "nl": "NL"
+  },
+  "classification": "ISCO-08, two-digit occupations",
+  "reference_year": null,
+  "generated_at": null,
+  "scoring_model_snapshot": null,
+  "generator_defaults": {
+    "reference_year": 2023,
+    "model": "gpt-4o",
+    "temperature": 0.3
+  },
+  "provenance_note": "The bundled export did not retain a reference year, generation timestamp, or exact model snapshot. Generator defaults are documented for context and do not confirm those values for this export.",
+  "exposure_scale": {
+    "minimum": 0,
+    "maximum": 10
+  },
+  "interpretation": "LLM estimates of occupational exposure, not measured effects or forecasts of job loss.",
+  "generator_reference_commit": "49b3d3ef20a940a4178a65cffd20b77e3b241a72",
+  "generator_reference_inspected_at": "2026-09-07",
+  "generator_reference_note": "This is the generator revision inspected while documenting provenance, not a confirmed source revision for the bundled export."
+}

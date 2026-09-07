@@ -5,14 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="version" content="1.1.0">
 <title>How to Design a Zachlike</title>
-<script>
-(function () {
-  const theme = localStorage.getItem('theme') ||
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', theme);
-})();
-</script>
-<link rel="stylesheet" href="https://emilesilvis.com/static/css/style.css">
+
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="/static/js/theme.js"></script>
 <style>
 /*
  * Guide-specific layout and components.
@@ -306,7 +301,7 @@ table.reg tr:target td:first-child {
 <div class="wrap">
 
 <nav class="guide-nav" aria-label="Contents">
-<details class="toc" open>
+<details class="toc">
 <summary>Contents</summary>
 <div class="toclinks">
   <div class="navhead">Start</div>
@@ -331,7 +326,8 @@ table.reg tr:target td:first-child {
 </details>
 </nav>
 
-<main id="content">
+<main id="content" tabindex="-1">
+<a href="/projects.html">← Projects</a>
 <p class="eyebrow">A guide to open-ended engineering puzzles</p>
 <h1 id="front">How to design a Zachlike</h1>
 <p class="lede">A Zachlike asks you to build an executable artifact, prove it against an exact behavioural specification, then find out how much better you can make it.</p>
@@ -346,7 +342,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </div>
 <p><strong>Domain</strong> supplies the process, verbs, and natural constraints. <strong>Mechanics</strong> define the operations you can use. <strong>Systems</strong> are what those rules do together. <strong>Puzzles</strong> select and pressure the resulting possibility space.</p>
 <p>Read the first four chapters in order because each gives the next its raw material. The arrows show where design decisions come from, not a one-way production schedule. Once you start prototyping, the chain becomes a loop. Evidence from one puzzle can force you back into the system, the mechanic set, or even the domain.</p>
-<h3>Around the core</h3>
+<h2>Around the core</h2>
 <p>Four more concerns turn a sound puzzle system into a complete game:</p>
 <ul>
 <li><strong>Presentation</strong> makes rules, state, causality, failure, and cost inspectable and makes revision cheap.</li>
@@ -355,7 +351,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <li><strong>Story</strong> gives the work a purpose and helps choose which artifacts and briefs belong.</li>
 </ul>
 <p>These concerns do not wait politely until the core is finished. They surround it, reveal it, and change it. Bring them into the prototype early enough to see those changes. The final chapter closes the loop by turning the whole structure into a prototyping and playtesting practice.</p>
-<h3>What remains outside the scope</h3>
+<h2>What remains outside the scope</h2>
 <p>This guide stays on the player-facing side of the game. It does not prescribe engine architecture, art direction, audio production, platform strategy, budgets, publishing, or marketing. It asks what the system must make possible, not how you should implement it.</p>
 <p>The <a href="#reg-m">design-element catalog</a> is vocabulary, not a specification. Do not mistake its size for a shopping list. A coherent game is defined as much by what it leaves out as by what it includes.</p>
 
@@ -372,7 +368,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <li><strong>It contains pressure.</strong> Capacity, timing, reach, scarcity, or irreversibility can force decisions.</li>
 </ul>
 <p>Four shipped Zachlikes show the pattern:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 1"><table>
 <thead>
 <tr>
 <th>Game and process</th>
@@ -406,7 +402,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Notice how aggressively these games simplify their domains. Each one keeps the part that protects the work fantasy and the decisions it needs. Before you depend on a metaphor, observe or research the real process behind it.</p>
 <h3>Test its yield and cost</h3>
 <p>Before you commit, walk the domain through six questions:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 2"><table>
 <thead>
 <tr>
 <th>Question</th>
@@ -453,7 +449,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Start with as few rules as the system needs. A new exception isn't depth. If the documentation grows faster than the possibility space, take that as a warning.</p>
 <h3>Build a construction language</h3>
 <p>You are designing a language for making systems, not a bag of themed parts. Before you expand the palette, define three things:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 3"><table>
 <thead>
 <tr>
 <th>Layer</th>
@@ -483,7 +479,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Now step back and ask what mental model this language makes the player learn. A conventional programming or construction model with new nouns may still be useful, but it gives up one of the form's strongest pleasures: discovering a genuinely different way to organize work. Originality isn't an excuse for obscurity. Whatever language you invent still has to survive the tests below.</p>
 <h3>Test every mechanic</h3>
 <p>The test I keep coming back to is not “does this mechanic sound interesting?” It is “does this mechanic deepen the whole system?”</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 4"><table>
 <thead>
 <tr>
 <th>Criterion</th>
@@ -517,7 +513,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Cut it too when explaining the rule takes more work than exploring it, or when it needs an incoherent exception to the <a href="#systems">core system</a>.</p>
 <h3>Choose a central pressure</h3>
 <p>What is the player short of? One or two scarce things can organize an otherwise loose collection of rules.</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 5"><table>
 <thead>
 <tr>
 <th>Pressure</th>
@@ -560,7 +556,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <p>If the honest answer is “nothing in particular,” pause. Construction may have become work without a decision.</p>
 <p>Keep four related terms distinct:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 6"><table>
 <thead>
 <tr>
 <th>Term</th>
@@ -614,7 +610,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <h3>Design interactions, not inventories</h3>
 <p>Take every pair of core mechanics and ask whether one changes the value, cost, timing, or failure modes of the other. Being connected isn't enough. An arm can load a belt, but if the belt treats every item alike, <em>arm × belt</em> has created no new decision.</p>
 <p>Put the mechanics on both axes of a matrix, with one cell for every unordered pair. For <em>n</em> mechanics, that gives you <em>n(n−1)/2</em> cells. Four mechanics produce six; seven produce twenty-one. Answer three questions in every cell:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 7"><table>
 <thead>
 <tr>
 <th>Pair</th>
@@ -645,7 +641,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Now decide which facts any presentation must expose. Objects, values, and control need traceable paths. Transformations need inspectable inputs, conditions, and outputs. The player has to see both the architecture and the schedule, even when distance or layout is doing the work of time.</p>
 <p>What is the earliest meaningful divergence the simulator can report? Define that too. A collision, wrong value, missed deadline, overflow, or illegal state should preserve the failing moment and the causal state around it. <a href="#presentation">§5</a> turns this requirement into debugging tools.</p>
 <p>Turn important limits into visible properties:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 8"><table>
 <thead>
 <tr>
 <th>Constraint</th>
@@ -676,7 +672,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </tbody>
 </table></div>
 <p>Local rules can create global complexity and still remain locally predictable. Seven mechanisms do most of that work:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 9"><table>
 <thead>
 <tr>
 <th>Mechanism</th>
@@ -758,7 +754,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Let the obvious, clumsy solution pass. Don't require an optimized score to continue unless satisfying that bound is the puzzle itself. This is the trick: lower the floor without flattening the ceiling.</p>
 <h3>Pressure one facet</h3>
 <p>Before you build the puzzle, name its bottleneck: routing, synchronization, storage, geometry, state, collision, transformation order, or topology. This bottleneck selects one facet of the central pressure from <a href="#mechanics">§2</a>. If the game's scarce thing is flow, for example, routing and storage should matter before geometry. The board and palette then decide how directly the player has to confront it.</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 10"><table>
 <thead>
 <tr>
 <th>Board</th>
@@ -808,7 +804,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Don't postpone this as polish. An illegible prototype can't tell you whether a playtest exposed a system problem or merely hid a sound rule.</p>
 <h3>Make causality visible</h3>
 <p>Pause the machine, then run it. In both states, the game should answer six questions:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 11"><table>
 <thead>
 <tr>
 <th>Question</th>
@@ -887,7 +883,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Use counterexamples to correct the false rules players are likely to invent. If you can choose between a clearer representation, a simpler rule, and another paragraph of instructions, choose one of the first two.</p>
 <h3>Alternate novelty and reinforcement</h3>
 <p>Give every puzzle a job in the curriculum:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 12"><table>
 <thead>
 <tr>
 <th>Role</th>
@@ -989,7 +985,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <h2 id="practice">9 · Prototype, test, and revise</h2>
 <p>Now the guide has to survive contact with a game. Don't begin with a full campaign. Build the smallest version that can prove the system, the editor, the curriculum, and the post-solve loop actually belong together.</p>
 <h3>Make a six-puzzle vertical slice</h3>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 13"><table>
 <thead>
 <tr>
 <th>Puzzle</th>
@@ -1026,7 +1022,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>Build the actual runner and debugging controls. Add a representative test harness, at least two conflicting score axes, provisional histograms, named solution variants, and one real export format. All of these features change how you author puzzles. Postpone them and you are testing a different game.</p>
 <h3>Write the one-page definition</h3>
 <p>Before you expand the campaign, record the decisions every later puzzle will depend on:</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 14"><table>
 <thead>
 <tr>
 <th>Field</th>
@@ -1078,7 +1074,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <p>Treat this page as a decision record, not a prophecy. When a prototype or player disproves it, change the record and revisit every puzzle that depends on the old decision.</p>
 <h3>Use three evidence streams</h3>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 15"><table>
 <thead>
 <tr>
 <th>Evidence</th>
@@ -1104,7 +1100,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 <p>For telemetry, record only what you can use, and collect it with consent and privacy safeguards. Useful events include puzzle starts and completions, time to first run and first correct run, resets, exits, returns after solving, score improvements after seeing a distribution, exports, and a short post-solve difficulty rating.</p>
 <p>Metrics show you where a problem is. Observation and interviews tell you why. You need both.</p>
 <h3>Diagnose the layer that failed</h3>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 16"><table>
 <thead>
 <tr>
 <th>Symptom</th>
@@ -1176,9 +1172,9 @@ Practice · Prototype → Evidence → Revision ↺</p>
 
 <hr>
 <p class="eyebrow">References</p>
-<h1 id="registers">Go deeper</h1>
+<h2 id="registers">Go deeper</h2>
 <p class="lede">The design-element catalog, a play list, and the original sources behind the guide.</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 17"><table>
 <thead>
 <tr>
 <th>Reference</th>
@@ -1219,7 +1215,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </div>
 <h3 id="mfam-a">A · Specification &amp; verification <span class="regcount">M001–M010</span></h3>
 <p class="note">Can the player infer a fair spec and test against it? M103 and M113 belong here by subject; they sit in G and H by number.</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 18"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m001"><td class="mname"><strong>M001</strong><br>Specification-driven I/O target</td><td>A level defines valid input-output behavior rather than a prescribed construction.</td><td>Infer the transformation and build any system that satisfies it.</td><td>Exact semantics; hidden or generated cases may apply</td><td>Correctness; robustness; simplicity</td><td>Low</td><td>SpaceChem, TIS-100, SHENZHEN I/O, EXAPUNKS, Manufactoria, HRM</td><td class="mono"><a href="#m002">M002</a>, <a href="#m003">M003</a>, <a href="#m008">M008</a>, <a href="#m105">M105</a></td></tr>
 <tr id="m002"><td class="mname"><strong>M002</strong><br>Multiple or adversarial test cases</td><td>A solution is replayed against varied inputs to prevent hard-coded answers.</td><td>Generalize logic and test edge cases.</td><td>Unknown future cases; one failure invalidates the program</td><td>Robustness; cycles across worst case; code size</td><td>Medium</td><td>TIS-100, SHENZHEN I/O, EXAPUNKS, Manufactoria, HRM</td><td class="mono"><a href="#m001">M001</a>, <a href="#m009">M009</a>, <a href="#m113">M113</a>, <a href="#m126">M126</a></td></tr>
@@ -1233,7 +1229,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-b">B · Flow &amp; capacity networks <span class="regcount">M011–M029</span></h3>
 <p class="note">How do topology, capacity, and timing make movement a design problem?</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 19"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m011"><td class="mname"><strong>M011</strong><br>Directed channel transport</td><td>Discrete entities move automatically along player-defined directed channels.</td><td>Place and orient channels between sources, processors, buffers, and sinks.</td><td>Direction, speed, occupancy, corners</td><td>Length; throughput; area; crossings</td><td>Medium</td><td>Factorio, shapez, Satisfactory, Infinifactory, Mindustry</td><td class="mono"><a href="#m013">M013</a>, <a href="#m017">M017</a></td></tr>
 <tr id="m013"><td class="mname"><strong>M013</strong><br>Split, merge, and balance flows</td><td>Junctions divide or combine streams, often with ratios or priority.</td><td>Place splitters, mergers, balancers, or junction logic.</td><td>Finite throughput; fairness or priority semantics</td><td>Balance; throughput; footprint</td><td>High</td><td>Factorio, shapez, Satisfactory</td><td class="mono"><a href="#m018">M018</a></td></tr>
@@ -1247,7 +1243,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-c">C · Transformation grammars <span class="regcount">M030–M044</span></h3>
 <p class="note">Can a small vocabulary of operations compose into several routes from input to output?</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 20"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m030"><td class="mname"><strong>M030</strong><br>Multi-input transformation process</td><td>A process consumes a defined combination of inputs over time and produces one or more outputs.</td><td>Select transformation rules and supply inputs at compatible rates.</td><td>Transformation rule stoichiometry, craft time, system compatibility</td><td>Components; time; energy; yield</td><td>High</td><td>Factorio, Satisfactory, Mindustry, shapez</td><td class="mono"><a href="#m018">M018</a>, <a href="#m118">M118</a></td></tr>
 <tr id="m031"><td class="mname"><strong>M031</strong><br>Cutting or partitioning</td><td>An object is divided into pieces or quadrants that retain identity or position.</td><td>Orient the object and route desired fragments.</td><td>Cut axis; fragment order; waste behavior</td><td>Cutter count; waste; throughput</td><td>Low</td><td>shapez, Infinifactory</td><td class="mono"><a href="#m032">M032</a>, <a href="#m033">M033</a>, <a href="#m039">M039</a></td></tr>
@@ -1262,7 +1258,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-d">D · Spatial construction <span class="regcount">M045–M060</span></h3>
 <p class="note">Does geometry create real access, routing, and timing decisions?</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 21"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m045"><td class="mname"><strong>M045</strong><br>Structural support and stability</td><td>Assemblies may fall, collapse, detach, or depend on support topology.</td><td>Sequence construction and add supports or exploit gravity.</td><td>Gravity, connection strength, platform rules</td><td>Support count; mass; stability margin</td><td>High</td><td>Poly Bridge, Besiege, The Incredible Machine, Infinifactory</td><td class="mono"><a href="#m033">M033</a>, <a href="#m035">M035</a></td></tr>
 <tr id="m046"><td class="mname"><strong>M046</strong><br>Discrete grid placement</td><td>Components snap to cells, making topology and distance countable.</td><td>Place, rotate, and connect pieces on a grid.</td><td>One component per cell; adjacency rules</td><td>Area; path length; symmetry</td><td>Low</td><td>SpaceChem, Opus Magnum, Factorio, shapez, TIS-100 (near-universal)</td><td class="mono"><a href="#m006">M006</a>, <a href="#m047">M047</a>, <a href="#m108">M108</a>, <a href="#m127">M127</a></td></tr>
@@ -1276,7 +1272,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-e">E · Time &amp; concurrency <span class="regcount">M061–M073</span></h3>
 <p class="note">Can the player understand how local schedules produce global behaviour?</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 22"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m061"><td class="mname"><strong>M061</strong><br>Global discrete ticks</td><td>All active components advance in synchronized time steps.</td><td>Align actions across devices and reason cycle by cycle.</td><td>Simultaneous update semantics</td><td>Cycles; latency; idle time</td><td>Medium</td><td>SpaceChem, TIS-100, Opus Magnum, Manufactoria, HRM (and every Zachtronics title)</td><td class="mono"><a href="#m063">M063</a>, <a href="#m064">M064</a>, <a href="#m066">M066</a>, <a href="#m072">M072</a></td></tr>
 <tr id="m062"><td class="mname"><strong>M062</strong><br>Per-device timelines</td><td>Each system or manipulator receives a sequenced row of commands aligned to time.</td><td>Place commands on timelines and synchronize rows.</td><td>One command per slot; repeating program; collision</td><td>Cycles; command count; parallelism</td><td>Medium</td><td>Opus Magnum, MOLEK-SYNTEZ</td><td class="mono"><a href="#m049">M049</a>, <a href="#m061">M061</a>, <a href="#m063">M063</a>, <a href="#m066">M066</a></td></tr>
@@ -1294,7 +1290,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-f">F · Programming &amp; information <span class="regcount">M074–M093</span></h3>
 <p class="note">How much behaviour can the player express with a deliberately poor language?</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 23"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m074"><td class="mname"><strong>M074</strong><br>Minimal instruction vocabulary</td><td>Programs use a compact set of moves, arithmetic, jumps, and I/O operations.</td><td>Write or drag instructions and manage low-level state.</td><td>Few instructions; explicit state; no high-level data structures</td><td>Instruction count; cycles; nodes</td><td>Low</td><td>TIS-100, SHENZHEN I/O, EXAPUNKS, HRM, 7 Billion Humans</td><td class="mono"><a href="#m076">M076</a>, <a href="#m085">M085</a>, <a href="#m086">M086</a>, <a href="#m109">M109</a></td></tr>
 <tr id="m075"><td class="mname"><strong>M075</strong><br>Spatially encoded control flow</td><td>An execution token moves through placed commands, so geometry encodes control flow.</td><td>Lay command paths, loops, branches, and crossings.</td><td>Grid space; path continuity; simultaneous tokens</td><td>Area; path length; cycles</td><td>High</td><td>SpaceChem, Manufactoria, Opus Magnum</td><td class="mono"><a href="#m011">M011</a>, <a href="#m046">M046</a>, <a href="#m063">M063</a>, <a href="#m088">M088</a></td></tr>
@@ -1318,7 +1314,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-g">G · Rule manipulation &amp; deduction <span class="regcount">M094–M104</span></h3>
 <p class="note">Is the player manipulating objects, or the rules themselves? This can be powerful, but it attacks the stable core the player relies on. Make it foundational or leave it out.</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 24"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m094"><td class="mname"><strong>M094</strong><br>Movable rule tokens</td><td>Rule tokens are spatial objects that can be moved to alter active rules.</td><td>Rearrange rule tokens while navigating the same space.</td><td>Rule tokens may be movable; grammar must remain valid</td><td>Moves; rule count; accessibility</td><td>High</td><td>Baba Is You</td><td class="mono"><a href="#m095">M095</a>, <a href="#m097">M097</a>, <a href="#m101">M101</a>, <a href="#m104">M104</a></td></tr>
 <tr id="m095"><td class="mname"><strong>M095</strong><br>Grammar-driven rule activation</td><td>Only grammatically valid arrangements of rule tokens become active rules.</td><td>Construct or break clauses using entity, relation, property, connector, and condition tokens.</td><td>Grammar, reading direction, connectors, overlap</td><td>Moves; clauses; rule economy</td><td>High</td><td>Baba Is You</td><td class="mono"><a href="#m094">M094</a>, <a href="#m096">M096</a>, <a href="#m100">M100</a>, <a href="#m101">M101</a></td></tr>
@@ -1334,7 +1330,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-h">H · Optimization &amp; architecture <span class="regcount">M105–M117</span></h3>
 <p class="note">Do different priorities produce visibly different machines?</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 25"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m105"><td class="mname"><strong>M105</strong><br>Multi-objective benchmark distributions</td><td>Solutions are plotted against community or benchmark distributions on several axes.</td><td>Compare, redesign, and choose which metric to optimize.</td><td>Metrics often conflict; no single total score</td><td>Cost; cycles; area; instructions; power</td><td>Low</td><td>Opus Magnum, TIS-100, SHENZHEN I/O, SpaceChem, EXAPUNKS</td><td class="mono"><a href="#m106">M106</a>, <a href="#m107">M107</a>, <a href="#m108">M108</a>, <a href="#m114">M114</a></td></tr>
 <tr id="m106"><td class="mname"><strong>M106</strong><br>Speed, latency, or cycle minimization</td><td>Players reduce time from input to completion or increase rate.</td><td>Parallelize work, shorten paths, remove waits, pipeline stages.</td><td>Correctness must remain; resource budget may increase</td><td>Cycles; latency; rate</td><td>Low</td><td>Opus Magnum, SpaceChem, TIS-100</td><td class="mono"><a href="#m061">M061</a>, <a href="#m064">M064</a>, <a href="#m113">M113</a></td></tr>
@@ -1348,7 +1344,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 </table></div>
 <h3 id="mfam-i">I · Progression, pressure &amp; meta <span class="regcount">M118–M135</span></h3>
 <p class="note">Does this deepen construction, or compete with it? These rows pace, frame, and contextualize construction rather than extend it. Several sit at the presentation boundary the guide draws up front, so include them deliberately.</p>
-<div class="tw"><table class="reg">
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 26"><table class="reg">
 <tr><th>Element</th><th>Description</th><th>Player action</th><th>Constraints</th><th>Optimization axes</th><th>Emerg. (editorial)</th><th>Examples to inspect</th><th>Combines with</th></tr>
 <tr id="m118"><td class="mname"><strong>M118</strong><br>Capability unlock graph</td><td>New components, operations, interfaces, or scale layers unlock through milestones.</td><td>Meet prerequisites, choose unlock paths, and integrate new capabilities.</td><td>Prerequisites, research cost, branch choices</td><td>Unlock order; research throughput; opportunity cost</td><td>Low</td><td>Factorio, Satisfactory, Mindustry</td><td class="mono"><a href="#m030">M030</a>, <a href="#m119">M119</a></td></tr>
 <tr id="m119"><td class="mname"><strong>M119</strong><br>Mechanic-isolating curriculum</td><td>Levels introduce one concept, then combine it with earlier mechanics.</td><td>Solve scaffolded tasks of increasing composition depth.</td><td>Ordered progression; gated content</td><td>Learning efficiency; hint use</td><td>Low</td><td>SpaceChem, HRM, Baba Is You, Manufactoria (and every Zachtronics title)</td><td class="mono"><a href="#m007">M007</a>, <a href="#m102">M102</a>, <a href="#m117">M117</a>, <a href="#m120">M120</a></td></tr>
@@ -1418,7 +1414,7 @@ Practice · Prototype → Evidence → Revision ↺</p>
 
 <h2 id="reg-src">C · Sources</h2>
 <p>This guide makes a design argument. It isn't a literature review. These primary sources let you inspect how shipped puzzle systems were designed and discussed, but none of them establishes a universal recipe.</p>
-<div class="tw"><table>
+<div class="tw" tabindex="0" role="region" aria-label="Reference table 27"><table>
 <thead>
 <tr>
 <th>Source</th>
@@ -1500,25 +1496,6 @@ Practice · Prototype → Evidence → Revision ↺</p>
 
 </main>
 </div>
-<script>
-(function () {
-  const toggle = document.getElementById('theme-toggle');
-  const icon = document.getElementById('theme-icon');
 
-  function applyTheme(theme, persist) {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (persist) localStorage.setItem('theme', theme);
-    icon.textContent = theme === 'dark' ? '☀️' : '🌙';
-  }
-
-  applyTheme(document.documentElement.getAttribute('data-theme'), false);
-  toggle.addEventListener('click', function () {
-    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
-  });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
-    if (!localStorage.getItem('theme')) applyTheme(event.matches ? 'dark' : 'light', false);
-  });
-})();
-</script>
 </body>
 </html>

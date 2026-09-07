@@ -6,7 +6,8 @@ import os
 from pathlib import Path
 import sys
 
-from build import POSTS, read_post
+from build import POSTS, build_values, render
+from content import read_document
 from pangram_badge import (
     DEFAULT_MODEL,
     DEFAULT_RESULTS_PATH,
@@ -35,9 +36,10 @@ def main(argv=None):
         # Validate every input before starting any chargeable work.
         inputs = []
         seen = set()
+        values = build_values()
         for post in posts:
-            _, rendered, _ = read_post(post)
-            prose = prose_from_html(rendered)
+            document = read_document(post, values=values)
+            prose = prose_from_html(render(document.body))
             if prose not in seen:
                 inputs.append((post, prose))
                 seen.add(prose)

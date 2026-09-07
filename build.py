@@ -1,319 +1,361 @@
 #!/usr/bin/env python3
-from config import SITE_NAME, BIO, HOSTNAME, UMAMI, NAVIGATION
-from pathlib import Path
-from datetime import datetime
-import shutil, re, html, hashlib
-import markdown  # only external dependency
-from pangram_badge import (
-    PangramBadgeService,
-    human_badge,
-    ineligible_reason,
-    prose_from_html,
-)
+"""Build the site offline from authored content and saved analysis results."""
 
+from collections import defaultdict
+from datetime import datetime, timezone
+from html import escape, unescape
+from html.parser import HTMLParser
+import hashlib
+import json
+from pathlib import Path
+import re
+import shutil
+from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
+import xml.etree.ElementTree as ET
+
+import markdown
+
+from assets import Images
+from config import SITE_NAME, BIO, HOSTNAME, UMAMI, NAVIGATION
+from content import Document, read_document
+from pangram_badge import PangramBadgeService, human_badge, ineligible_reason, prose_from_html
 
 ROOT = Path(__file__).parent
-POSTS = ROOT / "posts"
-PAGES = ROOT / "pages"
-OUT = ROOT / "out"
-TEMPL = (ROOT / "static" / "templates" / "template.html").read_text(encoding="utf-8")
-
-# cache-bust the stylesheet: append a content hash so browsers pick up CSS changes
-_css_hash = hashlib.md5((ROOT / "static" / "css" / "style.css").read_bytes()).hexdigest()[:8]
-TEMPL = TEMPL.replace('/static/css/style.css', f'/static/css/style.css?v={_css_hash}')
-def _nav_href(path):
-    path = path.strip("/")
-    return "/" if not path else f"/{path}.html"
-
-NAV_HTML = "<ul>" + "".join(
-    f'<li><a href="{_nav_href(n["path"])}">{n["title"]}</a></li>'
-    for n in NAVIGATION
-) + "</ul>" if NAVIGATION else ""
+POSTS = ROOT / 'posts'
+PAGES = ROOT / 'pages'
+OUT = ROOT / 'out'
+VOID_TAGS = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
 
-def process_external_links(html_content):
-    """Add target="_blank" and rel="noopener noreferrer" to external links"""
-    # Pattern to match <a href="..."> tags
-    link_pattern = r'<a\s+href="([^"]+)"([^>]*)>'
-    
-    def replace_link(match):
-        href = match.group(1)
-        other_attrs = match.group(2)
-        
-        # Check if it's an external link (starts with http:// or https://)
-        if href.startswith(('http://', 'https://')):
-            # Add target="_blank" and rel="noopener noreferrer" if not already present
-            if 'target="_blank"' not in other_attrs:
-                other_attrs += ' target="_blank"'
-            if 'rel="noopener noreferrer"' not in other_attrs:
-                other_attrs += ' rel="noopener noreferrer"'
-        
-        return f'<a href="{href}"{other_attrs}>'
-    
-    return re.sub(link_pattern, replace_link, html_content)
+def asset_url(path):
+    digest = hashlib.sha256((ROOT / path.lstrip('/')).read_bytes()).hexdigest()[:12]
+    return f'{path}?v={digest}'
 
 
-def render(markdown_text):
-    """convert md → html using python-markdown"""
-    html_content = markdown.markdown(
-        markdown_text,
-        extensions=[
-            "fenced_code",
-            "codehilite",
-            "tables",
-        ],
-        extension_configs={
-            "codehilite": {
-                "css_class": "codehilite",
-                "use_pygments": True,
-                "noclasses": False,
-            }
-        }
+def version_local_assets(html, page_path, sources):
+    """Update app asset versions too, so imported cache keys cannot go stale."""
+    def replace(match):
+        original = unescape(match[2])
+        url = urlsplit(urljoin(HOSTNAME + '/' + page_path, original))
+        source = sources.get(url.path.lstrip('/'))
+        if url.netloc != urlsplit(HOSTNAME).netloc or not source or source.suffix not in ('.css', '.js', '.mjs'):
+            return match[0]
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()[:12]
+        parts = urlsplit(original)
+        query = [(key, value) for key, value in parse_qsl(parts.query) if key != 'v'] + [('v', digest)]
+        versioned = urlunsplit(parts._replace(query=urlencode(query)))
+        return f'{match[1]}="{escape(versioned, quote=True)}"'
+    return re.sub(r'\b(src|href)="([^"]+)"', replace, html)
+
+
+def build_values():
+    occupations = json.loads((ROOT / 'static/data/job_market_data.json').read_text())
+    total = sum(row['eu'] for row in occupations)
+    average = sum(row['eu'] * row['exposure'] for row in occupations) / total
+    return {'eu_average_exposure': f'{average:.1f}'}
+
+
+class ContentHTML(HTMLParser):
+    """Enhance Markdown output without rewriting its text or code samples."""
+
+    def __init__(self, images=None):
+        super().__init__(convert_charrefs=False)
+        self.images = images
+        self.parts = []
+        self.image_count = 0
+        self.table_count = 0
+        self.code_count = 0
+        self.anchor_depth = 0
+
+    def handle_starttag(self, tag, pairs):
+        attrs = dict(pairs)
+        original_image = None
+        if tag == 'a':
+            self.anchor_depth += 1
+            url = urlsplit(attrs.get('href', ''))
+            if url.scheme in ('http', 'https') and url.netloc != urlsplit(HOSTNAME).netloc:
+                attrs.setdefault('target', '_blank')
+                attrs['rel'] = ' '.join(sorted(set(attrs.get('rel', '').split()) | {'noopener', 'noreferrer'}))
+        if tag == 'img':
+            self.image_count += 1
+            original_source = attrs.get('src', '')
+            if self.images:
+                attrs.update(self.images.attributes(original_source))
+                if 'srcset' in attrs and not self.anchor_depth:
+                    original_image = original_source
+            attrs.setdefault('loading', 'eager' if self.image_count == 1 else 'lazy')
+            attrs.setdefault('decoding', 'async')
+        if tag == 'video':
+            attrs.setdefault('preload', 'metadata')
+        if tag == 'pre':
+            self.code_count += 1
+            attrs.update({'tabindex': '0', 'role': 'region', 'aria-label': f'Code sample {self.code_count}'})
+        if tag == 'table':
+            self.table_count += 1
+            self.parts.append(f'<div class="table-scroll" tabindex="0" role="region" aria-label="Table {self.table_count}">')
+        if tag == 'th':
+            attrs.setdefault('scope', 'col')
+        rendered = ''.join(f' {key}' if value is None else f' {key}="{escape(value, quote=True)}"' for key, value in attrs.items())
+        if original_image:
+            label = escape('View full-size image: ' + attrs.get('alt', 'Image'), quote=True)
+            self.parts.append(f'<a class="image-original" href="{escape(original_image, quote=True)}" aria-label="{label}" title="View full-size image">')
+        self.parts.append(f'<{tag}{rendered}>')
+        if original_image:
+            self.parts.append('</a>')
+
+    def handle_endtag(self, tag):
+        if tag == 'a':
+            self.anchor_depth = max(0, self.anchor_depth - 1)
+        if tag not in VOID_TAGS:
+            self.parts.append(f'</{tag}>')
+        if tag == 'table':
+            self.parts.append('</div>')
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        self.handle_endtag(tag)
+
+    def handle_data(self, data):
+        self.parts.append(data)
+
+    def handle_entityref(self, name):
+        self.parts.append(f'&{name};')
+
+    def handle_charref(self, name):
+        self.parts.append(f'&#{name};')
+
+    def handle_comment(self, data):
+        self.parts.append(f'<!--{data}-->')
+
+
+def render(markdown_text, images=None):
+    body = markdown.markdown(markdown_text, extensions=['fenced_code', 'codehilite', 'tables'])
+    parser = ContentHTML(images)
+    parser.feed(body)
+    parser.close()
+    return ''.join(parser.parts)
+
+
+def page_metadata(title, description, url, image='', page_type='website', noindex=False):
+    canonical = urljoin(HOSTNAME, url)
+    metadata = [
+        f'<meta name="description" content="{escape(description, quote=True)}">',
+        f'<link rel="canonical" href="{escape(canonical, quote=True)}">',
+        f'<meta property="og:type" content="{page_type}">',
+        f'<meta property="og:url" content="{escape(canonical, quote=True)}">',
+        f'<meta property="og:title" content="{escape(title, quote=True)}">',
+        f'<meta property="og:description" content="{escape(description, quote=True)}">',
+        f'<meta name="twitter:card" content="{"summary_large_image" if image else "summary"}">',
+        f'<meta name="twitter:title" content="{escape(title, quote=True)}">',
+        f'<meta name="twitter:description" content="{escape(description, quote=True)}">',
+    ]
+    if image:
+        image = escape(urljoin(HOSTNAME, image), quote=True)
+        metadata += [f'<meta property="og:image" content="{image}">', f'<meta name="twitter:image" content="{image}">']
+    if noindex:
+        metadata.append('<meta name="robots" content="noindex">')
+    return '\n'.join(metadata)
+
+
+def navigation(url):
+    links = []
+    for item in NAVIGATION:
+        path = item['path'].strip('/')
+        href = f'/{path}.html' if path else '/'
+        current = ' aria-current="page"' if href == url else ''
+        links.append(f'<li><a href="{href}"{current}>{escape(item["title"])}</a></li>')
+    return '<ul>' + ''.join(links) + '</ul>'
+
+
+def apply_template(title, body_html, seo_image='', seo_description='', date='', main_heading='', *, url='/', page_type='website', noindex=False):
+    template = (ROOT / 'static/templates/template.html').read_text(encoding='utf-8')
+    values = {
+        'title': escape(title), 'content': body_html, 'main_heading': main_heading,
+        'year': str(datetime.now(timezone.utc).year), 'site_name': escape(SITE_NAME),
+        'hostname': escape(HOSTNAME), 'bio.name': escape(BIO['name']), 'bio.bio': escape(BIO['bio']),
+        'nav': navigation(url), 'umami_website_id': escape(UMAMI['website_id']),
+        'metadata': page_metadata(title, seo_description, url, seo_image, page_type, noindex),
+        'stylesheet': asset_url('/static/css/style.css'), 'theme_script': asset_url('/static/js/theme.js'),
+        'presence_script': asset_url('/static/js/presence.js'),
+    }
+    for name, social in BIO['social'].items():
+        for field, value in social.items():
+            values[f'bio.social.{name}.{field}'] = escape(value, quote=True)
+    # Replace only template tokens, never tokens inside authored code/content.
+    return re.sub(r'{{([\w.]+)}}', lambda match: values[match[1]], template)
+
+
+def series_navigation(document, documents):
+    if not document.series:
+        return ''
+    parts = sorted((doc for doc in documents if doc.series == document.series), key=lambda doc: doc.series_order)
+    links = ''.join(
+        f'<li><a href="{doc.url}"{" aria-current=\"page\"" if doc.url == document.url else ""}>{escape(doc.heading)}</a></li>'
+        for doc in parts
     )
-    
-    # Process external links to add target="_blank"
-    return process_external_links(html_content)
+    return f'<nav class="series-nav" aria-label="Series"><details><summary>{escape(document.series)} · Part {document.series_order} of {len(parts)}</summary><ol>{links}</ol></details></nav>'
 
 
-def apply_template(title, body_html, seo_image="", seo_description="", date="", main_heading=""):
-    seo_image = html.escape(seo_image, quote=True)
-    return (TEMPL.replace("{{title}}", html.escape(title))
-            .replace("{{content}}", body_html)
-            .replace("{{year}}", str(datetime.now().year))
-            .replace("{{site_name}}", SITE_NAME)
-            .replace("{{hostname}}", HOSTNAME)
-            .replace("{{bio.name}}", BIO["name"])
-            .replace("{{bio.bio}}", BIO["bio"])
-            .replace("{{bio.social.x.url}}", BIO["social"]["x"]["url"])
-            .replace("{{bio.social.x.icon}}", BIO["social"]["x"]["icon"])
-            .replace("{{bio.social.linkedin.url}}", BIO["social"]["linkedin"]["url"])
-            .replace("{{bio.social.linkedin.icon}}", BIO["social"]["linkedin"]["icon"])
-            .replace("{{bio.social.github.url}}", BIO["social"]["github"]["url"])
-            .replace("{{bio.social.github.icon}}", BIO["social"]["github"]["icon"])
-            .replace("{{bio.social.rss.url}}", BIO["social"]["rss"]["url"])
-            .replace("{{bio.social.rss.icon}}", BIO["social"]["rss"]["icon"])
-            .replace("{{nav}}", NAV_HTML)
-            .replace("{{og_image_meta}}", f'<meta property="og:image" content="{seo_image}">' if seo_image else "")
-            .replace("{{twitter_image_meta}}", f'<meta name="twitter:image" content="{seo_image}">' if seo_image else "")
-            .replace("{{twitter_card}}", "summary_large_image" if seo_image else "summary")
-            .replace("{{seo_description}}", seo_description)
-            .replace("{{date}}", date)
-            .replace("{{main_heading}}", main_heading)
-            .replace("{{umami_website_id}}", UMAMI["website_id"]))
-
-
-def read_post(md_path):
-    """Read the same rendered body for both publishing and explicit scans."""
-    raw = md_path.read_text(encoding="utf-8")
-    
-    # Parse frontmatter if it exists
-    frontmatter = {}
-    if raw.startswith("---"):
-        _, frontmatter_text, content = raw.split("---", 2)
-        for line in frontmatter_text.strip().split("\n"):
-            if ":" in line:
-                key, value = line.split(":", 1)
-                frontmatter[key.strip()] = value.strip().strip('"')
-        raw = content.strip()
-    
-    h1, _, body = raw.partition("\n")
-    title = h1.lstrip("# ").strip() or md_path.stem
-    html_body = render(body)
-    return title, html_body, frontmatter
+def render_document(document, *, pangram_badges=None, images=None, documents=()):
+    body = render(document.body, images)
+    heading = f'<h1>{escape(document.heading)}</h1>'
+    if document.published:
+        display_date = f'{document.published.day} {document.published:%b %Y}'
+        heading += f'<time datetime="{document.published.isoformat()}" class="post-date">{display_date}</time>'
+        if pangram_badges is not None:
+            prose = prose_from_html(body)
+            result = pangram_badges.lookup(prose)
+            if result is not None:
+                badge = human_badge(result)
+                if badge:
+                    body += '\n' + badge
+                print(f'Pangram report: {document.source.name} {result.dashboard_link}')
+            else:
+                reason = ineligible_reason(prose) or 'no matching recorded result'
+                print(f'Pangram skipped: {document.source.name}: {reason}')
+        heading += series_navigation(document, documents)
+    return apply_template(
+        document.title, body, seo_image=document.image, seo_description=document.description,
+        main_heading=heading, url=document.url, page_type='article' if document.published else 'website',
+    )
 
 
 def build_post(md_path, is_page=False, pangram_badges=None):
-    title, html_body, frontmatter = read_post(md_path)
-    
-    # Get SEO data from frontmatter or use defaults
-    seo_image = frontmatter.get("seo_image", "")
-    seo_description = frontmatter.get("seo_description", "")
-    
-    # Make SEO image URL absolute
-    if seo_image and not seo_image.startswith(('http://', 'https://')):
-        seo_image = HOSTNAME + seo_image
-    
-    if is_page:
-        main_heading = f'<h1>{html.escape(title)}</h1>'
-        date = ""
-    else:
-        date = frontmatter.get("date", "-".join(md_path.stem.split("-", 3)[:3]))
-        main_heading = f'<h1>{html.escape(title)}</h1>\n<time datetime="{date}" class="post-date">{date}</time>'
+    document = read_document(md_path, is_page=is_page, values=build_values())
+    return document.title, render_document(document, pangram_badges=pangram_badges)
 
-        if pangram_badges is not None:
-            prose = prose_from_html(html_body)
-            reason = ineligible_reason(prose)
-            result = pangram_badges.lookup(prose)
-            if reason:
-                print(f"Pangram: {md_path.name} skipped ({reason})")
-            elif result is None:
-                print(f"Pangram: {md_path.name} has no matching recorded result; badge omitted")
-            if result is not None:
-                badge_html = human_badge(result)
-                if badge_html:
-                    html_body = f"{html_body}\n{badge_html}"
-                    print(f"Pangram: {md_path.name} classified as Human (version {result.version})")
-                else:
-                    print(
-                        f"Pangram: {md_path.name} classified as "
-                        f"{result.prediction_short}; badge omitted"
-                    )
-                print(f"Pangram report: {md_path.name} {result.dashboard_link}")
-    
-    return title, apply_template(title, html_body, seo_image=seo_image, seo_description=seo_description, date=date, main_heading=main_heading)
+
+def reserve_output(registry, path, source):
+    if path in registry:
+        raise ValueError(f'Output collision at {path}: {registry[path]} and {source}')
+    registry[path] = source
+
+
+def xml_file(path, root):
+    ET.indent(root, space='  ')
+    ET.ElementTree(root).write(path, encoding='utf-8', xml_declaration=True)
+
+
+def write_discovery(posts, pages, extras):
+    sitemap = ET.Element('urlset', xmlns='http://www.sitemaps.org/schemas/sitemap/0.9')
+    urls = {'/': None}
+    for document in [*pages, *posts]:
+        urls[document.url] = document.updated
+    for path, metadata in extras.items():
+        if not metadata.get('alias'):
+            urls[metadata['url']] = None
+    for path, updated in urls.items():
+        entry = ET.SubElement(sitemap, 'url')
+        ET.SubElement(entry, 'loc').text = HOSTNAME + path
+        if updated:
+            ET.SubElement(entry, 'lastmod').text = updated.isoformat()
+    xml_file(OUT / 'sitemap.xml', sitemap)
+
+    feed = ET.Element('feed', xmlns='http://www.w3.org/2005/Atom')
+    ET.SubElement(feed, 'title').text = SITE_NAME
+    ET.SubElement(feed, 'link', href=HOSTNAME + '/')
+    ET.SubElement(feed, 'link', href=HOSTNAME + '/feed.xml', rel='self')
+    ET.SubElement(feed, 'id').text = HOSTNAME + '/'
+    updated = max((post.updated for post in posts), default=datetime.now(timezone.utc).date())
+    ET.SubElement(feed, 'updated').text = f'{updated.isoformat()}T00:00:00Z'
+    ET.SubElement(ET.SubElement(feed, 'author'), 'name').text = BIO['name']
+    for post in posts:
+        entry = ET.SubElement(feed, 'entry')
+        ET.SubElement(entry, 'title').text = post.title
+        ET.SubElement(entry, 'link', href=HOSTNAME + post.url)
+        ET.SubElement(entry, 'id').text = HOSTNAME + post.url
+        ET.SubElement(entry, 'published').text = f'{post.published.isoformat()}T00:00:00Z'
+        ET.SubElement(entry, 'updated').text = f'{post.updated.isoformat()}T00:00:00Z'
+        ET.SubElement(entry, 'summary').text = post.description
+    xml_file(OUT / 'feed.xml', feed)
+    (OUT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\n\nSitemap: {HOSTNAME}/sitemap.xml\n')
 
 
 def main():
-    pangram_badges = PangramBadgeService.from_environment()
+    values = build_values()
+    pages = [read_document(path, is_page=True, values=values) for path in sorted(PAGES.glob('*.md'))]
+    posts = sorted((read_document(path, values=values) for path in POSTS.glob('*.md')), key=lambda doc: (doc.published, doc.url), reverse=True)
+    extras = json.loads((ROOT / 'public_pages.json').read_text())
+    registry = {}
+    for generated in ('index.html', '404.html', 'sitemap.xml', 'feed.xml', 'robots.txt'):
+        reserve_output(registry, generated, 'generator')
+    for document in [*pages, *posts]:
+        reserve_output(registry, document.url.lstrip('/'), document.source)
+    copies = {}
+    for filename in ('CNAME', '.nojekyll'):
+        source = ROOT / filename
+        if source.is_file():
+            reserve_output(registry, filename, source)
+            copies[filename] = source
+    for folder in ('static', 'apps', 'html'):
+        for source in sorted((ROOT / folder).rglob('*')):
+            parts = source.relative_to(ROOT / folder).parts
+            if not source.is_file() or any(part.startswith('.') for part in parts) or 'templates' in parts:
+                continue
+            if source.name == 'README.md':
+                continue
+            target = source.relative_to(ROOT if folder == 'static' else ROOT / folder).as_posix()
+            reserve_output(registry, target, source)
+            copies[target] = source
+    html_copies = {target for target in copies if target.endswith('.html')}
+    if html_copies != set(extras):
+        raise ValueError(f'Update public_pages.json for HTML exports: {html_copies ^ set(extras)}')
+    for target, metadata in extras.items():
+        if not isinstance(metadata.get('preserve_export', False), bool):
+            raise ValueError(f'{target}: preserve_export must be a boolean')
+        if metadata.get('source') != copies[target].relative_to(ROOT).as_posix():
+            raise ValueError(f'{target}: public_pages.json source does not match the copied file')
+        for field in ('title', 'description', 'url'):
+            if not isinstance(metadata.get(field), str) or not metadata[field].strip():
+                raise ValueError(f'{target}: public_pages.json needs {field}')
+        expected_url = '/' + (target[:-10] if target.endswith('/index.html') else target)
+        if not metadata.get('alias') and metadata['url'] != expected_url:
+            raise ValueError(f'{target}: canonical path must be {expected_url}')
+    series_positions = set()
+    for post in posts:
+        if post.series:
+            position = (post.series, post.series_order)
+            if position in series_positions:
+                raise ValueError(f'Duplicate series position: {position}')
+            series_positions.add(position)
 
-    # clean & recreate output dir
-    if OUT.exists(): shutil.rmtree(OUT)
+    if OUT.exists():
+        shutil.rmtree(OUT)
     OUT.mkdir()
+    for target, source in copies.items():
+        destination = OUT / target
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if target in extras and not extras[target].get('preserve_export'):
+            metadata = extras[target]
+            raw = source.read_text(encoding='utf-8')
+            head = page_metadata(metadata['title'], metadata['description'], metadata['url'])
+            raw = raw.replace('</head>', head + '\n</head>', 1)
+            raw = version_local_assets(raw, target, copies)
+            destination.write_text(raw, encoding='utf-8')
+        else:
+            shutil.copyfile(source, destination)
 
-    # copy static directory
-    static_dir = ROOT / "static"
-    if static_dir.exists():
-        shutil.copytree(static_dir, OUT / "static")
+    images = Images(ROOT, OUT)
+    # Rendering never constructs a client or reads an API key. Refresh analysis
+    # explicitly with scan_pangram.py and keep the resulting metadata in git.
+    badges = PangramBadgeService.from_environment()
+    for document in [*pages, *posts]:
+        (OUT / document.url.lstrip('/')).write_text(render_document(document, pangram_badges=badges, images=images, documents=posts), encoding='utf-8')
 
-    # copy self-contained apps verbatim: apps/<name>/ -> /<name>. Drop a folder
-    # in (a landing page, a game build, anything that ships as-is) and it's
-    # served at its own path — no code change here. Godot web builds must be the
-    # single-thread export; Pages can't send the COOP/COEP headers threads need.
-    apps_dir = ROOT / "apps"
-    if apps_dir.exists():
-        for app in sorted(apps_dir.iterdir()):
-            if app.is_dir():
-                shutil.copytree(app, OUT / app.name,
-                                ignore=shutil.ignore_patterns(".DS_Store"))
-
-    # copy standalone HTML pages to output root
-    html_dir = ROOT / "html"
-    if html_dir.exists():
-        for f in html_dir.glob("*.html"):
-            shutil.copy(f, OUT / f.name)
-
-    # Process pages
-    pages = sorted(PAGES.glob("*.md"))
-    for md in pages:
-        title, full_html = build_post(
-            md,
-            is_page=True,
-            pangram_badges=pangram_badges,
+    by_year = defaultdict(list)
+    for post in posts:
+        date = f'{post.published.day} {post.published:%b %Y}'
+        by_year[post.published.year].append(
+            f'<li><a href="{post.url}">{escape(post.title)}</a><time datetime="{post.published.isoformat()}">{date}</time></li>'
         )
-        slug = md.stem
-        fname = f"{slug}.html"
-        (OUT / fname).write_text(full_html, encoding="utf-8")
-
-    # collect posts, sorted by date (newest first)
-    def post_date(md_path):
-        parts = md_path.stem.split("-", 3)[:3]
-        return datetime.strptime("-".join(parts), "%d-%m-%Y")
-
-    posts = sorted(POSTS.glob("*.md"), key=post_date, reverse=True)
-    posts_by_year = {}
-
-    for md in posts:
-        title, full_html = build_post(md, pangram_badges=pangram_badges)
-        slug = md.stem.split("-", 3)[-1]  # after the date
-        fname = f"{slug}.html"
-        (OUT / fname).write_text(full_html, encoding="utf-8")
-        date = "-".join(md.stem.split("-", 3)[:3])
-        year = md.stem.split("-")[2]  # DD-MM-YYYY -> YYYY
-        posts_by_year.setdefault(year, []).append(
-            f"<li><a href='{fname}'>{title}</a> <small>{date}</small></li>")
-
-    # Create index with posts grouped by year
-    index_content = []
-    index_content.append('<div class="main-content">')
-    index_content.append('<h1>Posts</h1>')
-    for year in sorted(posts_by_year, reverse=True):
-        index_content.append(f"<h2>{year}</h2>")
-        index_content.append("<ul>")
-        index_content.extend(posts_by_year[year])
-        index_content.append("</ul>")
-    index_content.append('</div>')
-
-    index_html = apply_template(SITE_NAME, "\n".join(index_content), main_heading="")
-    (OUT / "index.html").write_text(index_html, encoding="utf-8")
-
-    # Generate sitemap.xml
-    sitemap_urls = []
-
-    # Index page
-    sitemap_urls.append({"loc": HOSTNAME + "/", "priority": "1.0"})
-
-    # Pages
-    for md in pages:
-        slug = md.stem
-        sitemap_urls.append({"loc": f"{HOSTNAME}/{slug}.html", "priority": "0.8"})
-
-    # Posts (newest first, already sorted)
-    for md in posts:
-        slug = md.stem.split("-", 3)[-1]
-        parts = md.stem.split("-", 3)[:3]
-        # Convert DD-MM-YYYY to YYYY-MM-DD for sitemap lastmod
-        lastmod = f"{parts[2]}-{parts[1]}-{parts[0]}"
-        sitemap_urls.append({
-            "loc": f"{HOSTNAME}/{slug}.html",
-            "lastmod": lastmod,
-            "priority": "0.6",
-        })
-
-    sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    for entry in sitemap_urls:
-        sitemap_xml += "  <url>\n"
-        sitemap_xml += f"    <loc>{entry['loc']}</loc>\n"
-        if "lastmod" in entry:
-            sitemap_xml += f"    <lastmod>{entry['lastmod']}</lastmod>\n"
-        sitemap_xml += f"    <priority>{entry['priority']}</priority>\n"
-        sitemap_xml += "  </url>\n"
-    sitemap_xml += "</urlset>\n"
-    (OUT / "sitemap.xml").write_text(sitemap_xml, encoding="utf-8")
-
-    # Generate Atom feed (feed.xml)
-    feed_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    feed_xml += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
-    feed_xml += f"  <title>{html.escape(SITE_NAME)}</title>\n"
-    feed_xml += f"  <link href=\"{HOSTNAME}/\" />\n"
-    feed_xml += f"  <link href=\"{HOSTNAME}/feed.xml\" rel=\"self\" />\n"
-    feed_xml += f"  <id>{HOSTNAME}/</id>\n"
-    if posts:
-        newest_parts = posts[0].stem.split("-", 3)[:3]
-        feed_xml += f"  <updated>{newest_parts[2]}-{newest_parts[1]}-{newest_parts[0]}T00:00:00Z</updated>\n"
-    feed_xml += f"  <author><name>{html.escape(BIO['name'])}</name></author>\n"
-    for md in posts:
-        raw = md.read_text(encoding="utf-8")
-        frontmatter = {}
-        if raw.startswith("---"):
-            _, fm_text, content = raw.split("---", 2)
-            for line in fm_text.strip().split("\n"):
-                if ":" in line:
-                    key, value = line.split(":", 1)
-                    frontmatter[key.strip()] = value.strip().strip('"')
-            raw = content.strip()
-        h1, _, body = raw.partition("\n")
-        title = h1.lstrip("# ").strip() or md.stem
-        slug = md.stem.split("-", 3)[-1]
-        parts = md.stem.split("-", 3)[:3]
-        date_iso = f"{parts[2]}-{parts[1]}-{parts[0]}T00:00:00Z"
-        url = f"{HOSTNAME}/{slug}.html"
-        summary = frontmatter.get("seo_description", "")
-        feed_xml += "  <entry>\n"
-        feed_xml += f"    <title>{html.escape(title)}</title>\n"
-        feed_xml += f"    <link href=\"{url}\" />\n"
-        feed_xml += f"    <id>{url}</id>\n"
-        feed_xml += f"    <updated>{date_iso}</updated>\n"
-        if summary:
-            feed_xml += f"    <summary>{html.escape(summary)}</summary>\n"
-        feed_xml += "  </entry>\n"
-    feed_xml += "</feed>\n"
-    (OUT / "feed.xml").write_text(feed_xml, encoding="utf-8")
-
-    # Generate robots.txt
-    robots_txt = f"User-agent: *\nAllow: /\n\nSitemap: {HOSTNAME}/sitemap.xml\n"
-    (OUT / "robots.txt").write_text(robots_txt, encoding="utf-8")
+    index = ['<p class="reading-paths">Follow <a href="/how-1-plus-1-becomes-2.html">how a computer adds 1+1</a>, or explore the <a href="/projects.html">interactive projects</a>.</p>']
+    for year in sorted(by_year, reverse=True):
+        index.append(f'<h2>{year}</h2><ul class="post-list">{"".join(by_year[year])}</ul>')
+    (OUT / 'index.html').write_text(apply_template(SITE_NAME, '\n'.join(index), seo_description='Essays and interactive projects by Emile Silvis on mathematics, computing, AI, and systems thinking.', main_heading='<h1>Posts</h1>'), encoding='utf-8')
+    (OUT / '404.html').write_text(apply_template('Page not found', '<p>This page has moved or is no longer available.</p><p>Browse the <a href="/">posts</a> or explore the <a href="/projects.html">projects</a>.</p>', seo_description='Find your way back to Emile Silvis’s posts and projects.', main_heading='<h1>Page not found</h1>', url='/404.html', noindex=True), encoding='utf-8')
+    write_discovery(posts, pages, extras)
+    print(f'Built {len(posts)} posts, {len(pages)} pages, and {len(extras)} HTML exports.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

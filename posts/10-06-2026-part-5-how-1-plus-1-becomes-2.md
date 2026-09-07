@@ -1,4 +1,6 @@
 ---
+series: How 1+1 becomes 2
+series_order: 5
 title: "How 1+1 becomes 2 (part 5/5)"
 seo_description: "Pressing go: watching 1+1 run on the machine, tick by tick, until the ALU produces the 2 and it lands in the memory cell that is x."
 seo_image: "/static/images/1-plus-1-series/trace.png"
