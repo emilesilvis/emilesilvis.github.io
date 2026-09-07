@@ -252,14 +252,30 @@ def main():
 
             ctx = context()
             page = page_in(ctx)
+            visit(page, '/geomake/day-14.html')
+            expect(page.locator('#puzzle')).to_be_hidden()
+            expect(page.locator('#resume')).to_have_text('Puzzle 1')
+            expect(page.locator('#resume')).to_have_attribute('href', 'index.html')
             for day in range(1, 15):
                 path = '/geomake/' if day == 1 else f'/geomake/day-{day:02}.html'
                 visit(page, path)
+                expect(page.locator('#puzzle')).to_be_visible()
+                if day < 14:
+                    expect(page.locator('[rel="next"]')).to_be_disabled()
+                    assert page.locator(f'.puzzle-list [data-puzzle-day="{day + 1}"]').get_attribute('href') is None
                 directory = ROOT / 'apps/geomake' / page.locator('main').get_attribute('data-help')
                 expected_answer = json.loads((directory / 'check.json').read_text())
+                if day == 1:
+                    page.locator('#answer').fill('0')
+                    page.locator('#check').click()
+                    expect(page.locator('#feedback')).to_have_text('Not quite. Try again.')
+                    expect(page.locator('[rel="next"]')).to_be_disabled()
                 page.locator('#answer').fill(str(expected_answer))
                 page.locator('#check').click()
                 expect(page.locator('#feedback')).to_have_text('Correct.')
+                if day < 14:
+                    expect(page.locator('[rel="next"]')).to_have_attribute('href', f'day-{day + 1:02}.html')
+                    expect(page.locator(f'.puzzle-list [data-puzzle-day="{day + 1}"]')).to_have_attribute('href', f'day-{day + 1:02}.html')
                 for _ in range(3):
                     page.locator('#hint').click()
                     expect(page.locator('#hints li')).to_have_count(_ + 1)
@@ -271,7 +287,11 @@ def main():
                 expect(page.locator('#solution')).to_be_hidden()
                 page.reload()
                 expect(page.locator('#answer')).to_have_value(str(expected_answer))
-            report['flows'].append('Geomake: all fourteen answers, hints, solutions, and persisted input')
+                expect(page.locator('#puzzle')).to_be_visible()
+                if day < 14:
+                    expect(page.locator('[rel="next"]')).to_be_enabled()
+            expect(page.locator('#progress')).to_have_text('All 14 puzzles solved.')
+            report['flows'].append('Geomake: sequential gates, locked direct URLs, wrong answers, all fourteen answers, hints, solutions, and persisted completion')
             ctx.close()
 
             # Lily is an unchanged imported release; smoke-test both bundled languages.

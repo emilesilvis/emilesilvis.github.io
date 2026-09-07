@@ -5,41 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Puzzle 3</title>
   <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="stylesheet" href="styles.css?v=9d30678079ce">
+  <link rel="stylesheet" href="styles.css?v=9f8e67d17ccf">
   <script src="/static/js/theme.js"></script>
-  <script type="module" src="app.js?v=9d30678079ce"></script>
+  <script type="module" src="app.js?v=9f8e67d17ccf"></script>
 </head>
 <body>
   <nav class="app-nav" aria-label="Site"><a class="back-link" href="/projects.html">← Projects</a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode"><span id="theme-icon" aria-hidden="true">🌙</span></button></nav>
-  <main data-edition="7472b5f5c599085e" data-day="3" data-help="data/7472b5f5c599085e/day-03" data-hints="3">
+  <main data-edition="7472b5f5c599085e" data-day="3" data-total="14" data-help="data/7472b5f5c599085e/day-03" data-hints="3">
     <nav class="puzzle-nav" aria-label="Puzzles">
-      <a href="day-02.html" rel="prev">← Previous</a>
+      <a role="link" aria-disabled="true" data-puzzle-day="2" data-href="day-02.html" rel="prev">← Previous</a>
       <h1>Puzzle 3</h1>
-      <a href="day-04.html" rel="next">Next →</a>
+      <a role="link" aria-disabled="true" data-puzzle-day="4" data-href="day-04.html" rel="next">Next →</a>
     </nav>
-    <p class="difficulty">Estimated difficulty: Hard</p>
-    <p id="question">In a square of side 4 cm, a quarter circle of radius 2 cm is drawn at each corner. Find the shaded area in the middle.</p>
-    <img class="diagram" src="images/day-03.png" alt="In a square of side 4 cm, a quarter circle of radius 2 cm is drawn at each corner. Find the shaded area in the middle." width="676" height="676">
-    <form id="answer-form">
-      <label for="answer">Answer <span class="unit">(cm²)</span></label>
-      <div class="answer-row">
-        <input id="answer" name="answer" type="text" maxlength="160" autocomplete="off" spellcheck="false" aria-describedby="answer-format">
-        <button id="check" type="submit">Check</button>
+    <p id="locked" role="status">Solve <a id="resume" href="index.html">Puzzle 1</a> to unlock this puzzle.</p>
+    <section id="puzzle" aria-label="Puzzle" hidden>
+      <p class="difficulty">Estimated difficulty: Hard</p>
+      <p id="question">In a square of side 4 cm, a quarter circle of radius 2 cm is drawn at each corner. Find the shaded area in the middle.</p>
+      <img class="diagram" src="images/day-03.png" alt="In a square of side 4 cm, a quarter circle of radius 2 cm is drawn at each corner. Find the shaded area in the middle." width="676" height="676">
+      <form id="answer-form">
+        <label for="answer">Answer <span class="unit">(cm²)</span></label>
+        <div class="answer-row">
+          <input id="answer" name="answer" type="text" maxlength="160" autocomplete="off" spellcheck="false" aria-describedby="answer-format">
+          <button id="check" type="submit">Check</button>
+        </div>
+        <small id="answer-format">Use π, fractions, or sqrt(2). Decimals to two places are fine.</small>
+      </form>
+      <p id="feedback" role="status" hidden></p>
+      <p id="progress" class="progress-note">Enter the correct answer to unlock Puzzle 4.</p>
+      <div class="help-actions">
+        <button id="hint" class="text-button" type="button">Hint</button>
+        <button id="explain" class="text-button" type="button" aria-expanded="false" aria-controls="solution">Solution</button>
       </div>
-      <small id="answer-format">Use π, fractions, or sqrt(2). Decimals to two places are fine.</small>
-    </form>
-    <p id="feedback" role="status" hidden></p>
-    <div class="help-actions">
-      <button id="hint" class="text-button" type="button">Hint</button>
-      <button id="explain" class="text-button" type="button" aria-expanded="false" aria-controls="solution">Solution</button>
-    </div>
-    <ol id="hints" aria-live="polite" hidden></ol>
-    <section id="solution" aria-label="Solution" hidden></section>
+      <ol id="hints" aria-live="polite" hidden></ol>
+      <section id="solution" aria-label="Solution" hidden></section>
+    </section>
     <details class="puzzle-list">
       <summary>All puzzles</summary>
-      <ol><li><a href="index.html">Puzzle 1</a> <span class="archive-difficulty">· Medium (estimated)</span></li><li><a href="day-02.html">Puzzle 2</a> <span class="archive-difficulty">· Medium (estimated)</span></li><li><a href="day-03.html" aria-current="page">Puzzle 3</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-04.html">Puzzle 4</a> <span class="archive-difficulty">· Medium (estimated)</span></li><li><a href="day-05.html">Puzzle 5</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-06.html">Puzzle 6</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-07.html">Puzzle 7</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-08.html">Puzzle 8</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-09.html">Puzzle 9</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-10.html">Puzzle 10</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-11.html">Puzzle 11</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-12.html">Puzzle 12</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-13.html">Puzzle 13</a> <span class="archive-difficulty">· Hard (estimated)</span></li><li><a href="day-14.html">Puzzle 14</a> <span class="archive-difficulty">· Hard (estimated)</span></li></ol>
+      <ol><li><a href="index.html" data-puzzle-day="1" data-href="index.html">Puzzle 1</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="1"></span></li><li><a role="link" aria-disabled="true" data-puzzle-day="2" data-href="day-02.html">Puzzle 2</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="2"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="3" data-href="day-03.html" aria-current="page">Puzzle 3</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="3"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="4" data-href="day-04.html">Puzzle 4</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="4"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="5" data-href="day-05.html">Puzzle 5</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="5"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="6" data-href="day-06.html">Puzzle 6</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="6"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="7" data-href="day-07.html">Puzzle 7</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="7"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="8" data-href="day-08.html">Puzzle 8</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="8"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="9" data-href="day-09.html">Puzzle 9</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="9"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="10" data-href="day-10.html">Puzzle 10</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="10"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="11" data-href="day-11.html">Puzzle 11</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="11"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="12" data-href="day-12.html">Puzzle 12</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="12"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="13" data-href="day-13.html">Puzzle 13</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="13"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="14" data-href="day-14.html">Puzzle 14</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="14"> · Locked</span></li></ol>
     </details>
-    <noscript><p>Enable JavaScript to check answers or reveal hints.</p></noscript>
+    <noscript><p>Enable JavaScript to check answers, reveal hints, and unlock puzzles.</p></noscript>
   </main>
 </body>
 </html>
