@@ -6,7 +6,9 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import re
 import threading
+from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright, expect
 
@@ -20,7 +22,7 @@ FIXTURES = [
     '/part-4-how-tiny-physical-switches-learn-to-follow-instructions.html',
     '/part-5-how-1-plus-1-becomes-2.html',
     '/unit-circle.html', '/llm-exposure-eu-jobs-interactive.html',
-    '/geomake/', '/geomake/day-14.html', '/how-to-design-a-zachlike/', '/how-to-design-a-zachlike/mechanics.html',
+    '/geomake/', '/geomake/day-21.html', '/how-to-design-a-zachlike/', '/how-to-design-a-zachlike/mechanics.html',
 ]
 
 
@@ -51,6 +53,68 @@ def main():
             page.set_default_timeout(7000)
             page.on('pageerror', lambda error: report['errors'].append({'url': page.url, 'error': str(error)}))
             return page
+
+        def geomake_api(ctx):
+            """Synthetic API contract fixture; real answer checks live upstream.
+
+            The fixture accepts day * 10, so no actual answer catalog is needed
+            in the public website or its tests. No requests reach Cloudflare.
+            """
+            html = (ROOT / 'apps/geomake/index.html').read_text()
+            api = re.search(r'data-api="([^"]+)"', html)[1]
+            total = int(re.search(r'data-total="(\d+)"', html)[1])
+            players = {}
+            controls = {'board_error': False}
+
+            def handle(route):
+                request = route.request
+                path = urlsplit(request.url).path
+                token = request.headers.get('authorization', '')
+                headers = {'Access-Control-Allow-Origin': base,
+                           'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+                           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'}
+
+                def reply(value, status=200):
+                    route.fulfill(status=status, content_type='application/json',
+                                  headers=headers, body=json.dumps(value))
+
+                if request.method == 'OPTIONS':
+                    route.fulfill(status=204, headers=headers)
+                elif path == '/leaderboard':
+                    if controls['board_error']:
+                        reply({'error': 'Please try again.'}, 503)
+                    else:
+                        reply({'total': total, 'players': [
+                            {'id': row['id'], 'name': row['name'], 'solved': len(row['solved']), 'rank': i + 1}
+                            for i, row in enumerate(sorted(players.values(), key=lambda row: -len(row['solved'])))
+                        ]})
+                elif not re.fullmatch(r'Bearer [a-f0-9]{64}', token):
+                    reply({'error': 'Enter your name to save progress.'}, 401)
+                elif path == '/player' and request.method == 'POST':
+                    row = players.setdefault(token, {'id': f'player-{len(players) + 1}', 'solved': [], 'completedThrough': 0})
+                    row['name'] = request.post_data_json['name'].strip()
+                    reply(row)
+                elif token not in players:
+                    reply({'error': 'Enter your name to save progress.'}, 401)
+                elif path == '/player':
+                    reply(players[token])
+                elif path == '/check':
+                    row = players[token]
+                    data = request.post_data_json
+                    day = data['day']
+                    if day > row['completedThrough'] + 1:
+                        reply({'error': 'Solve the earlier puzzles first.'}, 409)
+                        return
+                    correct = data['answer'] == str(day * 10)
+                    if correct and day not in row['solved']:
+                        row['solved'].append(day)
+                        row['completedThrough'] = day
+                    reply({'correct': correct, 'player': row})
+                else:
+                    reply({'error': 'Unexpected API route.'}, 404)
+
+            ctx.route(api + '/**', handle)
+            return controls, total
 
         def visit(page, path):
             page.mouse.move(0, 0)
@@ -251,20 +315,27 @@ def main():
             print('Visualization flows passed.', flush=True)
 
             ctx = context()
+            api_controls, total = geomake_api(ctx)
             page = page_in(ctx)
-            visit(page, '/geomake/day-14.html')
+            visit(page, f'/geomake/day-{total:02}.html')
             expect(page.locator('#puzzle')).to_be_hidden()
+            expect(page.locator('#player-form')).to_be_visible()
+            page.locator('#player-name').fill('Browser check')
+            page.locator('#save-player').click()
+            expect(page.locator('#player-label')).to_have_text(f'Browser check · 0 of {total} solved')
+            expect(page.locator('#locked')).to_be_visible()
             expect(page.locator('#resume')).to_have_text('Puzzle 1')
             expect(page.locator('#resume')).to_have_attribute('href', 'index.html')
-            for day in range(1, 15):
+            assert not list((ROOT / 'apps/geomake').rglob('check.json'))
+            assert not list((ROOT / 'apps/geomake').rglob('solution.json'))
+            for day in range(1, total + 1):
                 path = '/geomake/' if day == 1 else f'/geomake/day-{day:02}.html'
                 visit(page, path)
                 expect(page.locator('#puzzle')).to_be_visible()
-                if day < 14:
+                if day < total:
                     expect(page.locator('[rel="next"]')).to_be_disabled()
                     assert page.locator(f'.puzzle-list [data-puzzle-day="{day + 1}"]').get_attribute('href') is None
-                directory = ROOT / 'apps/geomake' / page.locator('main').get_attribute('data-help')
-                expected_answer = json.loads((directory / 'check.json').read_text())
+                expected_answer = day * 10
                 if day == 1:
                     page.locator('#answer').fill('0')
                     page.locator('#check').click()
@@ -273,25 +344,46 @@ def main():
                 page.locator('#answer').fill(str(expected_answer))
                 page.locator('#check').click()
                 expect(page.locator('#feedback')).to_have_text('Correct.')
-                if day < 14:
+                if day < total:
                     expect(page.locator('[rel="next"]')).to_have_attribute('href', f'day-{day + 1:02}.html')
                     expect(page.locator(f'.puzzle-list [data-puzzle-day="{day + 1}"]')).to_have_attribute('href', f'day-{day + 1:02}.html')
                 for _ in range(3):
                     page.locator('#hint').click()
                     expect(page.locator('#hints li')).to_have_count(_ + 1)
                 expect(page.locator('#hint')).to_be_disabled()
-                page.locator('#explain').click()
-                expect(page.locator('#solution')).to_be_visible()
-                assert page.locator('#solution li').count() > 0
-                page.locator('#explain').click()
-                expect(page.locator('#solution')).to_be_hidden()
+                expect(page.locator('#explain')).to_have_count(0)
+                expect(page.locator('#solution')).to_have_count(0)
                 page.reload()
                 expect(page.locator('#answer')).to_have_value(str(expected_answer))
                 expect(page.locator('#puzzle')).to_be_visible()
-                if day < 14:
+                if day < total:
                     expect(page.locator('[rel="next"]')).to_be_enabled()
-            expect(page.locator('#progress')).to_have_text('All 14 puzzles solved.')
-            report['flows'].append('Geomake: sequential gates, locked direct URLs, wrong answers, all fourteen answers, hints, solutions, and persisted completion')
+            expect(page.locator('#progress')).to_have_text(f'All {total} puzzles solved.')
+            page.locator('#leaderboard summary').click()
+            expect(page.locator('#leaderboard-rows')).to_contain_text(f'{total} / {total}')
+            expect(page.locator('#leaderboard-rows .current-player')).to_contain_text('Browser check')
+            page.locator('#change-name').click()
+            page.locator('#player-name').fill('Changed name')
+            page.locator('#save-player').click()
+            expect(page.locator('#player-label')).to_have_text(f'Changed name · {total} of {total} solved')
+            expect(page.locator('#leaderboard-rows')).to_contain_text('Changed name')
+            api_controls['board_error'] = True
+            page.locator('#refresh-leaderboard').click()
+            expect(page.locator('#leaderboard-status')).to_have_text('Please try again.')
+            api_controls['board_error'] = False
+            page.locator('#refresh-leaderboard').click()
+            expect(page.locator('#leaderboard-status')).to_contain_text('Equal scores share a rank.')
+            for width in (320, 1440):
+                for theme in ('light', 'dark'):
+                    inspect(page, f'/geomake/day-{total:02}.html', width, theme, accessibility=True)
+                    expect(page.locator('#puzzle')).to_be_visible()
+                    page.locator('#leaderboard summary').click()
+                    expect(page.locator('#leaderboard-rows')).to_contain_text('Changed name')
+                    page.add_script_tag(path=str(AXE))
+                    assert page.evaluate('(async () => (await axe.run(document)).violations)()') == []
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+                    page.screenshot(path=str(ARTIFACTS / f'geomake-{width}-{theme}.png'))
+            report['flows'].append(f'Geomake: name entry, {total} sequential API checks, wrong answers, hints, no solutions, persisted completion, name changes, leaderboard retry and accessibility')
             ctx.close()
 
             # Lily is an unchanged imported release; smoke-test both bundled languages.

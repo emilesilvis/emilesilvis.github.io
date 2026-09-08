@@ -1,0 +1,1 @@
+"For BD:DC=p:1 and CE:EA=q:1, ABP has fraction p/(pq+p+1). Divide its given area by this fraction to recover T, then find the other two corner areas and subtract all three."

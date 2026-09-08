@@ -1,10 +1,12 @@
-import { evaluateAnswer, matchesAnswer } from './answer.js?v=9f8e67d17ccf';
-import { createProgress } from './progress.js?v=9f8e67d17ccf';
+import { evaluateAnswer, matchesAnswer } from './answer.js?v=77c516314689';
+import { createProgress } from './progress.js?v=77c516314689';
+import { createLeaderboard } from './leaderboard.js?v=77c516314689';
 
 const page = document.querySelector('main');
 const day = Number(page.dataset.day);
 const total = Number(page.dataset.total);
-const progress = createProgress(page.dataset.edition, total);
+const progress = createProgress(page.dataset.edition, total, undefined, JSON.parse(page.dataset.previousEditions || '[]'));
+const publicProgress = page.dataset.api ? createLeaderboard(page.dataset.api, page.dataset.edition) : null;
 const puzzle = document.querySelector('#puzzle');
 const locked = document.querySelector('#locked');
 const resume = document.querySelector('#resume');
@@ -13,17 +15,30 @@ const puzzleLinks = document.querySelectorAll('[data-puzzle-day]');
 const answer = document.querySelector('#answer');
 const feedback = document.querySelector('#feedback');
 const hintButton = document.querySelector('#hint');
-const explainButton = document.querySelector('#explain');
 const hints = document.querySelector('#hints');
-const solution = document.querySelector('#solution');
+const playerForm = document.querySelector('#player-form');
+const playerName = document.querySelector('#player-name');
+const savePlayer = document.querySelector('#save-player');
+const playerSummary = document.querySelector('#player-summary');
+const playerStatus = document.querySelector('#player-status');
+const board = document.querySelector('#leaderboard');
+const boardStatus = document.querySelector('#leaderboard-status');
+let player = null;
+let editingName = false;
+let loadingBoard = false;
 let hintCount = 0;
 let checking = false;
 
 function updateProgress() {
-  const completed = progress.completedThrough();
+  const completed = publicProgress ? player?.completedThrough || 0 : progress.completedThrough();
   const available = Math.min(completed + 1, total);
-  puzzle.hidden = day > available;
-  locked.hidden = !puzzle.hidden;
+  puzzle.hidden = (publicProgress && !player) || day > available;
+  locked.hidden = !puzzle.hidden || (publicProgress && !player);
+  if (publicProgress) {
+    playerForm.hidden = !!player && !editingName;
+    playerSummary.hidden = !player;
+    if (player) document.querySelector('#player-label').textContent = `${player.name} · ${player.solved.length} of ${total} solved`;
+  }
   for (const link of puzzleLinks) {
     const target = Number(link.dataset.puzzleDay);
     if (target <= available) {
@@ -48,8 +63,11 @@ function updateProgress() {
 }
 
 updateProgress();
-window.addEventListener('storage', updateProgress);
-window.addEventListener('pageshow', updateProgress);
+window.addEventListener('storage', event => {
+  if (!publicProgress) updateProgress();
+  else if (event.key === null || event.key?.startsWith('geomake:player:') || event.key?.endsWith(':solved')) restorePlayer();
+});
+window.addEventListener('pageshow', () => publicProgress ? restorePlayer() : updateProgress());
 
 answer.value = progress.loadAnswer(day);
 answer.addEventListener('input', () => {
@@ -76,6 +94,15 @@ document.querySelector('#answer-form').addEventListener('submit', async event =>
   document.querySelector('#check').disabled = true;
   try {
     evaluateAnswer(submitted);
+    if (publicProgress) {
+      const result = await publicProgress.check(day, submitted);
+      player = result.player;
+      if (result.correct) progress.markSolved(day);
+      updateProgress();
+      if (answer.value === submitted) message(result.correct ? 'Correct.' : 'Not quite. Try again.');
+      if (result.correct && board.open) await refreshBoard();
+      return;
+    }
     const expected = await readHelp('check');
     if (answer.value !== submitted) return;
     if (!matchesAnswer(submitted, expected)) {
@@ -94,6 +121,110 @@ document.querySelector('#answer-form').addEventListener('submit', async event =>
   }
 });
 
+function playerMessage(text) {
+  playerStatus.textContent = text;
+  playerStatus.hidden = !text;
+}
+
+async function syncPreviousAnswers() {
+  // Existing browser completion is only credited publicly after each saved
+  // answer has passed the same server check as a new solve.
+  const completed = progress.completedThrough();
+  while (player.completedThrough < completed) {
+    const next = player.completedThrough + 1;
+    const saved = progress.loadAnswer(next);
+    if (!saved) break;
+    let result;
+    try { result = await publicProgress.check(next, saved); }
+    catch (error) { if (error.status === 400) break; throw error; }
+    player = result.player;
+    if (!result.correct) break;
+  }
+}
+
+let restoringPlayer = false;
+async function restorePlayer() {
+  if (!publicProgress || restoringPlayer || savePlayer.disabled) return;
+  restoringPlayer = true;
+  savePlayer.disabled = true;
+  playerMessage('Loading your progress…');
+  try {
+    player = await publicProgress.loadPlayer();
+    if (player) {
+      await syncPreviousAnswers();
+      if (!editingName) playerName.value = player.name;
+    }
+    playerMessage('');
+  } catch (error) {
+    playerMessage(error instanceof Error ? error.message : 'Could not load your progress. Please try again.');
+  } finally {
+    savePlayer.disabled = false;
+    restoringPlayer = false;
+    updateProgress();
+  }
+}
+
+playerForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!publicProgress || savePlayer.disabled) return;
+  savePlayer.disabled = true;
+  playerMessage('Saving…');
+  try {
+    player = await publicProgress.savePlayer(playerName.value);
+    await syncPreviousAnswers();
+    editingName = false;
+    playerName.value = player.name;
+    playerMessage('');
+    updateProgress();
+    if (board.open) await refreshBoard();
+  } catch (error) {
+    playerMessage(error instanceof Error ? error.message : 'Could not save your name. Please try again.');
+  } finally {
+    savePlayer.disabled = false;
+    updateProgress();
+  }
+});
+
+document.querySelector('#change-name').addEventListener('click', () => {
+  editingName = true;
+  updateProgress();
+  playerName.focus();
+});
+
+async function refreshBoard() {
+  if (!publicProgress || loadingBoard) return;
+  loadingBoard = true;
+  const refresh = document.querySelector('#refresh-leaderboard');
+  refresh.disabled = true;
+  boardStatus.textContent = 'Loading…';
+  try {
+    const result = await publicProgress.loadBoard();
+    const rows = document.querySelector('#leaderboard-rows');
+    rows.replaceChildren();
+    for (const item of result.players) {
+      const row = document.createElement('tr');
+      if (item.id === player?.id) row.classList.add('current-player');
+      for (const value of [item.rank, item.name, `${item.solved} / ${result.total}`]) {
+        const cell = document.createElement('td');
+        cell.textContent = String(value);
+        row.append(cell);
+      }
+      rows.append(row);
+    }
+    document.querySelector('#leaderboard-table').hidden = result.players.length === 0;
+    boardStatus.textContent = result.players.length ? 'Top 100 players. Equal scores share a rank.' : 'No players yet.';
+  } catch (error) {
+    boardStatus.textContent = error instanceof Error ? error.message : 'Could not load the leaderboard. Please try again.';
+  } finally {
+    loadingBoard = false;
+    refresh.disabled = false;
+  }
+}
+
+board.addEventListener('toggle', () => { if (board.open) refreshBoard(); });
+document.querySelector('#refresh-leaderboard').addEventListener('click', refreshBoard);
+if (publicProgress) restorePlayer();
+
 hintButton.addEventListener('click', async () => {
   hintButton.disabled = true;
   try {
@@ -108,38 +239,5 @@ hintButton.addEventListener('click', async () => {
     message(error instanceof Error ? error.message : 'Please try again.');
   } finally {
     hintButton.disabled = hintCount >= Number(page.dataset.hints);
-  }
-});
-
-explainButton.addEventListener('click', async () => {
-  if (!solution.hidden) {
-    solution.hidden = true;
-    explainButton.setAttribute('aria-expanded', 'false');
-    explainButton.textContent = 'Solution';
-    return;
-  }
-  explainButton.disabled = true;
-  try {
-    if (!solution.childElementCount) {
-      const detail = await readHelp('solution');
-      const result = document.createElement('p');
-      const value = document.createElement('strong');
-      value.textContent = detail.answer;
-      result.append(value);
-      const steps = document.createElement('ol');
-      for (const step of detail.steps) {
-        const item = document.createElement('li');
-        item.textContent = step;
-        steps.append(item);
-      }
-      solution.append(result, steps);
-    }
-    solution.hidden = false;
-    explainButton.setAttribute('aria-expanded', 'true');
-    explainButton.textContent = 'Hide solution';
-  } catch (error) {
-    message(error instanceof Error ? error.message : 'Please try again.');
-  } finally {
-    explainButton.disabled = false;
   }
 });

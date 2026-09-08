@@ -1,0 +1,1 @@
+"If QU:UR=u:1, RV:VP=v:1 and PW:WQ=w:1, the inner corner fractions of K are u/(uv+u+1), v/(vw+v+1) and w/(wu+w+1). Subtract them from 1 and multiply by the previously found K."

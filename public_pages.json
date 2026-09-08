@@ -120,5 +120,47 @@
     "description": "A little puzzle game about thinking differently. Move words, rewrite the garden’s rules, and guide your little inhabitants home.",
     "url": "/lily/",
     "preserve_export": true
+  },
+  "geomake/day-15.html": {
+    "source": "apps/geomake/day-15.html",
+    "title": "Puzzle 15",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. BD:DC = 3:1, CE:EA = 1:1 and AF:FB = 2:1. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. Triangle ABP has area 216 cm². Find the shaded area of PQR.",
+    "url": "/geomake/day-15.html"
+  },
+  "geomake/day-16.html": {
+    "source": "apps/geomake/day-16.html",
+    "title": "Puzzle 16",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. CE:EA = 1:1 and AF:FB = 4:1; the division BD:DC is unknown. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. ABC has area 780 cm² and ABP has area 312 cm². Find the shaded area of PQR.",
+    "url": "/geomake/day-16.html"
+  },
+  "geomake/day-17.html": {
+    "source": "apps/geomake/day-17.html",
+    "title": "Puzzle 17",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. BD:DC = 2:1 and CE:EA = 3:1; the division AF:FB is unknown. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. ABP has area 112 cm² and CAR has area 126 cm². The total area of ABC is unknown. Find the shaded area of PQR.",
+    "url": "/geomake/day-17.html"
+  },
+  "geomake/day-18.html": {
+    "source": "apps/geomake/day-18.html",
+    "title": "Puzzle 18",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. BD:DC = 3:1, CE:EA = 1:1 and AF:FB = 2:1. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. ABP has area 216 cm². Through P, draw PS parallel to RC, meeting AC at S. Find the shaded area of quadrilateral PRCS.",
+    "url": "/geomake/day-18.html"
+  },
+  "geomake/day-19.html": {
+    "source": "apps/geomake/day-19.html",
+    "title": "Puzzle 19",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. BD:DC = 7:1, CE:EA = 2:1 and AF:FB = 4:1. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. Inside PQR, U lies on QR, V on RP and W on PQ, with QU:UR = 2:1, RV:VP = 2:1 and PW:WQ = 2:1. X is the intersection of PU and QV, Y of QV and RW, and Z of RW and PU. ABC has area 924 cm². Find the shaded area of XYZ.",
+    "url": "/geomake/day-19.html"
+  },
+  "geomake/day-20.html": {
+    "source": "apps/geomake/day-20.html",
+    "title": "Puzzle 20",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. BD:DC = 4:1, CE:EA = 7:1 and AF:FB = 2:1. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. Inside PQR, U lies on QR, V on RP and W on PQ, with QU:UR = 3:1, RV:VP = 2:1 and PW:WQ = 1:1. X is the intersection of PU and QV, Y of QV and RW, and Z of RW and PU. ABC has area 264 cm². Find the shaded area of XYZ.",
+    "url": "/geomake/day-20.html"
+  },
+  "geomake/day-21.html": {
+    "source": "apps/geomake/day-21.html",
+    "title": "Puzzle 21",
+    "description": "D, E and F lie on BC, CA and AB of triangle ABC, respectively. BD:DC = 2:1, CE:EA = 4:1 and AF:FB = 7:1. P is the intersection of AD and BE, Q of BE and CF, and R of CF and AD. Inside PQR, U lies on QR, V on RP and W on PQ, with QU:UR = 2:1, RV:VP = 1:1 and PW:WQ = 3:1. X is the intersection of PU and QV, Y of QV and RW, and Z of RW and PU. XYZ has area 10 cm². Find the total shaded area inside ABC but outside PQR.",
+    "url": "/geomake/day-21.html"
   }
 }
