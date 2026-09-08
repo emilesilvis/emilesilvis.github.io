@@ -50,7 +50,7 @@ input {
   padding: 0.3rem 0.5rem;
 }
 button { cursor: pointer; }
-#check {
+#check, #save-player {
   flex-shrink: 0;
   white-space: nowrap;
   border: 1px solid var(--text-lighter);
@@ -62,14 +62,20 @@ button { cursor: pointer; }
 button:disabled { cursor: default; opacity: 0.6; }
 .help-actions { display: flex; gap: 1.5rem; margin-top: 1rem; }
 .text-button { border: 0; padding: 0; color: var(--accent); background: none; }
-#hints, #solution ol { padding-left: 1.5rem; }
-#hints li, #solution li { margin: 0.6rem 0; }
-#solution { border-top: 1px solid var(--border-color); margin-top: 1.5rem; }
+#hints { padding-left: 1.5rem; }
+#hints li { margin: 0.6rem 0; }
 .puzzle-list { margin-top: 2rem; font-size: 0.9rem; }
 .puzzle-list summary { color: var(--accent); cursor: pointer; width: fit-content; }
 .puzzle-list ol { list-style: none; padding: 0; margin: 0.5rem 0; }
 .puzzle-list li { margin: 0.25rem 0; }
 .puzzle-list [aria-current="page"] { color: var(--text-color); font-weight: 600; }
+#player { margin-bottom: 1.5rem; }
+#player-summary { color: var(--text-muted); font-size: 0.8rem; }
+#leaderboard-table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1rem; }
+#leaderboard-table th, #leaderboard-table td { padding: 0.4rem 0.3rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+#leaderboard-table :is(th, td):last-child { text-align: right; white-space: nowrap; }
+#leaderboard-table td:nth-child(2) { overflow-wrap: anywhere; }
+#leaderboard-table .current-player { font-weight: 600; }
 summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
@@ -80,7 +86,7 @@ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media print {
   body { padding: 0; color: #222; background: #fff; }
-  .puzzle-nav a, form, .help-actions, .puzzle-list, #hints, #solution, #feedback, noscript { display: none !important; }
+  .puzzle-nav a, form, .help-actions, .puzzle-list, #player, #hints, #feedback, noscript { display: none !important; }
   .diagram, [data-theme="dark"] .diagram { filter: none; mix-blend-mode: normal; }
 }
 

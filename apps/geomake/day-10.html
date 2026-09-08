@@ -5,19 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Puzzle 10</title>
   <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="stylesheet" href="styles.css?v=9f8e67d17ccf">
+  <link rel="stylesheet" href="styles.css?v=77c516314689">
   <script src="/static/js/theme.js"></script>
-  <script type="module" src="app.js?v=9f8e67d17ccf"></script>
+  <script type="module" src="app.js?v=77c516314689"></script>
 </head>
 <body>
   <nav class="app-nav" aria-label="Site"><a class="back-link" href="/projects.html">← Projects</a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode"><span id="theme-icon" aria-hidden="true">🌙</span></button></nav>
-  <main data-edition="7472b5f5c599085e" data-day="10" data-total="14" data-help="data/7472b5f5c599085e/day-10" data-hints="3">
+  <main data-edition="618a980d4497d066" data-day="10" data-total="21" data-help="data/618a980d4497d066/day-10" data-hints="3" data-api="https://geomake-leaderboard.crayfish.workers.dev" data-previous-editions="[{&quot;edition&quot;: &quot;baca39e909561c5a&quot;, &quot;total&quot;: 7}, {&quot;edition&quot;: &quot;7472b5f5c599085e&quot;, &quot;total&quot;: 14}]">
     <nav class="puzzle-nav" aria-label="Puzzles">
       <a role="link" aria-disabled="true" data-puzzle-day="9" data-href="day-09.html" rel="prev">← Previous</a>
       <h1>Puzzle 10</h1>
       <a role="link" aria-disabled="true" data-puzzle-day="11" data-href="day-11.html" rel="next">Next →</a>
     </nav>
-    <p id="locked" role="status">Solve <a id="resume" href="index.html">Puzzle 1</a> to unlock this puzzle.</p>
+    <section id="player" aria-label="Your progress">
+      <form id="player-form">
+        <label for="player-name">Name on leaderboard</label>
+        <div class="answer-row">
+          <input id="player-name" name="nickname" type="text" maxlength="40" required autocomplete="nickname" aria-describedby="public-name-note">
+          <button id="save-player" type="submit">Save name</button>
+        </div>
+        <small id="public-name-note">Your name and number of solved puzzles will be public. A nickname is fine.</small>
+      </form>
+      <p id="player-summary" hidden><span id="player-label"></span> · <button id="change-name" class="text-button" type="button">Change name</button></p>
+      <p id="player-status" role="status" hidden></p>
+    </section>
+    <p id="locked" role="status" hidden>Solve <a id="resume" href="index.html">Puzzle 1</a> to unlock this puzzle.</p>
     <section id="puzzle" aria-label="Puzzle" hidden>
       <p class="difficulty">Estimated difficulty: Hard</p>
       <p id="question">Triangle ABC has area 56 cm². D lies on BC with BD:DC = 3:1, and E is the midpoint of AC. Segments AD and BE meet at P. Find the shaded area of triangle ABP.</p>
@@ -34,14 +46,21 @@
       <p id="progress" class="progress-note">Enter the correct answer to unlock Puzzle 11.</p>
       <div class="help-actions">
         <button id="hint" class="text-button" type="button">Hint</button>
-        <button id="explain" class="text-button" type="button" aria-expanded="false" aria-controls="solution">Solution</button>
       </div>
       <ol id="hints" aria-live="polite" hidden></ol>
-      <section id="solution" aria-label="Solution" hidden></section>
     </section>
     <details class="puzzle-list">
       <summary>All puzzles</summary>
-      <ol><li><a href="index.html" data-puzzle-day="1" data-href="index.html">Puzzle 1</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="1"></span></li><li><a role="link" aria-disabled="true" data-puzzle-day="2" data-href="day-02.html">Puzzle 2</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="2"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="3" data-href="day-03.html">Puzzle 3</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="3"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="4" data-href="day-04.html">Puzzle 4</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="4"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="5" data-href="day-05.html">Puzzle 5</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="5"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="6" data-href="day-06.html">Puzzle 6</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="6"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="7" data-href="day-07.html">Puzzle 7</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="7"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="8" data-href="day-08.html">Puzzle 8</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="8"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="9" data-href="day-09.html">Puzzle 9</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="9"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="10" data-href="day-10.html" aria-current="page">Puzzle 10</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="10"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="11" data-href="day-11.html">Puzzle 11</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="11"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="12" data-href="day-12.html">Puzzle 12</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="12"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="13" data-href="day-13.html">Puzzle 13</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="13"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="14" data-href="day-14.html">Puzzle 14</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="14"> · Locked</span></li></ol>
+      <ol><li><a href="index.html" data-puzzle-day="1" data-href="index.html">Puzzle 1</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="1"></span></li><li><a role="link" aria-disabled="true" data-puzzle-day="2" data-href="day-02.html">Puzzle 2</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="2"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="3" data-href="day-03.html">Puzzle 3</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="3"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="4" data-href="day-04.html">Puzzle 4</a> <span class="archive-difficulty">· Medium (estimated)</span><span class="puzzle-state" data-state-day="4"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="5" data-href="day-05.html">Puzzle 5</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="5"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="6" data-href="day-06.html">Puzzle 6</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="6"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="7" data-href="day-07.html">Puzzle 7</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="7"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="8" data-href="day-08.html">Puzzle 8</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="8"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="9" data-href="day-09.html">Puzzle 9</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="9"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="10" data-href="day-10.html" aria-current="page">Puzzle 10</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="10"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="11" data-href="day-11.html">Puzzle 11</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="11"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="12" data-href="day-12.html">Puzzle 12</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="12"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="13" data-href="day-13.html">Puzzle 13</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="13"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="14" data-href="day-14.html">Puzzle 14</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="14"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="15" data-href="day-15.html">Puzzle 15</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="15"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="16" data-href="day-16.html">Puzzle 16</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="16"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="17" data-href="day-17.html">Puzzle 17</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="17"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="18" data-href="day-18.html">Puzzle 18</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="18"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="19" data-href="day-19.html">Puzzle 19</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="19"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="20" data-href="day-20.html">Puzzle 20</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="20"> · Locked</span></li><li><a role="link" aria-disabled="true" data-puzzle-day="21" data-href="day-21.html">Puzzle 21</a> <span class="archive-difficulty">· Hard (estimated)</span><span class="puzzle-state" data-state-day="21"> · Locked</span></li></ol>
+    </details>
+    <details id="leaderboard" class="puzzle-list">
+      <summary>Leaderboard</summary>
+      <p id="leaderboard-status" role="status"></p>
+      <table id="leaderboard-table" hidden>
+        <thead><tr><th scope="col">Rank</th><th scope="col">Name</th><th scope="col">Solved</th></tr></thead>
+        <tbody id="leaderboard-rows"></tbody>
+      </table>
+      <button id="refresh-leaderboard" class="text-button" type="button">Refresh</button>
     </details>
     <noscript><p>Enable JavaScript to check answers, reveal hints, and unlock puzzles.</p></noscript>
   </main>

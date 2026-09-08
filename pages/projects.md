@@ -12,7 +12,7 @@ A few things I've built and tinker with.
 - **Spookasem** — An autonomous scout for overlooked software opportunities, gathering public evidence and putting promising business ideas through a critical review. In development.
 - **[Lily](/lily/)** — A browser puzzle game where moving words rewrites the rules of a garden. Explore thirty gardens, gather blooms, and find a way home, with undo and progressive hints.
 - **[How to Design a Zachlike](/how-to-design-a-zachlike/)** — A guide to designing open-ended engineering puzzle games, from mechanics and systems to teaching, optimisation, and playtesting.
-- **[Geomake](/geomake/)** — A geometry puzzle generator with a small browser collection, progressive hints, answer checking, and worked solutions.
+- **[Geomake](/geomake/)** — Twenty-one geometry puzzles with progressive hints, answer checking, and a public progress leaderboard.
 - **[Unit Circle](/unit-circle.html)** — Visualise all six trigonometric functions by dragging a point around the circle.
 - **[EU jobs visualisation](/llm-exposure-eu-jobs-interactive.html)** — Explore employment in the Netherlands and Europe, with occupations sized by workforce and coloured by LLM-estimated exposure to AI.
 - **[Generative plotter art](https://github.com/emilesilvis/grasshopper)** — Code-generated drawings for an AxiDraw pen plotter, alongside experiments with [quadrilateral tilings](https://github.com/emilesilvis/quad_tiling), [triangle tilings](https://github.com/emilesilvis/triangle_tiling), and [triangulation](https://github.com/emilesilvis/triangulation).
