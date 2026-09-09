@@ -12,19 +12,31 @@ export function createLeaderboard(api, edition, stores = [() => localStorage, ()
     const existing = token();
     if (existing) return existing;
     const created = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
-    let saved = false;
-    for (const store of stores) {
-      try { store().setItem(key, created); saved = true; } catch { /* Try tab storage. */ }
-    }
-    if (!saved) throw new Error('Allow browser storage to save your name and progress.');
+    saveToken(created);
     return created;
   }
-  async function request(path, data, authenticated = true) {
+  function saveToken(value) {
+    const previous = stores.map(store => {
+      try { return store().getItem(key); } catch { return null; }
+    });
+    for (const store of stores) {
+      try { store().setItem(key, value); } catch { /* Try tab storage. */ }
+    }
+    if (token() === value) return;
+    // A readable but unwritable older store must not silently win on reload.
+    stores.forEach((store, i) => {
+      try {
+        if (previous[i] === null) store().removeItem(key);
+        else store().setItem(key, previous[i]);
+      } catch { /* A failed store remains unchanged. */ }
+    });
+    throw new Error('Allow browser storage to save your name and progress.');
+  }
+  async function request(path, data, authenticated = true, credential = token()) {
     const headers = {};
     if (authenticated) {
-      const saved = token();
-      if (!saved) throw new Error('Enter your name to save progress.');
-      headers.Authorization = `Bearer ${saved}`;
+      if (!credential) throw new Error('Enter your name or log in with a recovery code.');
+      headers.Authorization = `Bearer ${credential}`;
     }
     if (data !== undefined) headers['Content-Type'] = 'application/json';
     const response = await send(`${api}${path}?edition=${encodeURIComponent(edition)}`, {
@@ -46,6 +58,25 @@ export function createLeaderboard(api, edition, stores = [() => localStorage, ()
       catch (error) { if (error.status === 401) return null; throw error; }
     },
     savePlayer(name) { ensureToken(); return request('/player', { name }); },
+    logOut() {
+      for (const store of stores) {
+        try { store().removeItem(key); } catch { /* Try the other store. */ }
+      }
+      if (token()) throw new Error('Allow browser storage to log out.');
+    },
+    recoveryCode: () => token()?.match(/.{8}/g).join('-') || '',
+    async restorePlayer(code) {
+      const candidate = typeof code === 'string' ? code.trim().toLowerCase().replace(/[\s-]/g, '') : '';
+      if (!validToken(candidate)) throw new Error('Enter the full private recovery code.');
+      let player;
+      try { player = await request('/player', undefined, true, candidate); }
+      catch (error) {
+        if (error.status === 401) throw new Error('That recovery code was not recognised. Check it and try again.');
+        throw error;
+      }
+      saveToken(candidate);
+      return player;
+    },
     check: (day, answer) => request('/check', { day, answer }),
     loadBoard: () => request('/leaderboard', undefined, false),
   };

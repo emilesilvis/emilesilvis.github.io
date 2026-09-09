@@ -1,11 +1,12 @@
 /** Edition-scoped attempts and completion, with tab storage as a fallback. */
-export function createProgress(edition, total, stores = [() => localStorage, () => sessionStorage], previousEditions = []) {
-  const key = (day, field) => `geomake:${edition}:${day}:${field}`;
+export function createProgress(edition, total, stores = [() => localStorage, () => sessionStorage], previousEditions = [], playerId = '') {
+  const owner = playerId ? `player:${playerId}:` : '';
+  const key = (day, field) => `geomake:${edition}:${owner}${day}:${field}`;
   const validDay = day => Number.isInteger(day) && day >= 1 && day <= total;
 
   function values(day, field) {
     const keys = [key(day, field), ...previousEditions.filter(item => day <= item.total)
-      .map(item => `geomake:${item.edition}:${day}:${field}`)];
+      .map(item => `geomake:${item.edition}:${owner}${day}:${field}`)];
     return keys.flatMap(name => stores.map(store => {
       try { return store().getItem(name); } catch { return null; }
     }));

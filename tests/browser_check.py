@@ -367,6 +367,24 @@ def main():
             page.locator('#save-player').click()
             expect(page.locator('#player-label')).to_have_text(f'Changed name · {total} of {total} solved')
             expect(page.locator('#leaderboard-rows')).to_contain_text('Changed name')
+            expect(page.locator('#recovery-login')).to_be_hidden()
+            page.locator('#recovery-details summary').click()
+            expect(page.locator('#recovery-code')).to_have_text(re.compile(r'(?:[a-f0-9]{8}-){7}[a-f0-9]{8}'))
+            code = page.locator('#recovery-code').inner_text()
+            page.locator('#log-out').click()
+            expect(page.locator('#player-form')).to_be_visible()
+            page.locator('#recovery-login summary').click()
+            page.locator('#recovery-input').fill('f' * 64)
+            page.locator('#restore-player').click()
+            expect(page.locator('#player-status')).to_contain_text('not recognised')
+            page.locator('#recovery-input').fill(code.upper())
+            page.locator('#restore-player').click()
+            expect(page.locator('#player-label')).to_have_text(f'Changed name · {total} of {total} solved')
+            expect(page.locator('#recovery-login')).to_be_hidden()
+            page.reload()
+            expect(page.locator('#player-label')).to_have_text(f'Changed name · {total} of {total} solved')
+            expect(page.locator('#answer')).to_have_value(str(total * 10))
+            page.locator('#leaderboard summary').click()
             api_controls['board_error'] = True
             page.locator('#refresh-leaderboard').click()
             expect(page.locator('#leaderboard-status')).to_have_text('Please try again.')
@@ -383,7 +401,7 @@ def main():
                     assert page.evaluate('(async () => (await axe.run(document)).violations)()') == []
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                     page.screenshot(path=str(ARTIFACTS / f'geomake-{width}-{theme}.png'))
-            report['flows'].append(f'Geomake: name entry, {total} sequential API checks, wrong answers, hints, no solutions, persisted completion, name changes, leaderboard retry and accessibility')
+            report['flows'].append(f'Geomake: name entry, {total} sequential API checks, wrong answers, hints, no solutions, persisted completion, name changes, recovery code login/logout, invalid recovery, leaderboard retry and accessibility')
             ctx.close()
 
             # Lily is an unchanged imported release; smoke-test both bundled languages.

@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Puzzle 1</title>
   <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="stylesheet" href="styles.css?v=77c516314689">
+  <link rel="stylesheet" href="styles.css?v=2edb0ab6765d">
   <script src="/static/js/theme.js"></script>
-  <script type="module" src="app.js?v=77c516314689"></script>
+  <script type="module" src="app.js?v=2edb0ab6765d"></script>
 </head>
 <body>
   <nav class="app-nav" aria-label="Site"><a class="back-link" href="/projects.html">← Projects</a><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode"><span id="theme-icon" aria-hidden="true">🌙</span></button></nav>
@@ -17,18 +17,7 @@
       <h1>Puzzle 1</h1>
       <a role="link" aria-disabled="true" data-puzzle-day="2" data-href="day-02.html" rel="next">Next →</a>
     </nav>
-    <section id="player" aria-label="Your progress">
-      <form id="player-form">
-        <label for="player-name">Name on leaderboard</label>
-        <div class="answer-row">
-          <input id="player-name" name="nickname" type="text" maxlength="40" required autocomplete="nickname" aria-describedby="public-name-note">
-          <button id="save-player" type="submit">Save name</button>
-        </div>
-        <small id="public-name-note">Your name and number of solved puzzles will be public. A nickname is fine.</small>
-      </form>
-      <p id="player-summary" hidden><span id="player-label"></span> · <button id="change-name" class="text-button" type="button">Change name</button></p>
-      <p id="player-status" role="status" hidden></p>
-    </section>
+    <p id="player-summary" hidden><span id="player-label"></span></p>
     <p id="locked" role="status" hidden>Solve <a id="resume" href="index.html">Puzzle 1</a> to unlock this puzzle.</p>
     <section id="puzzle" aria-label="Puzzle" hidden>
       <p class="difficulty">Estimated difficulty: Medium</p>
@@ -62,6 +51,39 @@
       </table>
       <button id="refresh-leaderboard" class="text-button" type="button">Refresh</button>
     </details>
+    <section id="player" aria-label="Your progress">
+      <form id="player-form">
+        <label for="player-name">Name on leaderboard</label>
+        <div class="answer-row">
+          <input id="player-name" name="nickname" type="text" maxlength="40" required autocomplete="nickname" aria-describedby="public-name-note">
+          <button id="save-player" type="submit">Save name</button>
+        </div>
+        <small id="public-name-note">Your name and number of solved puzzles will be public. A nickname is fine.</small>
+        <small>Already played? Use your recovery code below to get your progress back.</small>
+      </form>
+      <div id="player-actions" hidden>
+        <button id="change-name" class="text-button" type="button">Change name</button>
+        <button id="log-out" class="text-button" type="button">Log out</button>
+      </div>
+      <details id="recovery-details" class="recovery" hidden>
+        <summary>Your recovery code</summary>
+        <p>Your progress is saved online. Save this code somewhere private to log back in or use another device. Anyone with it can access your progress.</p>
+        <code id="recovery-code"></code>
+        <button id="copy-recovery-code" class="text-button" type="button">Copy code</button>
+        <p id="copy-status" role="status" hidden></p>
+      </details>
+      <details id="recovery-login" class="recovery">
+        <summary>Log in with a recovery code</summary>
+        <form id="recovery-form">
+          <label for="recovery-input">Private recovery code</label>
+          <div class="answer-row">
+            <input id="recovery-input" name="recovery-code" type="password" maxlength="100" required autocomplete="off" autocapitalize="none" spellcheck="false">
+            <button id="restore-player" type="submit">Log in</button>
+          </div>
+        </form>
+      </details>
+      <p id="player-status" role="status" hidden></p>
+    </section>
     <noscript><p>Enable JavaScript to check answers, reveal hints, and unlock puzzles.</p></noscript>
   </main>
 </body>
