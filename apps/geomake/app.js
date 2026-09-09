@@ -1,11 +1,13 @@
-import { evaluateAnswer, matchesAnswer } from './answer.js?v=77c516314689';
-import { createProgress } from './progress.js?v=77c516314689';
-import { createLeaderboard } from './leaderboard.js?v=77c516314689';
+import { evaluateAnswer, matchesAnswer } from './answer.js?v=2edb0ab6765d';
+import { createProgress } from './progress.js?v=2edb0ab6765d';
+import { createLeaderboard } from './leaderboard.js?v=2edb0ab6765d';
 
 const page = document.querySelector('main');
 const day = Number(page.dataset.day);
 const total = Number(page.dataset.total);
-const progress = createProgress(page.dataset.edition, total, undefined, JSON.parse(page.dataset.previousEditions || '[]'));
+const previousEditions = JSON.parse(page.dataset.previousEditions || '[]');
+const legacyProgress = createProgress(page.dataset.edition, total, undefined, previousEditions);
+let progress = legacyProgress;
 const publicProgress = page.dataset.api ? createLeaderboard(page.dataset.api, page.dataset.edition) : null;
 const puzzle = document.querySelector('#puzzle');
 const locked = document.querySelector('#locked');
@@ -21,6 +23,12 @@ const playerName = document.querySelector('#player-name');
 const savePlayer = document.querySelector('#save-player');
 const playerSummary = document.querySelector('#player-summary');
 const playerStatus = document.querySelector('#player-status');
+const playerActions = document.querySelector('#player-actions');
+const recoveryDetails = document.querySelector('#recovery-details');
+const recoveryCode = document.querySelector('#recovery-code');
+const recoveryLogin = document.querySelector('#recovery-login');
+const recoveryInput = document.querySelector('#recovery-input');
+const restoreButton = document.querySelector('#restore-player');
 const board = document.querySelector('#leaderboard');
 const boardStatus = document.querySelector('#leaderboard-status');
 let player = null;
@@ -28,6 +36,19 @@ let editingName = false;
 let loadingBoard = false;
 let hintCount = 0;
 let checking = false;
+
+function selectPlayer(next) {
+  const changed = next?.id !== player?.id;
+  player = next;
+  progress = player ? createProgress(page.dataset.edition, total, undefined, previousEditions, player.id) : legacyProgress;
+  if (changed) {
+    answer.value = player ? progress.loadAnswer(day) : '';
+    feedback.hidden = true;
+    recoveryDetails.open = false;
+    recoveryCode.textContent = '';
+    document.querySelector('#copy-status').hidden = true;
+  }
+}
 
 function updateProgress() {
   const completed = publicProgress ? player?.completedThrough || 0 : progress.completedThrough();
@@ -37,6 +58,9 @@ function updateProgress() {
   if (publicProgress) {
     playerForm.hidden = !!player && !editingName;
     playerSummary.hidden = !player;
+    playerActions.hidden = !player;
+    recoveryDetails.hidden = !player;
+    recoveryLogin.hidden = !!player;
     if (player) document.querySelector('#player-label').textContent = `${player.name} · ${player.solved.length} of ${total} solved`;
   }
   for (const link of puzzleLinks) {
@@ -69,7 +93,7 @@ window.addEventListener('storage', event => {
 });
 window.addEventListener('pageshow', () => publicProgress ? restorePlayer() : updateProgress());
 
-answer.value = progress.loadAnswer(day);
+answer.value = publicProgress ? '' : progress.loadAnswer(day);
 answer.addEventListener('input', () => {
   feedback.hidden = true;
   progress.saveAnswer(day, answer.value);
@@ -88,7 +112,7 @@ async function readHelp(file) {
 
 document.querySelector('#answer-form').addEventListener('submit', async event => {
   event.preventDefault();
-  if (checking || puzzle.hidden) return;
+  if (checking || restoringPlayer || puzzle.hidden) return;
   const submitted = answer.value;
   checking = true;
   document.querySelector('#check').disabled = true;
@@ -97,7 +121,6 @@ document.querySelector('#answer-form').addEventListener('submit', async event =>
     if (publicProgress) {
       const result = await publicProgress.check(day, submitted);
       player = result.player;
-      if (result.correct) progress.markSolved(day);
       updateProgress();
       if (answer.value === submitted) message(result.correct ? 'Correct.' : 'Not quite. Try again.');
       if (result.correct && board.open) await refreshBoard();
@@ -129,16 +152,17 @@ function playerMessage(text) {
 async function syncPreviousAnswers() {
   // Existing browser completion is only credited publicly after each saved
   // answer has passed the same server check as a new solve.
-  const completed = progress.completedThrough();
+  const completed = legacyProgress.completedThrough();
   while (player.completedThrough < completed) {
     const next = player.completedThrough + 1;
-    const saved = progress.loadAnswer(next);
+    const saved = legacyProgress.loadAnswer(next);
     if (!saved) break;
     let result;
     try { result = await publicProgress.check(next, saved); }
     catch (error) { if (error.status === 400) break; throw error; }
     player = result.player;
     if (!result.correct) break;
+    progress.saveAnswer(next, saved);
   }
 }
 
@@ -147,11 +171,11 @@ async function restorePlayer() {
   if (!publicProgress || restoringPlayer || savePlayer.disabled) return;
   restoringPlayer = true;
   savePlayer.disabled = true;
+  restoreButton.disabled = true;
   playerMessage('Loading your progress…');
   try {
-    player = await publicProgress.loadPlayer();
+    selectPlayer(await publicProgress.loadPlayer());
     if (player) {
-      await syncPreviousAnswers();
       if (!editingName) playerName.value = player.name;
     }
     playerMessage('');
@@ -159,6 +183,7 @@ async function restorePlayer() {
     playerMessage(error instanceof Error ? error.message : 'Could not load your progress. Please try again.');
   } finally {
     savePlayer.disabled = false;
+    restoreButton.disabled = false;
     restoringPlayer = false;
     updateProgress();
   }
@@ -167,28 +192,93 @@ async function restorePlayer() {
 playerForm.addEventListener('submit', async event => {
   event.preventDefault();
   if (!publicProgress || savePlayer.disabled) return;
+  const registering = !player;
   savePlayer.disabled = true;
+  restoreButton.disabled = true;
   playerMessage('Saving…');
   try {
-    player = await publicProgress.savePlayer(playerName.value);
-    await syncPreviousAnswers();
+    selectPlayer(await publicProgress.savePlayer(playerName.value));
+    // Import pre-leaderboard completion only when first registering. A recovery
+    // login must never submit a different player's cached answers.
+    if (registering) await syncPreviousAnswers();
     editingName = false;
     playerName.value = player.name;
     playerMessage('');
+    if (registering) recoveryDetails.open = true;
     updateProgress();
     if (board.open) await refreshBoard();
   } catch (error) {
     playerMessage(error instanceof Error ? error.message : 'Could not save your name. Please try again.');
   } finally {
     savePlayer.disabled = false;
+    restoreButton.disabled = false;
     updateProgress();
   }
+});
+
+document.querySelector('#recovery-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!publicProgress || restoringPlayer || savePlayer.disabled || checking) return;
+  restoringPlayer = true;
+  savePlayer.disabled = true;
+  restoreButton.disabled = true;
+  document.querySelector('#check').disabled = true;
+  playerMessage('Loading your saved progress…');
+  try {
+    selectPlayer(await publicProgress.restorePlayer(recoveryInput.value));
+    editingName = false;
+    playerName.value = player.name;
+    recoveryInput.value = '';
+    recoveryLogin.open = false;
+    playerMessage('Logged in. Your saved progress is restored.');
+    updateProgress();
+    if (board.open) await refreshBoard();
+  } catch (error) {
+    playerMessage(error instanceof Error ? error.message : 'Could not restore your progress. Please try again.');
+  } finally {
+    restoringPlayer = false;
+    savePlayer.disabled = false;
+    restoreButton.disabled = false;
+    document.querySelector('#check').disabled = false;
+    updateProgress();
+  }
+});
+
+recoveryDetails.addEventListener('toggle', () => {
+  recoveryCode.textContent = recoveryDetails.open && player ? publicProgress.recoveryCode() : '';
+});
+
+document.querySelector('#copy-recovery-code').addEventListener('click', async () => {
+  if (!player) return;
+  const status = document.querySelector('#copy-status');
+  try {
+    await navigator.clipboard.writeText(publicProgress.recoveryCode());
+    status.textContent = 'Copied. Save it somewhere private.';
+  } catch {
+    status.textContent = 'Select and copy the code above.';
+  }
+  status.hidden = false;
 });
 
 document.querySelector('#change-name').addEventListener('click', () => {
   editingName = true;
   updateProgress();
   playerName.focus();
+});
+
+document.querySelector('#log-out').addEventListener('click', async () => {
+  if (!publicProgress || restoringPlayer || checking || savePlayer.disabled) return;
+  try {
+    publicProgress.logOut();
+    selectPlayer(null);
+    editingName = false;
+    playerName.value = '';
+    playerMessage('Logged out. Use your recovery code to log back in.');
+    updateProgress();
+    if (board.open) await refreshBoard();
+  } catch (error) {
+    playerMessage(error instanceof Error ? error.message : 'Could not log out. Please try again.');
+  }
 });
 
 async function refreshBoard() {

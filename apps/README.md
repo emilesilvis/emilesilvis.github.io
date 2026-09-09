@@ -2,7 +2,7 @@ These are checked-in static applications copied into the site by `build.py`.
 
 | App | Version retained here | Upstream provenance |
 | --- | --- | --- |
-| Geomake | Edition `618a980d4497d066`, twenty-one puzzles with a public progress leaderboard | [emilesilvis/geomake](https://github.com/emilesilvis/geomake), commit `17c6204fcbc1396262679b17546b5c01e30c0fdf`, seed 7. Answers are checked by its Cloudflare Worker; static answer and solution files have been removed. |
+| Geomake | Edition `618a980d4497d066`, twenty-one puzzles with a public progress leaderboard and private recovery codes | [emilesilvis/geomake](https://github.com/emilesilvis/geomake), commit `73a1d70ed3fad2106cf0ffcc88351892a0639777`, seed 7. Answers are checked by its Cloudflare Worker; static answer and solution files have been removed. |
 | How to design a Zachlike | 1.1.0, dated 2026-08-08 | Authored HTML is maintained here; no upstream repository or export command was recorded. |
 | Lily | English/Dutch static release, thirty gardens | Private Lily source, commit `1d3d394652b194c02841bfb703eff95343a17641`; archive checksum and repeatable build instructions are in [README.md](../README.md#lily). |
 
@@ -29,7 +29,9 @@ or the unused `theme.js`. The normal site build adds metadata and versions asset
 
 The first fourteen questions are unchanged. Their published browser progress can
 be recovered after saved answers pass the server checks. Names and solved counts
-are public; a private browser token retains access to each player's saved progress.
+are public; a private recovery code restores access to each player's saved progress across browsers.
+Login controls are below the puzzle lists and hidden while logged in; recovery codes
+and logout remain available at the bottom.
 The leaderboard uses solved count, with equal ranks for ties, and no speed score.
 
 `how-to-design-a-zachlike/index.html` is the canonical guide. `guide.html` is a
