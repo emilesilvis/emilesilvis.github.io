@@ -3,7 +3,7 @@ These are checked-in static applications copied into the site by `build.py`.
 | App | Version retained here | Upstream provenance |
 | --- | --- | --- |
 | Geomake | Edition `618a980d4497d066`, twenty-one puzzles with a public progress leaderboard and private recovery codes | [emilesilvis/geomake](https://github.com/emilesilvis/geomake), commit `73a1d70ed3fad2106cf0ffcc88351892a0639777`, seed 7. Answers are checked by its Cloudflare Worker; static answer and solution files have been removed. |
-| How to design a Zachlike | 1.1.0, dated 2026-08-08 | Authored HTML is maintained here; no upstream repository or export command was recorded. |
+| How to design a Zachlike | 1.1.0, dated 2026-08-08 | [emilesilvis/how-to-design-a-zachlike](https://github.com/emilesilvis/how-to-design-a-zachlike), source commit `faa05a02f5e0714e762d7c575a68148bc7c57798`; build and export instructions below. |
 | Lily | English/Dutch static release, thirty gardens | Private Lily source, commit `1d3d394652b194c02841bfb703eff95343a17641`; archive checksum and repeatable build instructions are in [README.md](../README.md#lily). |
 
 When importing an update:
@@ -36,5 +36,20 @@ The leaderboard uses solved count, with equal ranks for ties, and no speed score
 
 `how-to-design-a-zachlike/index.html` is the canonical guide. `guide.html` is a
 compatibility redirect. Keep its hash-preserving redirect when replacing exports.
+The guide's Markdown, YAML catalog, layout, and navigation are maintained in the
+source repository. To reproduce this website copy from the source commit above:
+
+```sh
+npm ci --ignore-scripts
+npm test
+npm run export:site -- /path/to/emilesilvis.github.io/apps/how-to-design-a-zachlike
+```
+
+Run those commands in the guide source checkout, then run this website's checks.
+The exporter writes all three HTML files, preserving local shared assets, Projects
+navigation, accessible headings and tables, and the compatibility redirect.
+Desktop contents stay open; mobile contents initially collapse and remain operable
+by pointer and keyboard. Without JavaScript, contents remain available.
+
 Wolf Tone and all three archived exports were removed at the owner's request;
 they can be recovered from git history.

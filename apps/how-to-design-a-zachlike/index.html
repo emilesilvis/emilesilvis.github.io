@@ -301,7 +301,7 @@ table.reg tr:target td:first-child {
 <div class="wrap">
 
 <nav class="guide-nav" aria-label="Contents">
-<details class="toc">
+<details class="toc" open>
 <summary>Contents</summary>
 <div class="toclinks">
   <div class="navhead">Start</div>
@@ -325,6 +325,20 @@ table.reg tr:target td:first-child {
 </div>
 </details>
 </nav>
+<script>
+(function () {
+  const contents = document.querySelector('.guide-nav .toc');
+  const desktop = window.matchMedia('(min-width: 881px)');
+
+  // Desktop hides the disclosure control, so its contents must stay open.
+  function updateContents() {
+    contents.open = desktop.matches;
+  }
+
+  updateContents();
+  desktop.addEventListener('change', updateContents);
+})();
+</script>
 
 <main id="content" tabindex="-1">
 <a href="/projects.html">← Projects</a>

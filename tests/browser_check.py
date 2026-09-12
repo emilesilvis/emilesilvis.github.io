@@ -31,6 +31,42 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
+def check_guide_contents(page, url):
+    """Contents must be usable on arrival and after crossing the layout breakpoint."""
+    nav = page.get_by_role('navigation', name='Contents', exact=True)
+    start = nav.get_by_role('link', name='Start here', exact=True)
+    summary = nav.locator('summary')
+    for width in (1440, 881):
+        page.set_viewport_size({'width': width, 'height': 844})
+        page.goto(url)
+        expect(start).to_be_visible()
+        expect(start).to_be_in_viewport()
+        expect(summary).to_be_hidden()
+        start.focus()
+        expect(start).to_be_focused()
+        nav.get_by_role('link', name='1 · Domain', exact=True).click()
+        expect(page).to_have_url(url + '#domain')
+        expect(start).to_be_in_viewport()
+
+    for width in (390, 880):
+        page.set_viewport_size({'width': width, 'height': 844})
+        page.goto(url)
+        expect(summary).to_be_in_viewport()
+        expect(start).to_be_hidden()
+        summary.click()
+        expect(start).to_be_visible()
+        page.set_viewport_size({'width': width - 1, 'height': 844})
+        expect(start).to_be_visible()
+        summary.press('Space')
+        expect(start).to_be_hidden()
+        page.set_viewport_size({'width': 1440, 'height': 844})
+        expect(start).to_be_visible()
+        expect(summary).to_be_hidden()
+        page.set_viewport_size({'width': width, 'height': 844})
+        expect(summary).to_be_in_viewport()
+        expect(start).to_be_hidden()
+
+
 def main():
     if not AXE.exists():
         raise SystemExit('Run npm ci and build the site before browser checks.')
@@ -182,6 +218,25 @@ def main():
             visit(page, '/how-to-design-a-zachlike/guide.html#domain')
             expect(page).to_have_url(base + '/how-to-design-a-zachlike/#domain')
             report['flows'].append('Navigation, skip link, series order, hash-preserving guide redirect')
+            ctx.close()
+
+            ctx = context()
+            page = page_in(ctx)
+            check_guide_contents(page, base + '/how-to-design-a-zachlike/')
+            report['flows'].append('Guide contents: visible desktop links, section navigation, mobile pointer/keyboard toggling and viewport changes')
+            ctx.close()
+
+            ctx = context(java_script_enabled=False)
+            page = page_in(ctx)
+            for width in (1440, 390):
+                page.set_viewport_size({'width': width, 'height': 844})
+                visit(page, '/how-to-design-a-zachlike/')
+                expect(page.get_by_role('navigation', name='Contents').get_by_role('link', name='Start here')).to_be_in_viewport()
+            page.locator('.guide-nav summary').click()
+            expect(page.locator('.guide-nav .toclinks')).to_be_hidden()
+            page.locator('.guide-nav summary').press('Enter')
+            expect(page.locator('.guide-nav .toclinks')).to_be_visible()
+            report['flows'].append('Guide contents remain usable without JavaScript on desktop and mobile')
             ctx.close()
 
             # Follow repeated system changes until an explicit preference is set.
