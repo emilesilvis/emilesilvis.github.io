@@ -18,9 +18,11 @@ class Images:
 
     def attributes(self, url: str) -> dict:
         path = urlsplit(url)
-        if path.netloc or not path.path.startswith("/static/images/"):
+        if path.netloc or not path.path.startswith(("/static/images/", "../static/images/")):
             return {}
-        source = self.root / path.path.lstrip("/")
+        # Posts and pages sit one directory below the root; relative paths also
+        # let Markdown editors preview their images directly from the source.
+        source = self.root / path.path.removeprefix("../").lstrip("/")
         if not source.is_file():
             raise ValueError(f"Image does not exist: {url}")
         if url in self.prepared:
