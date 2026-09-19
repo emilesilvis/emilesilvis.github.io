@@ -115,7 +115,9 @@ that could create duplicate charges. Malformed results files raise an error
 instead of silently replacing paid results.
 
 Alternatively, run the **Scan posts with Pangram 4** workflow manually using the
-repository's `PANGRAM_API_KEY` Actions secret. Download its `pangram-results`
+repository's `PANGRAM_API_KEY` Actions secret. Set its optional `post` input to a
+single post path to limit the scan, or leave it blank to scan all posts.
+Download its `pangram-results`
 artifact, replace `data/pangram/results.json`, and commit it before another scan
 run. This also applies after a failed run: the artifact preserves completed
 results and pending tasks. Artifacts are temporary transport; the committed JSON

@@ -3,6 +3,10 @@ name: Scan posts with Pangram 4
 on:
   workflow_dispatch:
     inputs:
+      post:
+        description: Post path to scan (leave blank for all posts)
+        type: string
+        default: ''
       refresh:
         description: Rescan existing Pangram 4 results (uses additional credits)
         type: boolean
@@ -30,13 +34,17 @@ jobs:
       - name: Scan posts
         env:
           PANGRAM_API_KEY: ${{ secrets.PANGRAM_API_KEY }}
+          PANGRAM_POST_PATH: ${{ inputs.post }}
           PANGRAM_REFRESH: ${{ inputs.refresh }}
         run: |
+          args=()
           if [ "$PANGRAM_REFRESH" = "true" ]; then
-            python scan_pangram.py --model pangram-4 --refresh
-          else
-            python scan_pangram.py --model pangram-4
+            args+=(--refresh)
           fi
+          if [ -n "$PANGRAM_POST_PATH" ]; then
+            args+=("$PANGRAM_POST_PATH")
+          fi
+          python scan_pangram.py --model pangram-4 "${args[@]}"
       - name: Save results and pending tasks for review
         if: always()
         uses: actions/upload-artifact@v4

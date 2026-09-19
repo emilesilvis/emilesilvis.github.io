@@ -160,6 +160,21 @@ class BuildTests(unittest.TestCase):
             changed = Images(root, root / 'out').attributes('/static/images/example.png')
             self.assertNotEqual(attrs['src'], changed['src'])
 
+    def test_relative_post_images_keep_responsive_output_and_full_size_links(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'static/images/example.png'
+            source.parent.mkdir(parents=True)
+            Image.new('RGB', (900, 450), '#224466').save(source)
+            images = Images(root, root / 'out')
+            attrs = images.attributes('/static/images/example.png')
+            rendered = build.render('![Diagram](../static/images/example.png)', images)
+            self.assertIn('class="image-original" href="../static/images/example.png"', rendered)
+            self.assertIn(f'src="{attrs["src"]}"', rendered)
+            self.assertIn(f'srcset="{attrs["srcset"]}"', rendered)
+            self.assertIn(f'sizes="{attrs["sizes"]}"', rendered)
+            self.assertIn('width="900" height="450"', rendered)
+
 
 if __name__ == '__main__':
     unittest.main()
