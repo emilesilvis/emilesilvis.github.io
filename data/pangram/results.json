@@ -253,6 +253,17 @@
       "prediction_short": "Mixed",
       "version": "3.3.2"
     },
+    "ec7eb46eda02e67483a29dccf2d4d3e0ebae96210e9d7231ad5f9e6c1cbc8fcb": {
+      "analyzed_at": "2026-09-25T07:55:00.076608+00:00",
+      "dashboard_link": "https://www.pangram.com/history/c769b236-8fdf-4ea5-a760-84e3d35f46f9",
+      "fraction_ai": 0.0,
+      "fraction_ai_assisted": 0.0,
+      "fraction_human": 1.0,
+      "headline": "Human Written",
+      "model": "pangram-4",
+      "prediction_short": "Human",
+      "version": "4.0"
+    },
     "fb4995dbbbbd8cd82f0d2152c449a50618b6b135e9a8b5d77e3771ae3f4b08a1": {
       "analyzed_at": "2026-09-03T18:48:14.803959+00:00",
       "dashboard_link": "https://www.pangram.com/history/315944bd-78fa-4240-81b7-84fbf5d31bd1",
