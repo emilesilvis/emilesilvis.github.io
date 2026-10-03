@@ -3,6 +3,7 @@ seo_description: "Books Emile Silvis has read, from science fiction and mathemat
 ---
 # Books read
 
+- *[The Particle at the End of the Universe: How the Hunt for the Higgs Boson Leads Us to the Edge of a New World](https://www.goodreads.com/book/show/15744013)* — Sean Carroll *(read: 2026-10-01)*
 - *[Mathematica: A Secret World of Intuition and Curiosity](https://www.goodreads.com/book/show/200128457-mathematica)* — David Bessis *(read: 2026-05-08)*
 - *[There Is No Antimemetics Division](https://www.goodreads.com/book/show/54870256-there-is-no-antimemetics-division)* — qntm *(read: 2026-05-01)*
 - *[The MANIAC](https://www.goodreads.com/book/show/75665931)* — Benjamín Labatut *(read: 2026-04-22)*
