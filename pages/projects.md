@@ -5,6 +5,7 @@ seo_description: "Interactive projects and experiments by Emile Silvis."
 
 A few things I've built and tinker with.
 
+- **[Ripple](/ripple.html)** — Gentle soundscapes from a simulated world: flowing water, wind-driven chimes, and creatures that hear their neighbours. Explore eight worlds in a live terminal player.
 - **[handwritten.blog](https://handwritten.blog)** — A blogging platform for handwritten posts: write on paper or a tablet, photograph your page, and publish it as a live web post — you can even draw clickable link boxes onto your handwriting. Experimental [reMarkable](https://github.com/emilesilvis/handwritten-blog-remarkable-uploader) and [Supernote](https://github.com/emilesilvis/handwritten-blog-supernote-plugin) clients send notebooks to private drafts.
 - **[SDD Observatory](https://sddobservatory.com)** — An open, community-maintained directory tracking spec-driven development frameworks and real-world projects over time, to evaluate how different approaches hold up in practice.
 - **[How I AI](https://howiai.directory)** — A directory of creators' personal AI policies, documenting their choices, boundaries, and responsibilities when using AI in their work.
